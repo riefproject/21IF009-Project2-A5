@@ -4,6 +4,7 @@ CC = gcc
 # Flags
 CFLAGS = -Wall -Wextra -Iinclude
 LDFLAGS = -lraylib -lopengl32 -lgdi32 -lwinmm
+GRFLAGS = -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
 
 # Paths
 SRC_PATH = src library
@@ -26,7 +27,7 @@ $(TARGET): $(OBJ)
 	@echo "Creating necessary directories..."
 	@mkdir -p $(BIN_PATH)
 	@echo "🔧 Linking..."
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) $^ -o $@ $(LDFLAGS) $(GRFLAGS)
     # tambahkan cls bang di line ini
 	@echo "✅ Build successful! Run './$(TARGET)'"
 
