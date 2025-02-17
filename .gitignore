@@ -1,0 +1,27 @@
+# Ignore binary output files
+/bin/*
+/build/*
+/*.exe
+
+# Ignore object files
+**/*.o
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore temporary files from editors
+*~
+
+# Ignore logs
+*.log
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Windows PowerShell profile
+init.ps1
+
+# keep
+!*/
