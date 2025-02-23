@@ -3,7 +3,6 @@
 
 #include <raylib.h>
 
-
 // Define Values
 #define LOADING_TIME 5.0f
 
@@ -34,11 +33,13 @@
 #define delete(var) \
     free(var);      \
     var = NULL; 
+
 #define INIT_GAME_VARIABLES int gameLevel; \
     GameState currentState, prevState;\
     Sound sfxMove, sfxSelect;\
     Font fontBody, fontHeader;\
     Texture2D blockTexture;
+
 
 // Struktur HiScore
 // Menyimpan data skor tertinggi yang pernah dicapai oleh pemain.
@@ -138,6 +139,7 @@ void displayQueue(BlockQueue* q);
 void clearQueue(BlockQueue* q);
 
 // Tampilan
+
 extern int gameLevel;
 extern GameState currentState, prevState;
 extern Sound sfxMove, sfxSelect;
