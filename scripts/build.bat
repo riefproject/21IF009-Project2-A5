@@ -58,11 +58,16 @@ if %errorlevel% neq 0 (
 
 :: Link all object files into the final executable in bin
 echo Linking object files...
-gcc build\output\src\main.o build\output\library\arief.o build\output\library\naira.o build\output\library\raffi.o build\output\library\faliq.o build\output\library\goklas.o -o bin/game.exe -lm -lraylib -lopengl32 -lgdi32 -lwinmm -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
+gcc build\output\src\main.o build\output\library\arief.o build\output\library\naira.o build\output\library\raffi.o build\output\library\faliq.o build\output\library\goklas.o -o bin/game.exe -lm -lraylib -lopengl32 -lgdi32 -lwinmm
 if %errorlevel% neq 0 (
     echo Linking failed!
     exit /b %errorlevel%
 )
 
-echo Compilation successful! Executable is in bin\game.exe
-pause
+:: Run the game
+echo Running game...
+bin\game.exe
+if %errorlevel% neq 0 (
+    echo Game crashed!
+    exit /b %errorlevel%
+)
