@@ -256,6 +256,8 @@ void clearQueue(BlockQueue* q) {
 //                Display
 // =======================================
 
+INIT_GAME_VARIABLES
+
 void mainWindow() {
     Settings settings;
     loadSettings(&settings);
