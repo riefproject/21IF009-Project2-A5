@@ -47,6 +47,13 @@
     Texture2D blockTexture;
 
 
+#define INIT_GAME_VARIABLES int gameLevel; \
+    GameState currentState, prevState;\
+    Sound sfxMove, sfxSelect;\
+    Font fontBody, fontHeader;\
+    Texture2D blockTexture;
+
+
 // Struktur HiScore
 // Menyimpan data skor tertinggi yang pernah dicapai oleh pemain.
 typedef struct {
@@ -145,6 +152,10 @@ void displayQueue(BlockQueue* q);
 void clearQueue(BlockQueue* q);
 
 // Tampilan
+<<<<<<< HEAD
+=======
+
+>>>>>>> 45c2812c79103c97886d7837c304769d1d6bd6a1
 extern int gameLevel;
 extern GameState currentState, prevState;
 extern Sound sfxMove, sfxSelect;
