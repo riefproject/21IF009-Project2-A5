@@ -4,12 +4,14 @@ CC = gcc
 # Flags
 CFLAGS = -Wall -Wextra -Iinclude
 LDFLAGS = -lraylib -lopengl32 -lgdi32 -lwinmm
+# Graphics library flags (cuma kompatibel di compiler 32-bit)
 GRFLAGS = -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
 
 # Paths
 SRC_PATH = src library
 OBJ_PATH = build/output
 BIN_PATH = bin
+TMP_PATH = temp
 
 # Source files
 SRC = src/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c
@@ -27,8 +29,8 @@ $(TARGET): $(OBJ)
 	@echo "Creating necessary directories..."
 	@mkdir -p $(BIN_PATH)
 	@echo "🔧 Linking..."
-	$(CC) $^ -o $@ $(LDFLAGS) $(GRFLAGS)
-    # tambahkan cls bang di line ini
+	$(CC) $^ -o $@ $(LDFLAGS)
+	# tambahkan cls bang di line ini
 	@echo "✅ Build successful! Run './$(TARGET)'"
 
 # Compile each .c file into build/output/
@@ -44,6 +46,36 @@ clean:
 	@echo "✅ Clean complete!"
 
 # Run
-run: all clear
+run: all
 	@echo "🚀 Running game..."
 	@./$(TARGET)
+
+# Test files
+TEST_SRC = $(TMP_PATH)/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c
+TEST_OBJ = $(patsubst %.c,$(OBJ_PATH)/%.o,$(TEST_SRC))
+TEST_TARGET = $(BIN_PATH)/test.exe
+
+# Test target
+test: clean-test $(TEST_TARGET)
+	@echo "🧪 Running tests..."
+	@./$(TEST_TARGET)
+
+$(TEST_TARGET): $(TEST_OBJ)
+	@echo "Creating necessary directories..."
+	@mkdir -p $(BIN_PATH)
+	@echo "🔧 Linking test executable..."
+	$(CC) $^ -o $@ $(LDFLAGS)
+	@echo "✅ Test build successful!"
+
+# Compile test files
+$(OBJ_PATH)/$(TMP_PATH)/%.o: $(TMP_PATH)/%.c
+	@echo "🔨 Compiling test file $<..."
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean tests
+clean-test:
+	@echo "🗑 Cleaning test files..."
+	@rm -f $(TEST_TARGET)
+	@rm -rf $(OBJ_PATH)/$(TMP_PATH)
+	@echo "✅ Test clean complete!"

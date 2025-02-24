@@ -7,7 +7,7 @@
 **/*.o
 
 # Ignore IDE specific files
-.vscode/
+.vscode/**/*
 .idea/
 
 # Ignore temporary files from editors
@@ -23,5 +23,12 @@ Thumbs.db
 # Ignore Windows PowerShell profile
 init.ps1
 
+#ignore Temp Folder
+/temp/*
+
 # keep
 !*/
+
+#db
+db/*
+!db/.gitkeep
