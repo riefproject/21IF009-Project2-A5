@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <math.h>
+#include "Faliq.h"
 
 // =======================================
 //                Database 
@@ -266,7 +267,9 @@ void mainWindow() {
     const int screenWidth = SCREEN_WIDTH;
     const int screenHeight = SCREEN_HEIGHT;
     float loadingTime = 0.0f;
-
+    P.x = 160;
+    P.y = 608;
+    
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     SetTargetFPS(60);
 
@@ -843,10 +846,8 @@ void displayGame() {
 
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
 
-    for (int i = 0; i < 10; ++i) {
-        Vector2 position = { GetRandomValue(0, 9) * 32, GetRandomValue(0, 15) * 32 };
-        DrawTexture(blockTexture, position.x, position.y, WHITE);
-    }
+    shooter(&P.x, &P.y);
+    moveSet(&P.x);
 
     DrawRectangle(0, 512, 320, 1, BLACK);
     DrawText("Hi Score", 340, 20, 15, WHITE);

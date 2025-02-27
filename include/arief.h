@@ -152,10 +152,6 @@ void displayQueue(BlockQueue* q);
 void clearQueue(BlockQueue* q);
 
 // Tampilan
-<<<<<<< HEAD
-=======
-
->>>>>>> 45c2812c79103c97886d7837c304769d1d6bd6a1
 extern int gameLevel;
 extern GameState currentState, prevState;
 extern Sound sfxMove, sfxSelect;
