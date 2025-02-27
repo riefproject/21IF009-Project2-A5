@@ -1,4 +1,5 @@
 #include "arief.h"
+#include "goklas.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -6,6 +7,7 @@
 #include <raylib.h>
 #include <math.h>
 
+Vector2 playerpos = {150, 400};
 // =======================================
 //                Database 
 // =======================================
@@ -300,7 +302,7 @@ void mainWindow() {
             showSettings(&settings);
             break;
         case STATE_PLAY:
-            displayGame();
+            displayGame(playerpos);
             break;
         case STATE_QUIT:
             exitGame();
@@ -836,23 +838,53 @@ void exitGame() {
     }
 }
 
-void displayGame() {
+Bullets bullets[MAX_BULLETS];
+int bulletCount = 0;
+bool canShoot = true;
+float reloadTimer = 0;
+int playerDirection = 0;
+
+void displayGame(Vector2 playerpos) {
     prevState = STATE_PLAY;
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+    
+    MoveBullets(bullets);
+    DrawBullets(bullets);
 
-    for (int i = 0; i < 10; ++i) {
-        Vector2 position = { GetRandomValue(0, 9) * 32, GetRandomValue(0, 15) * 32 };
-        DrawTexture(blockTexture, position.x, position.y, WHITE);
+    if (IsKeyPressed(KEY_RIGHT)) {
+        playerpos.x += 5;
+        playerDirection = 1;
+    }
+
+    if (IsKeyPressed(KEY_LEFT)) {
+        playerpos.x -= 5;
+        playerDirection = -1;
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
+    }
+
+    if (IsKeyDown(KEY_SPACE)) {
+        canShoot = true;
+    }
+
+    if (bulletCount >= MAX_BULLETS) {
+        reloadTimer += GetFrameTime();
+
+        if (reloadTimer >= GetFrameTime()) {
+            ReloadBullets(bullets, &bulletCount, &canShoot);
+            reloadTimer = 0;
+        }
     }
 
     DrawRectangle(0, 512, 320, 1, BLACK);
     DrawText("Hi Score", 340, 20, 15, WHITE);
     DrawText("12345", 340, 40, 20, LIGHTGRAY);
 
-    DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
     EndDrawing();
 
     if (IsKeyPressed(KEY_P)) {
