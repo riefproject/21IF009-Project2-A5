@@ -16,5 +16,7 @@ void shooter(int *x , int *y);
 // Membuat Moveset Shooter
 void moveSet(int *x);
 
+// Mensetting lagu gameplay
+extern Music soundGameplay;
 
 #endif

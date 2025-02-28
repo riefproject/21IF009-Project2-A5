@@ -6,8 +6,9 @@
 #define SPEED 32
 
 position P;
+Music soundGameplay;
 
-void shooter(int *x, int *y){
+void shooter(int * x, int *y){
     int positionx = *x;
     int positiony = *y;
 
@@ -20,7 +21,6 @@ void shooter(int *x, int *y){
     }else{
         DrawRectangle(positionx, positiony, SIZE, SIZE, WHITE);
         DrawRectangle(positionx - SIZE, positiony, SIZE, SIZE, WHITE);
-        // DrawRectangle(positionx + SIZE, positiony, SIZE, SIZE, WHITE);
         DrawRectangle(positionx, positiony - SIZE, SIZE, SIZE, WHITE);
     }
 }
@@ -29,7 +29,9 @@ void shooter(int *x, int *y){
 void moveSet(int *x){
     if((IsKeyPressed(KEY_LEFT)) && (*x > 0)){
         *x -= SPEED;
+        PlaySound(sfxMove);
     }else if((IsKeyPressed(KEY_RIGHT)) && (*x + SIZE < GAME_SCREEN_WIDTH)){
         *x += SPEED;
+        PlaySound(sfxMove);
     }
 }

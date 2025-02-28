@@ -267,13 +267,17 @@ void mainWindow() {
     const int screenWidth = SCREEN_WIDTH;
     const int screenHeight = SCREEN_HEIGHT;
     float loadingTime = 0.0f;
-    P.x = 160;
-    P.y = 608;
+    P.x = 160; // Ditambahkan oleh faliq
+    P.y = 608; // Ditambahkan oleh faliq
     
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     SetTargetFPS(60);
 
     InitAudioDevice();
+    soundGameplay = LoadMusicStream("C:/PROJECT/PROJECT_2/21IF009-Project2-A5/assets/sounds/gameplay.mp3"); // Ditambahkan oleh faliq
+    PlayMusicStream(soundGameplay);  // Ditambahkan oleh faliq
+    SetMusicVolume(soundGameplay, 0.5f); // Ditambahkan oleh faliq
+    
     sfxMove = LoadSound("assets/sounds/click.wav");
     sfxSelect = LoadSound("assets/sounds/select.wav");
     SetSoundVolume(sfxMove, 1.0f);
@@ -303,6 +307,7 @@ void mainWindow() {
             showSettings(&settings);
             break;
         case STATE_PLAY:
+            UpdateMusicStream(soundGameplay); // Ditambahkan oleh faliq
             displayGame();
             break;
         case STATE_QUIT:
@@ -841,13 +846,15 @@ void exitGame() {
 
 void displayGame() {
     prevState = STATE_PLAY;
+
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
-
-    shooter(&P.x, &P.y);
-    moveSet(&P.x);
+    
+// Menambahkan blok shooter beserta movesetnya
+    shooter(&P.x, &P.y); // Ditambahkan oleh faliq
+    moveSet(&P.x); // Ditambahkan oleh faliq
 
     DrawRectangle(0, 512, 320, 1, BLACK);
     DrawText("Hi Score", 340, 20, 15, WHITE);
