@@ -333,12 +333,11 @@ void mainWindow(void) {
     HiScore scores[MAX_LEVELS];
     loadHiScores(scores);
     float loadingTime = 0.0f;
-    P.x = 160; // Ditambahkan oleh faliq
-    P.y = 608; // Ditambahkan oleh faliq
-
 
     int screenWidth = MIN_SCREEN_WIDTH;
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
+    P.x = 160; // Ditambahkan oleh faliq
+    P.y = 608; // Ditambahkan oleh faliq
 
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     Image ico = LoadImage("assets/ico.png");
@@ -999,6 +998,7 @@ float blockGenerationInterval = .64f;  // Generate new blocks every 3 seconds
 int blockSpeed = 100;                  // Speed in pixels per second
 int currentScore = 0;
 // Add these helper functions
+
 void initBlocks() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         blocks[i].active = false;
@@ -1040,7 +1040,12 @@ void displayGame(void) {
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+    Rectangle gameArea = {
+        0, 0,
+        auto_x(320),
+        auto_y(640)
+    };
+    DrawRectangleRec(gameArea, Fade(SKYBLUE, 0.3f));
 
     // Menambahkan blok shooter beserta movesetnya
     shooter(&P.x, &P.y); // Ditambahkan oleh faliq

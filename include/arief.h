@@ -154,24 +154,21 @@ void clearQueue(BlockQueue* q);
 
 // Tampilan
 void displayGame(void);
+int loadingScreen(float* loadingTime);
 void mainWindow(void);
 void mainMenu(void);
+void resetHiScores(void);
+void rejectReset(void);
+void gameOver(void);
 void selectMode(Settings* settings);
 void showControls(void);
-
-void displayGame();
-int loadingScreen(float* loadingTime);
-void mainWindow();
-void mainMenu();
-void selectLevel();
-void showControls();
 void showHiScore(HiScore scores[]);
 void showSettings(Settings* settings);
-bool confirmExit();
-void exitGame();
-void pauseMenu();
-void countdownPause();
-bool confirmBack();
+bool confirmExit(void);
+void exitGame(void);
+void pauseMenu(void);
+void countdownPause(void);
+bool confirmBack(void);
 
 // debug
 #define DBG printf("Haiiii");
