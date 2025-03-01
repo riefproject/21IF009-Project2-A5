@@ -15,6 +15,7 @@
 
 # Ignore logs
 *.log
+*.dat
 
 # Ignore OS-specific files
 .DS_Store
@@ -28,3 +29,7 @@ init.ps1
 
 # keep
 !*/
+
+#db
+!db
+/db/**/*
