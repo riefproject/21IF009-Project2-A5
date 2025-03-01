@@ -1,13 +1,13 @@
 #include "arief.h"
-#include <time.h>
+#include "goklas.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include <math.h>
-#include "Faliq.h"
 
+Vector2 playerpos = { 150, 400 };
 // =======================================
 //                Database 
 // =======================================
@@ -260,6 +260,8 @@ void clearQueue(BlockQueue* q) {
 
 INIT_GAME_VARIABLES
 
+INIT_GAME_VARIABLES
+
 /*        Helper
  * ====================== */
 
@@ -408,6 +410,7 @@ void mainWindow(void) {
         case STATE_PLAY:
             UpdateMusicStream(soundGameplay); // Ditambahkan oleh faliq
             displayGame();
+            displayGame(playerpos);
             break;
         case STATE_QUIT:
             exitGame();
@@ -980,85 +983,53 @@ void exitGame(void) {
     }
 }
 
-// Add these definitions to your header file
-#define MAX_BLOCKS 100
-#define BLOCK_SIZE 32
-#define BOARD_COLUMNS 10
+Bullets bullets[MAX_BULLETS];
+int bulletCount = 0;
+bool canShoot = true;
+float reloadTimer = 0;
+int playerDirection = 0;
 
-typedef struct {
-    int x;
-    int y;
-    int jumlah;  // Value of block
-    bool active; // Whether this block is currently in use
-} BlockItem;
-
-BlockItem blocks[MAX_BLOCKS];
-float timeSinceLastRow = 0.0f;
-float blockGenerationInterval = .64f;  // Generate new blocks every 3 seconds
-int blockSpeed = 100;                  // Speed in pixels per second
-int currentScore = 0;
-// Add these helper functions
-
-void initBlocks() {
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        blocks[i].active = false;
-    }
-}
-#define SNAP_DISTANCE 2  // Jarak untuk menempel
-float gameSpeed = 1.0f;  // Speed multiplier (1.0 = normal, 2.0 = 2x faster, etc.)
-
-// Modifikasi generateNewBlockRow()
-void generateNewBlockRow() {
-    // Generate 2-5 random blocks across the top
-    int count = (rand() % 4) + 2;
-    bool used[BOARD_COLUMNS] = { 0 };
-
-    for (int i = 0; i < count; i++) {
-        int column;
-        do {
-            column = rand() % BOARD_COLUMNS;
-        } while (used[column]);
-
-        used[column] = true;
-
-        for (int j = 0; j < MAX_BLOCKS; j++) {
-            if (!blocks[j].active) {
-                blocks[j].x = column * BLOCK_SIZE;
-                blocks[j].y = -BLOCK_SIZE;
-                blocks[j].jumlah = (rand() % 9) + 1;
-                blocks[j].active = true;
-                break;
-            }
-        }
-    }
-}
-// Main game function
-void displayGame(void) {
-    ScaleFactor scale = GetScreenScaleFactor();
+void displayGame(Vector2 playerpos) {
     prevState = STATE_PLAY;
 
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    Rectangle gameArea = {
-        0, 0,
-        auto_x(320),
-        auto_y(640)
-    };
-    DrawRectangleRec(gameArea, Fade(SKYBLUE, 0.3f));
+    DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
 
-    // Menambahkan blok shooter beserta movesetnya
-    shooter(&P.x, &P.y); // Ditambahkan oleh faliq
-    moveSet(&P.x); // Ditambahkan oleh faliq
+    MoveBullets(bullets);
+    DrawBullets(bullets);
 
-    Vector2 hiScorePos = { auto_x(340), auto_y(20) };
-    Vector2 scorePos = { auto_x(340), auto_y(40) };
-    DrawRectangle(0, auto_y(512), auto_x(320), 1, BLACK);
-    DrawTextEx(fontBody, "Hi Score", hiScorePos, auto_y(15), auto_x(2), WHITE);
+    if (IsKeyPressed(KEY_RIGHT)) {
+        playerpos.x += 5;
+        playerDirection = 1;
+    }
 
-    char scoreText[32];
-    sprintf(scoreText, "%d", currentScore);
-    DrawTextEx(fontBody, scoreText, scorePos, auto_y(20), auto_x(2), LIGHTGRAY);
+    if (IsKeyPressed(KEY_LEFT)) {
+        playerpos.x -= 5;
+        playerDirection = -1;
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
+    }
+
+    if (IsKeyDown(KEY_SPACE)) {
+        canShoot = true;
+    }
+
+    if (bulletCount >= MAX_BULLETS) {
+        reloadTimer += GetFrameTime();
+
+        if (reloadTimer >= GetFrameTime()) {
+            ReloadBullets(bullets, &bulletCount, &canShoot);
+            reloadTimer = 0;
+        }
+    }
+
+    DrawRectangle(0, 512, 320, 1, BLACK);
+    DrawText("Hi Score", 340, 20, 15, WHITE);
+    DrawText("12345", 340, 40, 20, LIGHTGRAY);
 
     EndDrawing();
 

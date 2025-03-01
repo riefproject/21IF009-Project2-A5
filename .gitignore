@@ -33,3 +33,7 @@ init.ps1
 #db
 !db
 /db/**/*
+
+#db
+db/*
+!db/.gitkeep
