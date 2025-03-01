@@ -161,7 +161,6 @@ void clearQueue(BlockQueue* q);
 // Tampilan
 
 void displayGame();
-void displayGame(void);
 int loadingScreen(float* loadingTime);
 void mainWindow(void);
 void mainMenu(void);

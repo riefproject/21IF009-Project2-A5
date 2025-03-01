@@ -1,4 +1,5 @@
 #include "arief.h"
+#include "faliq.h"
 #include "goklas.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -7,7 +8,6 @@
 #include <raylib.h>
 #include <math.h>
 
-Vector2 playerpos = { 150, 400 };
 // =======================================
 //                Database 
 // =======================================
@@ -410,7 +410,6 @@ void mainWindow(void) {
         case STATE_PLAY:
             UpdateMusicStream(soundGameplay); // Ditambahkan oleh faliq
             displayGame();
-            displayGame(playerpos);
             break;
         case STATE_QUIT:
             exitGame();
@@ -989,12 +988,13 @@ bool canShoot = true;
 float reloadTimer = 0;
 int playerDirection = 0;
 
-void displayGame(Vector2 playerpos) {
+void displayGame() {
     prevState = STATE_PLAY;
-
     BeginDrawing();
     ClearBackground(DARKGRAY);
-
+    shooter(&P.x, &P.y);
+    moveSet(&P.x);
+    Vector2 playerpos = { P.x, P.y };
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
 
     MoveBullets(bullets);
