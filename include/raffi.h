@@ -9,7 +9,7 @@ void initializeDb(HiScore scores[]);
 void playerInitialization(Game *game);
 
 //Menambahkan score player
-void playerScore(Game *game);
+void playerScore(Game *game, HiScore scores[]);
 
 
 //Mencari nilai terbesar antara skor player dan HiScore
