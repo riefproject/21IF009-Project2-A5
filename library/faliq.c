@@ -35,3 +35,9 @@ void moveSet(int *x){
         PlaySound(sfxMove);
     }
 }
+
+void musicGameplay(){
+    soundGameplay = LoadMusicStream("C:/PROJECT/PROJECT_2/21IF009-Project2-A5/assets/sounds/gameplay.mp3"); // Ditambahkan oleh faliq
+    PlayMusicStream(soundGameplay);  // Ditambahkan oleh faliq
+    SetMusicVolume(soundGameplay, 0.5f); // Ditambahkan oleh faliq
+}

@@ -18,5 +18,6 @@ void moveSet(int *x);
 
 // Mensetting lagu gameplay
 extern Music soundGameplay;
+void musicGameplay();
 
 #endif

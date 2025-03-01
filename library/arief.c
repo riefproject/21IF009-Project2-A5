@@ -274,9 +274,7 @@ void mainWindow() {
     SetTargetFPS(60);
 
     InitAudioDevice();
-    soundGameplay = LoadMusicStream("C:/PROJECT/PROJECT_2/21IF009-Project2-A5/assets/sounds/gameplay.mp3"); // Ditambahkan oleh faliq
-    PlayMusicStream(soundGameplay);  // Ditambahkan oleh faliq
-    SetMusicVolume(soundGameplay, 0.5f); // Ditambahkan oleh faliq
+    musicGameplay(); // Ditambahkan faliq
     
     sfxMove = LoadSound("assets/sounds/click.wav");
     sfxSelect = LoadSound("assets/sounds/select.wav");
