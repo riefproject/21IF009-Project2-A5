@@ -7,10 +7,10 @@
 #include <raylib.h>
 #include <math.h>
 
-extern GameState currentState;
-extern GameState prevState;
-// extern int blocks[MAX_ROWS][MAX_COLUMNS];
-extern Texture2D blockTexture;
+// extern GameState currentState;
+// extern GameState prevState;
+// // extern int blocks[MAX_ROWS][MAX_COLUMNS];
+// extern Texture2D blockTexture;
 
 int frameCounter = 0;
 int currentRow = 0;
@@ -184,13 +184,13 @@ void drawFallingBlocks(BlockRow fallingBlocks[FALLING_BLOCKS_ROWS]) {
 ///////////////////////////////////////////////////////////////////////////////////// new code testing vvv
 
 // Define speeds for 11 difficulty levels (higher index = faster speed)
-int difficultySpeeds[DIFFICULTY_LEVELS] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15};
+int difficultySpeeds[DIFFICULTY_LEVELS] = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15 };
 
 void InitDifficultySpeeds() {
     // If you ever need to tweak speeds dynamically, do it here.
 }
 
-void GenerateBlockRow(BlockRow *row, int difficulty) {
+void GenerateBlockRow(BlockRow* row, int difficulty) {
     row->numBlocks = (rand() % 5) + 5;  // Random number between 5 and 9
 
     for (int i = 0; i < row->numBlocks; i++) {
@@ -201,7 +201,7 @@ void GenerateBlockRow(BlockRow *row, int difficulty) {
     row->speed = difficultySpeeds[difficulty];  // Assign speed based on difficulty
 }
 
-void UpdateBlockRow(BlockRow *row) {
+void UpdateBlockRow(BlockRow* row) {
     for (int i = 0; i < row->numBlocks; i++) {
         row->blocks[i].y += row->speed;  // Move blocks downward
     }
@@ -210,4 +210,4 @@ void UpdateBlockRow(BlockRow *row) {
 BlockRow row;
 // Inside game update loop:)
 //Should I use this? unsure..
-void UpdateBlockRow(BlockRow *row);
+void UpdateBlockRow(BlockRow* row);

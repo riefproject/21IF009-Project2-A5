@@ -55,12 +55,6 @@ typedef struct {
     float y;
 } ScaleFactor;
 
-#define INIT_GAME_VARIABLES int gameLevel;\
-    GameState currentState, prevState;\
-    Sound sfxMove, sfxSelect;\
-    Font fontBody, fontHeader;\
-    Texture2D blockTexture;
-
 // Struktur HiScore
 // Menyimpan data skor tertinggi yang pernah dicapai oleh pemain.
 typedef struct {

@@ -991,8 +991,59 @@ bool canShoot = true;
 float reloadTimer = 0;
 int playerDirection = 0;
 
+// Testing my code :')
 void displayGame() {
     prevState = STATE_PLAY;
+
+    BlockRow fallingBlocks[FALLING_BLOCKS_ROWS]; // This is the array used for falling blocks..
+    float lastUpdateTime = 0.0f;
+
+    int currentDifficulty = 0;  // Set this dynamically later..but why?
+
+    // Initialize first row of blocks
+    GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
+
+    while (currentState == STATE_PLAY && !WindowShouldClose()) {
+        float currentTime = GetTime();
+
+        if (currentTime - lastUpdateTime >= difficultySpeeds[currentDifficulty]) {
+            // Move falling blocks downward
+            for (int i = FALLING_BLOCKS_ROWS - 1; i > 0; i--) {
+                memcpy(&fallingBlocks[i], &fallingBlocks[i - 1], sizeof(BlockRow)); // Shift rows downward
+            }
+
+            // Generate a new row at the top
+            GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
+
+            lastUpdateTime = currentTime;
+        }
+
+        BeginDrawing();
+        ClearBackground(DARKGRAY);
+
+        // Draw all falling blocks
+        for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
+            drawFallingBlocks(fallingBlocks);  // Pass the address of the row
+        }
+
+        DrawText("Hi Score", 340, 20, 15, WHITE);
+        DrawText("12345", 340, 40, 20, LIGHTGRAY);
+        DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
+        DrawTexture(blockTexture, 0, 0, WHITE);
+
+        EndDrawing();
+
+        if (IsKeyPressed(KEY_P)) {
+            while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
+                BeginDrawing();
+                ClearBackground(DARKGRAY);
+                DrawText("Paused", 200, 200, 30, WHITE);
+                EndDrawing();
+            }
+            pauseMenu();
+        }
+    }
+
     BeginDrawing();
     ClearBackground(DARKGRAY);
     shooter(&P.x, &P.y);
