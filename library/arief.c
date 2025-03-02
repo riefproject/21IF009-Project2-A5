@@ -1,4 +1,5 @@
 #include "arief.h"
+#include "naira.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -834,33 +835,100 @@ void exitGame() {
     }
 }
 
+// Testing my code :')
+
 void displayGame() {
     prevState = STATE_PLAY;
-    BeginDrawing();
-    ClearBackground(DARKGRAY);
+    
+    BlockRow fallingBlocks[FALLING_BLOCKS_ROWS]; // This is the array used for falling blocks..
+    float lastUpdateTime = 0.0f;
+    
+    int currentDifficulty = 0;  // Set this dynamically later..but why?
 
-    DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+    // Initialize first row of blocks
+    GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
 
-    for (int i = 0; i < 10; ++i) {
-        Vector2 position = { GetRandomValue(0, 9) * 32, GetRandomValue(0, 15) * 32 };
-        DrawTexture(blockTexture, position.x, position.y, WHITE);
-    }
+    while (currentState == STATE_PLAY && !WindowShouldClose()) {
+        float currentTime = GetTime();
 
-    DrawRectangle(0, 512, 320, 1, BLACK);
-    DrawText("Hi Score", 340, 20, 15, WHITE);
-    DrawText("12345", 340, 40, 20, LIGHTGRAY);
+        if (currentTime - lastUpdateTime >= difficultySpeeds[currentDifficulty]) {
+            // Move falling blocks downward
+            for (int i = FALLING_BLOCKS_ROWS - 1; i > 0; i--) {
+                memcpy(&fallingBlocks[i], &fallingBlocks[i - 1], sizeof(BlockRow)); // Shift rows downward
+            }
+            
+            // Generate a new row at the top
+            GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
 
-    DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
-    EndDrawing();
-
-    if (IsKeyPressed(KEY_P)) {
-        while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
-            BeginDrawing();
-            EndDrawing();
+            lastUpdateTime = currentTime;
         }
-        pauseMenu(GetFontDefault());
+
+        BeginDrawing();
+        ClearBackground(DARKGRAY);
+
+        // Draw all falling blocks
+        for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
+            drawFallingBlocks(fallingBlocks);  // Pass the address of the row
+        }
+
+        DrawText("Hi Score", 340, 20, 15, WHITE);
+        DrawText("12345", 340, 40, 20, LIGHTGRAY);
+        DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
+        DrawTexture(blockTexture, 0, 0, WHITE);
+        
+        EndDrawing();
+
+        if (IsKeyPressed(KEY_P)) {
+            while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
+                BeginDrawing();
+                ClearBackground(DARKGRAY);
+                DrawText("Paused", 200, 200, 30, WHITE);
+                EndDrawing();
+            }
+            pauseMenu(GetFontDefault());
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+//Bottom is Arief's original code
+//============================================
+
+// void displayGame() {
+//     prevState = STATE_PLAY;
+//     BeginDrawing();
+//     ClearBackground(DARKGRAY);
+
+//     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+
+//     for (int i = 0; i < 10; ++i) {
+//         Vector2 position = { GetRandomValue(0, 9) * 32, GetRandomValue(0, 15) * 32 };
+//         DrawTexture(blockTexture, position.x, position.y, WHITE);
+//     }
+
+//     DrawRectangle(0, 512, 320, 1, BLACK);
+//     DrawText("Hi Score", 340, 20, 15, WHITE);
+//     DrawText("12345", 340, 40, 20, LIGHTGRAY);
+
+//     DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
+//     EndDrawing();
+
+//     if (IsKeyPressed(KEY_P)) {
+//         while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
+//             BeginDrawing();
+//             EndDrawing();
+//         }
+//         pauseMenu(GetFontDefault());
+//     }
+// }
 
 bool confirmBack() {
     const char* message1 = "Are you sure you want to go back";
