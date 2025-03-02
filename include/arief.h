@@ -3,15 +3,24 @@
 
 #include <raylib.h>
 
+
 // Define Values
 #define LOADING_TIME 5.0f
 
 // Screen Size
-#define SCREEN_HEIGHT 640
-#define SCREEN_WIDTH 480
+// Screen Size Constants
+#define MIN_SCREEN_WIDTH 480
+#define MIN_SCREEN_HEIGHT 640
+#define ASPECT_RATIO_WIDTH 3
+#define ASPECT_RATIO_HEIGHT 4
+#define BASE_WIDTH MIN_SCREEN_WIDTH
+#define BASE_HEIGHT MIN_SCREEN_HEIGHT
 #define GAME_SCREEN_HEIGHT 640
 #define GAME_SCREEN_WIDTH 320
 #define GAME_SCREEN 0, 0, 320, 640
+#define auto_x(var) (int)(var * scale.x)
+#define auto_y(var) (int)(var * scale.y)
+#define len(var) sizeof(var) / sizeof(var[0])
 
 // Key Mapping
 #define OK_KEY IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_Y)
@@ -19,7 +28,7 @@
 #define MOVE_DOWN IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN)
 #define MOVE_LEFT IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT)
 #define MOVE_RIGHT IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT)
-#define SHOOT IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)
+#define SHOOT_KEY IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)
 #define BACK_KEY IsKeyPressed(KEY_B) || IsKeyPressed(KEY_BACKSPACE)
 #define FORWARD_KEY IsKeyPressed(KEY_F)
 
@@ -33,6 +42,24 @@
 #define delete(var) \
     free(var);      \
     var = NULL; 
+
+#define INIT_GAME_VARIABLES int gameLevel; \
+    GameState currentState, prevState;\
+    Sound sfxMove, sfxSelect;\
+    Font fontBody, fontHeader;\
+    Texture2D blockTexture;
+
+// Helper Resize Window Size
+typedef struct {
+    float x;
+    float y;
+} ScaleFactor;
+
+#define INIT_GAME_VARIABLES int gameLevel;\
+    GameState currentState, prevState;\
+    Sound sfxMove, sfxSelect;\
+    Font fontBody, fontHeader;\
+    Texture2D blockTexture;
 
 // Struktur HiScore
 // Menyimpan data skor tertinggi yang pernah dicapai oleh pemain.
@@ -132,27 +159,24 @@ void displayQueue(BlockQueue* q);
 void clearQueue(BlockQueue* q);
 
 // Tampilan
-int gameLevel;
-GameState currentState, prevState;
-Sound sfxMove, sfxSelect;
-Font fontBody, fontHeader;
-Texture2D blockTexture;
 
 void displayGame();
 int loadingScreen(float* loadingTime);
-void mainWindow();
-void mainMenu();
-void selectLevel();
-void showControls();
+void mainWindow(void);
+void mainMenu(void);
+void resetHiScores(void);
+void rejectReset(void);
+void gameOver(void);
+void selectMode(Settings* settings);
+void showControls(void);
 void showHiScore(HiScore scores[]);
 void showSettings(Settings* settings);
-bool confirmExit();
-void exitGame();
-void pauseMenu();
-void countdownPause();
-bool confirmBack();
+bool confirmExit(void);
+void exitGame(void);
+void pauseMenu(void);
+void countdownPause(void);
+bool confirmBack(void);
 
 // debug
 #define DBG printf("Haiiii");
 #endif
-
