@@ -10,7 +10,7 @@
 int frameCounter = 0;
 int currentRow = 0;
 
-//=====Halo, untuk check display di arief.c go to line 840
+//=====Halo, untuk check display di arief.c go to line 996
 
 void printFallingBlocks(int fallingBlocks[FALLING_BLOCKS_ROWS][FALLING_BLOCKS_COLS]) {
     printf("Current Blocks:\n");
