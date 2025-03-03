@@ -851,18 +851,18 @@ void displayGame(Vector2 playerpos) {
 
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
     
-    MoveBullets(bullets);
+    MoveBullets(bullets, &bulletCount);
     DrawBullets(bullets);
 
-    if (IsKeyPressed(KEY_RIGHT)) {
-        playerpos.x += 5;
-        playerDirection = 1;
-    }
+    // if (IsKeyPressed(KEY_RIGHT)) {
+    //     playerpos.x += 5;
+    //     playerDirection = 1;
+    // }
 
-    if (IsKeyPressed(KEY_LEFT)) {
-        playerpos.x -= 5;
-        playerDirection = -1;
-    }
+    // if (IsKeyPressed(KEY_LEFT)) {
+    //     playerpos.x -= 5;
+    //     playerDirection = -1;
+    // }
 
     if (IsKeyPressed(KEY_SPACE)) {
         ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
@@ -874,8 +874,7 @@ void displayGame(Vector2 playerpos) {
 
     if (bulletCount >= MAX_BULLETS) {
         reloadTimer += GetFrameTime();
-
-        if (reloadTimer >= GetFrameTime()) {
+        if (reloadTimer >= 1.0f) {
             ReloadBullets(bullets, &bulletCount, &canShoot);
             reloadTimer = 0;
         }

@@ -14,9 +14,9 @@ typedef struct {
 } Bullets;
 
 
-void InitBullets(Bullets bullets[]);
+// void InitBullets(Bullets bullets[]);
 void ShootBullets(Bullets bullets[],Vector2 playerpos, int *BulletCount, bool *CanShoot, int direction);
-void MoveBullets(Bullets bullets[]);
+void MoveBullets(Bullets bullets[], int *BulletCount);
 void DrawBullets(Bullets bullets[]);
 void ReloadBullets(Bullets bullets[], int *BulletCount, bool *CanShoot);
 
