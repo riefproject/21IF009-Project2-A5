@@ -44,13 +44,13 @@ void playerScore(Game *game, HiScore scores[]){
 			continue;
 		}
 	}
-	scores[level].score = getMax(scores, *game);
+	scores[level].score = getMax(scores, game);
 }
 
-int getMax(HiScore scores[], Game game){ //Mencari nilai terbesar dari score player dengan highscore
-	int level = game.level-1;
-	if (scores[level].score < game.score){
-		return game.score;
+int getMax(HiScore scores[], Game *game){ //Mencari nilai terbesar dari score player dengan highscore
+	int level = game->level-1;
+	if (scores[level].score < game->score){
+		return game->score;
 	} else {
 		return scores[level].score;
 	}
