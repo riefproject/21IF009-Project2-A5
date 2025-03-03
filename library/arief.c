@@ -991,41 +991,120 @@ bool canShoot = true;
 float reloadTimer = 0;
 int playerDirection = 0;
 
-// Testing my code :')
+//===================================
+
 void displayGame() {
     prevState = STATE_PLAY;
 
-    BlockRow fallingBlocks[FALLING_BLOCKS_ROWS]; // This is the array used for falling blocks..
+    BlockRow fallingBlocks[FALLING_BLOCKS_ROWS];  
     float lastUpdateTime = 0.0f;
+    int currentDifficulty = 0;
 
-    int currentDifficulty = 0;  // Set this dynamically later..but why?
+    for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
+        fallingBlocks[i].numBlocks = 0;
+        fallingBlocks[i].speed = 0;
+        
+        for (int j = 0; j < MAX_BLOCKS_PER_ROW; j++) {
+            fallingBlocks[i].blocks[j].x = 0;
+            fallingBlocks[i].blocks[j].y = 0;
+        }
+    }
 
-    // Initialize first row of blocks
+    printf("Checking memory...\n");
+    if (&fallingBlocks == NULL) {
+        printf("Error: fallingBlocks is NULL!\n");
+    }
+    if (&bullets == NULL) {
+        printf("Error: bullets is NULL!\n");
+    }
+    printf("All memory checks passed.\n");
+    
+
+    // This initializes the first row of blocks
+
+    // Game crashes caused by GenerateBlockRow..why??
     GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
 
     while (currentState == STATE_PLAY && !WindowShouldClose()) {
         float currentTime = GetTime();
 
+
+        // This is supposed to be the main loop, will initiate once game stops crashing
+
         if (currentTime - lastUpdateTime >= difficultySpeeds[currentDifficulty]) {
-            // Move falling blocks downward
+            // Move falling blocks downward safely
             for (int i = FALLING_BLOCKS_ROWS - 1; i > 0; i--) {
-                memcpy(&fallingBlocks[i], &fallingBlocks[i - 1], sizeof(BlockRow)); // Shift rows downward
+                if (fallingBlocks[i - 1].numBlocks > MAX_BLOCKS_PER_ROW) {
+                    fallingBlocks[i - 1].numBlocks = MAX_BLOCKS_PER_ROW;
+                }
+            
+                for (int j = 0; j < fallingBlocks[i - 1].numBlocks; j++) {
+                    if (j < MAX_BLOCKS_PER_ROW) {
+                        fallingBlocks[i].blocks[j] = fallingBlocks[i - 1].blocks[j];  
+                    }
+                }
+                fallingBlocks[i].numBlocks = fallingBlocks[i - 1].numBlocks;
+                fallingBlocks[i].speed = fallingBlocks[i - 1].speed;
             }
-
-            // Generate a new row at the top
+            
+            // Generate new row at top
             GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
-
             lastUpdateTime = currentTime;
+        }
+
+        // Move bullets
+        if (bullets != NULL) {
+            MoveBullets(bullets);
         }
 
         BeginDrawing();
         ClearBackground(DARKGRAY);
 
-        // Draw all falling blocks
+        // Draw falling blocks safely
         for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
-            drawFallingBlocks(fallingBlocks);  // Pass the address of the row
+            drawFallingBlocks(&fallingBlocks[i]);  
         }
 
+        // Draw player
+        shooter(&P.x, &P.y);
+        moveSet(&P.x);
+        Vector2 playerpos = { P.x, P.y };
+        DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+
+        // Draw bullets safely
+        if (bullets != NULL) {
+            DrawBullets(bullets);
+        }
+
+        // Handle player movement
+        if (IsKeyPressed(KEY_RIGHT)) {
+            playerpos.x += 5;
+            playerDirection = 1;
+        }
+        if (IsKeyPressed(KEY_LEFT)) {
+            playerpos.x -= 5;
+            playerDirection = -1;
+        }
+
+        // Shooting bullets
+        if (IsKeyPressed(KEY_SPACE)) {
+            ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
+        }
+        if (IsKeyDown(KEY_SPACE)) {
+            canShoot = true;
+        }
+
+        // Reload bullets
+        if (bulletCount >= MAX_BULLETS) {
+            reloadTimer += GetFrameTime();
+            if (reloadTimer >= GetFrameTime()) {
+                ReloadBullets(bullets, &bulletCount, &canShoot);
+                reloadTimer = 0;
+            }
+        }
+
+        // Draw UI
+        DrawRectangle(0, 512, 320, 1, BLACK);
         DrawText("Hi Score", 340, 20, 15, WHITE);
         DrawText("12345", 340, 40, 20, LIGHTGRAY);
         DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
@@ -1033,74 +1112,136 @@ void displayGame() {
 
         EndDrawing();
 
+        // Handle pause menu
         if (IsKeyPressed(KEY_P)) {
-            while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
-                BeginDrawing();
-                ClearBackground(DARKGRAY);
-                DrawText("Paused", 200, 200, 30, WHITE);
-                EndDrawing();
-            }
             pauseMenu();
         }
-    }
 
-    BeginDrawing();
-    ClearBackground(DARKGRAY);
-    shooter(&P.x, &P.y);
-    moveSet(&P.x);
-    Vector2 playerpos = { P.x, P.y };
-    DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
-
-    MoveBullets(bullets);
-    DrawBullets(bullets);
-
-    if (IsKeyPressed(KEY_RIGHT)) {
-        playerpos.x += 5;
-        playerDirection = 1;
-    }
-
-    if (IsKeyPressed(KEY_LEFT)) {
-        playerpos.x -= 5;
-        playerDirection = -1;
-    }
-
-    if (IsKeyPressed(KEY_SPACE)) {
-        ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
-    }
-
-    if (IsKeyDown(KEY_SPACE)) {
-        canShoot = true;
-    }
-
-    if (bulletCount >= MAX_BULLETS) {
-        reloadTimer += GetFrameTime();
-
-        if (reloadTimer >= GetFrameTime()) {
-            ReloadBullets(bullets, &bulletCount, &canShoot);
-            reloadTimer = 0;
+        // Handle game over
+        if (IsKeyPressed(KEY_G)) {
+            gameOver();
         }
-    }
-
-    DrawRectangle(0, 512, 320, 1, BLACK);
-    DrawText("Hi Score", 340, 20, 15, WHITE);
-    DrawText("12345", 340, 40, 20, LIGHTGRAY);
-
-    EndDrawing();
-
-    // Test game over function with G key
-    if (IsKeyPressed(KEY_G)) {
-        gameOver();
-    }
-
-    // Handle pause
-    if (IsKeyPressed(KEY_P)) {
-        while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
-            BeginDrawing();
-            EndDrawing();
-        }
-        pauseMenu();
     }
 }
+
+
+
+
+
+// Testing my code :')
+// void displayGame() {
+//     prevState = STATE_PLAY;
+
+//     BlockRow fallingBlocks[FALLING_BLOCKS_ROWS]; // This is the array used for falling blocks..
+//     float lastUpdateTime = 0.0f;
+
+//     int currentDifficulty = 0;  // Set this dynamically later..but why?
+
+//     // Initialize first row of blocks
+//     GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
+
+//     while (currentState == STATE_PLAY && !WindowShouldClose()) {
+//         float currentTime = GetTime();
+
+//         if (currentTime - lastUpdateTime >= difficultySpeeds[currentDifficulty]) {
+//             // Move falling blocks downward
+//             for (int i = FALLING_BLOCKS_ROWS - 1; i > 0; i--) {
+//                 for (int j = 0; j < fallingBlocks[i - 1].numBlocks; j++) {
+//                     fallingBlocks[i].blocks[j] = fallingBlocks[i - 1].blocks[j]; // Copy each block
+//                 }
+//                 fallingBlocks[i].numBlocks = fallingBlocks[i - 1].numBlocks;
+//                 fallingBlocks[i].speed = fallingBlocks[i - 1].speed;
+//             }            
+
+//             // Generate a new row at the top
+//             GenerateBlockRow(&fallingBlocks[0], currentDifficulty);
+
+//             lastUpdateTime = currentTime;
+//         }
+
+//         BeginDrawing();
+//         ClearBackground(DARKGRAY);
+
+//         // Draw all falling blocks
+//         for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
+//             drawFallingBlocks(&fallingBlocks[i]);  // Pass the address of the row
+//         }
+
+//         DrawText("Hi Score", 340, 20, 15, WHITE);
+//         DrawText("12345", 340, 40, 20, LIGHTGRAY);
+//         DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
+//         DrawTexture(blockTexture, 0, 0, WHITE);
+
+//         EndDrawing();
+
+//         if (IsKeyPressed(KEY_P)) {
+//             while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
+//                 BeginDrawing();
+//                 ClearBackground(DARKGRAY);
+//                 DrawText("Paused", 200, 200, 30, WHITE);
+//                 EndDrawing();
+//             }
+//             pauseMenu();
+//         }
+//     }
+
+//     BeginDrawing();
+//     ClearBackground(DARKGRAY);
+//     shooter(&P.x, &P.y);
+//     moveSet(&P.x);
+//     Vector2 playerpos = { P.x, P.y };
+//     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
+
+//     MoveBullets(bullets);
+//     DrawBullets(bullets);
+
+//     if (IsKeyPressed(KEY_RIGHT)) {
+//         playerpos.x += 5;
+//         playerDirection = 1;
+//     }
+
+//     if (IsKeyPressed(KEY_LEFT)) {
+//         playerpos.x -= 5;
+//         playerDirection = -1;
+//     }
+
+//     if (IsKeyPressed(KEY_SPACE)) {
+//         ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
+//     }
+
+//     if (IsKeyDown(KEY_SPACE)) {
+//         canShoot = true;
+//     }
+
+//     if (bulletCount >= MAX_BULLETS) {
+//         reloadTimer += GetFrameTime();
+
+//         if (reloadTimer >= GetFrameTime()) {
+//             ReloadBullets(bullets, &bulletCount, &canShoot);
+//             reloadTimer = 0;
+//         }
+//     }
+
+//     DrawRectangle(0, 512, 320, 1, BLACK);
+//     DrawText("Hi Score", 340, 20, 15, WHITE);
+//     DrawText("12345", 340, 40, 20, LIGHTGRAY);
+
+//     EndDrawing();
+
+//     // Test game over function with G key
+//     if (IsKeyPressed(KEY_G)) {
+//         gameOver();
+//     }
+
+//     // Handle pause
+//     if (IsKeyPressed(KEY_P)) {
+//         while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
+//             BeginDrawing();
+//             EndDrawing();
+//         }
+//         pauseMenu();
+//     }
+// }
 
 bool confirmBack(void) {
     ScaleFactor scale = GetScreenScaleFactor();

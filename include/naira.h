@@ -3,7 +3,7 @@
 #include "arief.h"
 
 // Falling blocks mechanism
-#define MAX_HEIGHT_BLOCKS 20 // Define the maximum height of blocksks
+#define MAX_HEIGHT_BLOCKS 16 // Define the maximum height of blocksks
 #define BLOCK_SIZE 32  // Adjust if needed
 #define FALLING_BLOCKS_UPDATE_INTERVAL 0.5f // Update every 0.5 seconds
 #define FALLING_BLOCKS_ROWS MAX_HEIGHT_BLOCKS // Define the number of rows for falling blocks
@@ -17,7 +17,7 @@
 #define ROW_DELAY 60 // Frames to wait before spawning the next row
 #define BLOCK_FALL_SPEED 2 // How fast blocks fall
 #define NUMBER_OF_BLOCKS_HORIZONTALLY 10
-#define NO_BLOCKS_FOR_GAP 20  
+#define NO_BLOCKS_FOR_GAP 10  
 
 #define MAX_BLOCKS 10
 
@@ -45,8 +45,8 @@
 
 #define GRID_WIDTH 10  // Change based on your grid size
 #define GRID_HEIGHT 20
-#define MAX_BLOCKS_PER_ROW 10  // Max blocks that can appear per row
-#define DIFFICULTY_LEVELS 11  // 11 difficulty levels
+#define MAX_BLOCKS_PER_ROW 10  
+#define DIFFICULTY_LEVELS 5
 
 typedef struct {
     int x;  // X-coordinate
@@ -64,11 +64,12 @@ typedef struct {
 
 // Arrays for block behavior
 extern int difficultySpeeds[DIFFICULTY_LEVELS];  // Stores speeds for different difficulties
+// BlockRow rows = { .numBlocks = 0, .speed = 0 };
 
 // Function declarations
 void InitDifficultySpeeds();  
-void GenerateBlockRow(BlockRow *row, int difficulty);
-void UpdateBlockRow(BlockRow *row);
+void GenerateBlockRow(BlockRow *rows, int difficulty);
+void UpdateBlockRow(BlockRow *rows);
 
 void initFallingBlocks(int fallingBlocks[FALLING_BLOCKS_ROWS][FALLING_BLOCKS_COLS]);
 void updateFallingBlocks(int fallingBlocks[FALLING_BLOCKS_ROWS][FALLING_BLOCKS_COLS]);
