@@ -1,13 +1,7 @@
 #include "goklas.h"
 #include <raylib.h>
 
-// void InitBullets(Bullets bullets[])
-// {
-//     for(int i = 0;i < MAX_BULLETS;i++) {
-//         bullets[i].active = false;
-//         bullets[i].direction = 0;
-//     }
-// }
+extern Texture2D blockTexture;
 
 void ShootBullets(Bullets bullets[],Vector2 playerpos, int *BulletCount, bool *CanShoot, int direction)
 {
@@ -30,8 +24,7 @@ void MoveBullets(Bullets bullets[],int *BulletCount)
 {
     for(int i = 0;i < MAX_BULLETS;i++) {
         if (bullets[i].active) {
-            //bullets[i].position.x += bullets[i].direction * 5;
-            bullets[i].position.y -= 5;
+            bullets[i].position.y -= 10;
             if (bullets[i].position.y < 0) {
                 bullets[i].active = false;
             }
@@ -44,7 +37,7 @@ void DrawBullets(Bullets bullets[])
 {
     for(int i = 0;i < MAX_BULLETS;i++) {
         if (bullets[i].active) {
-            DrawRectangle(bullets[i].position.x,bullets[i].position.y,5,10,BLUE);
+            DrawTexture(blockTexture,bullets->position.x,bullets->position.y,BLUE);
         }
     }
 }
