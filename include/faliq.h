@@ -19,4 +19,8 @@ void moveSet(int* x);
 extern Music soundGameplay;
 void musicGameplay();
 
+void *randomBlock();
+void *shooterAndMoveset();
+void gameplay();
+
 #endif

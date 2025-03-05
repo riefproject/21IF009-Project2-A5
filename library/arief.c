@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <math.h>
+#include <unistd.h>
+#include <pthread.h>>
 
 // =======================================
 //                Database 
@@ -339,7 +341,7 @@ void mainWindow(void) {
     int screenWidth = MIN_SCREEN_WIDTH;
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
     P.x = 160; // Ditambahkan oleh faliq
-    P.y = 608; // Ditambahkan oleh faliq
+    P.y = 598; // Ditambahkan oleh faliq
 
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     Image ico = LoadImage("assets/ico.png");
@@ -408,7 +410,7 @@ void mainWindow(void) {
             showSettings(&settings);
             break;
         case STATE_PLAY:
-            UpdateMusicStream(soundGameplay); // Ditambahkan oleh faliq
+            // UpdateMusicStream(soundGameplay); // Ditambahkan oleh faliq
             displayGame();
             break;
         case STATE_QUIT:
@@ -992,11 +994,20 @@ void displayGame() {
     prevState = STATE_PLAY;
     BeginDrawing();
     ClearBackground(DARKGRAY);
+
+    pthread_t brickThread;
+
+    pthread_create(&brickThread, NULL, randomBlock, NULL);
+
+    pthread_join(brickThread, NULL);
+
     shooter(&P.x, &P.y);
     moveSet(&P.x);
+
     Vector2 playerpos = { P.x, P.y };
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
 
+    randomBlock(); // Ditambahkan oleh faliq 2.0
     MoveBullets(bullets);
     DrawBullets(bullets);
 
