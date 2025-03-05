@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <raylib.h>
 #include "Faliq.h"
+#include "arief.h"
 #include "all.h"
 #define SIZE 32
 #define SPEED 32
