@@ -28,3 +28,7 @@ init.ps1
 
 # keep
 !*/
+
+#db
+db/*
+!db/.gitkeep
