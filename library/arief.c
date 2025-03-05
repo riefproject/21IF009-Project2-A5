@@ -1,11 +1,12 @@
 #include "arief.h"
+#include "faliq.h"
+#include "goklas.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include <math.h>
-#include "Faliq.h"
 
 // =======================================
 //                Database 
@@ -259,23 +260,97 @@ void clearQueue(BlockQueue* q) {
 
 INIT_GAME_VARIABLES
 
-void mainWindow() {
+INIT_GAME_VARIABLES
+
+/*        Helper
+ * ====================== */
+
+    ScaleFactor GetScreenScaleFactor(void) {
+    ScaleFactor scale;
+    float screenWidth = (float)GetScreenWidth();
+    float screenHeight = (float)GetScreenHeight();
+
+    float scaleX = screenWidth / MIN_SCREEN_WIDTH;
+    float scaleY = screenHeight / MIN_SCREEN_HEIGHT;
+
+    float finalScale = (scaleX < scaleY) ? scaleX : scaleY;
+
+    scale.x = finalScale;
+    scale.y = finalScale;
+
+    return scale;
+}
+
+void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight) {
+    float targetRatio = (float)ASPECT_RATIO_WIDTH / ASPECT_RATIO_HEIGHT; // 3:4
+
+    // Hitung ukuran yang sesuai dengan rasio 3:4
+    if (width > height * targetRatio) {
+        // Jika lebar terlalu besar, sesuaikan berdasarkan tinggi
+        *outHeight = height;
+        *outWidth = (int)(height * targetRatio);
+    }
+    else {
+        // Jika tinggi terlalu besar, sesuaikan berdasarkan lebar
+        *outWidth = width;
+        *outHeight = (int)(width / targetRatio);
+    }
+
+    // Pastikan ukuran tidak lebih kecil dari minimum
+    *outWidth = (*outWidth < MIN_SCREEN_WIDTH) ? MIN_SCREEN_WIDTH : *outWidth;
+    *outHeight = (*outHeight < MIN_SCREEN_HEIGHT) ? MIN_SCREEN_HEIGHT : *outHeight;
+}
+
+void loadAssets(void) {
+    // Sounds / Musics
+    sfxMove = LoadSound("assets/sounds/click.wav");
+    sfxSelect = LoadSound("assets/sounds/select.wav");
+
+    // Fonts
+    fontHeader = LoadFont("assets/fonts/Ubuntu-Medium.ttf");
+    fontBody = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
+
+    // Textures
+    blockTexture = LoadTexture("assets/sprites/block.png");
+}
+
+void unloadAssets(void) {
+    // Sounds / Musics
+    UnloadSound(sfxMove);
+    UnloadSound(sfxSelect);
+
+    // Fonts
+    UnloadFont(fontHeader);
+    UnloadFont(fontBody);
+
+    // Textures
+    UnloadTexture(blockTexture);
+}
+/*    Core of Display
+ * ====================== */
+
+void mainWindow(void) {
     Settings settings;
     loadSettings(&settings);
     HiScore scores[MAX_LEVELS];
     loadHiScores(scores);
-    const int screenWidth = SCREEN_WIDTH;
-    const int screenHeight = SCREEN_HEIGHT;
     float loadingTime = 0.0f;
+
+    int screenWidth = MIN_SCREEN_WIDTH;
+    int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
     P.x = 160; // Ditambahkan oleh faliq
     P.y = 608; // Ditambahkan oleh faliq
-    
-    InitWindow(screenWidth, screenHeight, "Block Shooter");
-    SetTargetFPS(60);
 
+    InitWindow(screenWidth, screenHeight, "Block Shooter");
+    Image ico = LoadImage("assets/ico.png");
+    SetWindowIcon(ico);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowMinSize(MIN_SCREEN_WIDTH, MIN_SCREEN_HEIGHT);
+    SetTargetFPS(60);
+    loadAssets();
     InitAudioDevice();
     musicGameplay(); // Ditambahkan faliq
-    
+
     sfxMove = LoadSound("assets/sounds/click.wav");
     sfxSelect = LoadSound("assets/sounds/select.wav");
     SetSoundVolume(sfxMove, 1.0f);
@@ -283,9 +358,37 @@ void mainWindow() {
     fontHeader = LoadFont("assets/fonts/Ubuntu-Medium.ttf");
     fontBody = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
     blockTexture = LoadTexture("assets/sprites/block.png");
+    settings.sfx ? SetSoundVolume(sfxMove, 1.0f) : SetSoundVolume(sfxMove, 0.0f);
 
     currentState = STATE_LOADING;
     while (!WindowShouldClose()) {
+        if (IsWindowResized() || (IsWindowState(FLAG_WINDOW_MAXIMIZED) &&
+            (GetScreenWidth() != GetMonitorWidth(GetCurrentMonitor()) ||
+                GetScreenHeight() != GetMonitorHeight(GetCurrentMonitor())))) {
+
+            int width = GetScreenWidth();
+            int height = GetScreenHeight();
+            int adjustedWidth, adjustedHeight;
+
+            GetAdjustedWindowSize(width, height, &adjustedWidth, &adjustedHeight);
+
+            // Update window size
+            if (IsWindowState(FLAG_WINDOW_MAXIMIZED)) {
+                // Jika dimaksimalkan, buat window dengan ukuran yang disesuaikan
+                ClearWindowState(FLAG_WINDOW_MAXIMIZED);
+                SetWindowSize(adjustedWidth, adjustedHeight);
+
+                int monitorWidth = GetMonitorWidth(GetCurrentMonitor());
+                int monitorHeight = GetMonitorHeight(GetCurrentMonitor());
+                SetWindowPosition(
+                    (monitorWidth - adjustedWidth) / 2,
+                    (monitorHeight - adjustedHeight) / 2
+                );
+            }
+            else {
+                SetWindowSize(adjustedWidth, adjustedHeight);
+            }
+        }
         switch (currentState) {
         case STATE_LOADING:
             if (loadingScreen(&loadingTime)) {
@@ -315,7 +418,7 @@ void mainWindow() {
             pauseMenu();
             break;
         case STATE_SELECT_LEVEL:
-            selectLevel(&settings);
+            selectMode(&settings);
             break;
         }
     }
@@ -329,6 +432,7 @@ void mainWindow() {
 }
 
 int loadingScreen(float* loadingTime) {
+    ScaleFactor scale = GetScreenScaleFactor();
     const int blockSize = 50;
     const float stepDuration = 0.25f;
     const int totalSteps = 9;
@@ -340,23 +444,23 @@ int loadingScreen(float* loadingTime) {
 
     Vector2 steps[9][4] = {
         // Step 1:
-        { {190,265}, {240,265}, {190,315}, {240,315} },
+        { {auto_x(190), auto_y(265)}, {auto_x(240), auto_y(265)}, {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)} },
         // Step 2:
-        { {140,265}, {290,265}, {190,315}, {240,315} },
+        { {auto_x(140), auto_y(265)}, {auto_x(290), auto_y(265)}, {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)} },
         // Step 3:
-        { {140,315}, {290,315}, {190,315}, {240,315} },
+        { {auto_x(140), auto_y(315)}, {auto_x(290), auto_y(315)}, {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)} },
         // Step 4:
-        { {140,315}, {290,315}, {190,265}, {240,265} },
+        { {auto_x(140), auto_y(315)}, {auto_x(290), auto_y(315)}, {auto_x(190), auto_y(265)}, {auto_x(240), auto_y(265)} },
         // Step 5:
-        { {190,315}, {240,315}, {190,265}, {240,265} },
+        { {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)}, {auto_x(190), auto_y(265)}, {auto_x(240), auto_y(265)} },
         // Step 6:
-        { {190,315}, {240,315}, {140,265}, {290,265} },
+        { {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)}, {auto_x(140), auto_y(265)}, {auto_x(290), auto_y(265)} },
         // Step 7:
-        { {190,315}, {240,315}, {140,315}, {290,315} },
+        { {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)}, {auto_x(140), auto_y(315)}, {auto_x(290), auto_y(315)} },
         // Step 8:
-        { {190,265}, {240,265}, {140,315}, {290,315} },
+        { {auto_x(190), auto_y(265)}, {auto_x(240), auto_y(265)}, {auto_x(140), auto_y(315)}, {auto_x(290), auto_y(315)} },
         // Step 9:
-        { {190,265}, {240,265}, {190,315}, {240,315} }
+        { {auto_x(190), auto_y(265)}, {auto_x(240), auto_y(265)}, {auto_x(190), auto_y(315)}, {auto_x(240), auto_y(315)} }
     };
 
     float elapsed = fmodf(GetTime(), cycleDuration);
@@ -384,7 +488,7 @@ int loadingScreen(float* loadingTime) {
     return 0;
 }
 
-void mainMenu() {
+void mainMenu(void) {
     prevState = STATE_MAIN_MENU;
     Font defaultFont = GetFontDefault();
     const char* lines[] = {
@@ -394,29 +498,37 @@ void mainMenu() {
         "SETTINGS",
         "QUIT"
     };
-    int fontSize = 30;
-    int lineCount = sizeof(lines) / sizeof(lines[0]);
 
+    ScaleFactor scale = GetScreenScaleFactor();
+    int fontSize = auto_x(30);
+    int lineCount = len(lines);
     int selection = 0;
-
-    while (currentState == STATE_MAIN_MENU && !WindowShouldClose()) {
+    while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
+        EndDrawing();
+    }
+    while (currentState == STATE_MAIN_MENU && !WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
         int totalTextHeight = 0;
         for (int i = 0; i < lineCount; i++) {
             Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
             totalTextHeight += textSize.y + 30;
         }
 
-        int startY = (640 - totalTextHeight) / 2;
+        int startY = (GetScreenHeight() - totalTextHeight) / 2;
         for (int i = 0; i < lineCount; i++) {
             Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + 50;
+            startY += textSize.y + auto_y(50);
         }
-
+        if (IsKeyPressed(KEY_F1)) { // Use any function key for testing
+            PlaySound(sfxSelect);
+            gameOver();
+        }
         if (MOVE_UP) {
             PlaySound(sfxMove);
             selection--;
@@ -454,10 +566,10 @@ void mainMenu() {
     }
 }
 
-void showControls() {
-    int fontSize = 20;
-    int spacing = 4;
-    int startY = 200;
+void showControls(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
+    int fontSize = auto_y(20);
+    int spacing = auto_x(4);
 
     const char* lines[] = {
         "W / Up Arrow    : Up",
@@ -470,15 +582,22 @@ void showControls() {
         "Q / Backspace   : Kembali"
     };
 
-    int lineCount = sizeof(lines) / sizeof(lines[0]);
+    int lineCount = len(lines);
 
     while (currentState == STATE_CONTROLS && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
+        int totalHeight = 0;
+        for (int i = 0; i < lineCount; i++) {
+            totalHeight += fontSize + spacing;
+        }
+
+        int startY = (GetScreenHeight() - totalHeight) / 2;
         {
-            Vector2 textSize = MeasureTextEx(fontHeader, "CONTROLS", 30, 0);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
-            DrawTextEx(fontHeader, "CONTROLS", (Vector2) { startX, 100 }, 30, 0, DARKGRAY);
+            Vector2 textSize = MeasureTextEx(fontHeader, "CONTROLS", auto_y(30), 0);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(fontHeader, "CONTROLS", (Vector2) { startX, startY - auto_y(60) }, 30, 0, DARKGRAY);
         }
 
         int maxLabelWidth = 0;
@@ -492,9 +611,9 @@ void showControls() {
             if (valueWidth > maxValueWidth) { maxValueWidth = valueWidth; }
         }
 
-        int padding = 20;
+        int padding = auto_x(20);
         int totalWidth = maxLabelWidth + 10 + MeasureTextEx(fontBody, ":", fontSize, spacing).x + 5 + maxValueWidth;
-        int startX = (SCREEN_WIDTH - totalWidth) / 2;
+        int startX = (GetScreenWidth() - totalWidth) / 2;
         if (startX < padding) { startX = padding; }
 
         int y = startY;
@@ -516,7 +635,7 @@ void showControls() {
             else
                 infoText = "[A]: Main Menu    [F]: Settings";
             Vector2 textSize = MeasureTextEx(fontBody, infoText, (prevState == STATE_PLAY) ? 15 : 20, 2.0f);
-            int startXInfo = (SCREEN_WIDTH - textSize.x) / 2;
+            int startXInfo = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, infoText, (Vector2) { startXInfo, 560 }, (prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
         }
         EndDrawing();
@@ -550,27 +669,34 @@ void showControls() {
 }
 
 void showSettings(Settings* settings) {
-    int fontSize = 20;
-    int spacing = 4;
-    int startY = 200;
+    ScaleFactor scale = GetScreenScaleFactor();
+    int fontSize = auto_y(20);
+    int spacing = auto_x(4);
+    int menuSpacing = auto_y(25);
 
     char lines[4][100];
     snprintf(lines[0], sizeof(lines[0]), "Music : %s", settings->music ? "On" : "Off");
     snprintf(lines[1], sizeof(lines[1]), "Sfx   : %s", settings->sfx ? "On" : "Off");
+    settings->sfx ? SetSoundVolume(sfxMove, 1.0f) : SetSoundVolume(sfxMove, 0.0f);
+    settings->sfx ? SetSoundVolume(sfxSelect, 1.0f) : SetSoundVolume(sfxSelect, 0.0f);
     snprintf(lines[2], sizeof(lines[2]), "Controls");
     snprintf(lines[3], sizeof(lines[3]), "Reset");
 
-    int lineCount = sizeof(lines) / sizeof(lines[0]);
+    int lineCount = len(lines);
     int selection = 0;
     bool editing = false;
 
     while (currentState == STATE_SETTINGS && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        int totalHeight = (2 * (fontSize + spacing)) +
+            (2 * (fontSize + menuSpacing));
+
+        int startY = (GetScreenHeight() - totalHeight) / 2;
         {
-            Vector2 textSize = MeasureTextEx(fontHeader, "SETTINGS", 30, 0);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
-            DrawTextEx(fontHeader, "SETTINGS", (Vector2) { startX, 100 }, 30, 0, DARKGRAY);
+            Vector2 textSize = MeasureTextEx(fontHeader, "SETTINGS", auto_y(30), 0);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(fontHeader, "SETTINGS", (Vector2) { startX, auto_y(60) }, 30, 0, DARKGRAY);
         }
 
         int maxLabelWidth = 0;
@@ -584,9 +710,9 @@ void showSettings(Settings* settings) {
             if (valueWidth > maxValueWidth) { maxValueWidth = valueWidth; }
         }
 
-        int padding = 20;
+        int padding = auto_x(20);
         int totalWidth = maxLabelWidth + 10 + MeasureTextEx(fontBody, ":", fontSize, spacing).x + 5 + maxValueWidth;
-        int startX = (SCREEN_WIDTH - totalWidth) / 2;
+        int startX = (GetScreenWidth() - totalWidth) / 2;
         if (startX < padding) { startX = padding; }
 
         int y = startY;
@@ -595,7 +721,7 @@ void showSettings(Settings* settings) {
             sscanf(lines[i], "%[^:]:%[^\n]", label, value);
             int colonX = startX + maxLabelWidth + 10;
             int textX = colonX + MeasureTextEx(fontBody, ":", fontSize, spacing).x + 5;
-            DrawTextEx(fontBody, label, (Vector2) { startX, y }, fontSize, spacing, selection == i ? BLUE : DARKGRAY);
+            DrawTextEx(fontBody, label, (Vector2) { startX, y }, fontSize, spacing, selection == i ? editing ? DARKBLUE : BLUE : DARKGRAY);
             DrawTextEx(fontBody, ":", (Vector2) { colonX, y }, fontSize, spacing, DARKGRAY);
             DrawTextEx(fontBody, value, (Vector2) { textX, y }, fontSize, spacing, DARKGRAY);
             y += fontSize + spacing;
@@ -604,7 +730,7 @@ void showSettings(Settings* settings) {
         for (int i = 2; i < 4; ++i) {
             const char* optionText = lines[i];
             Vector2 textSize = MeasureTextEx(fontBody, optionText, 20, 2.0f);
-            int startXOption = (SCREEN_WIDTH - textSize.x) / 2;
+            int startXOption = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, optionText, (Vector2) { startXOption, y }, 20, 2.0f, selection == i ? BLUE : DARKGRAY);
             y += 50;
         }
@@ -615,7 +741,7 @@ void showSettings(Settings* settings) {
             else
                 infoText = "[A]: Main Menu    [F]: ke Controls";
             Vector2 textSize = MeasureTextEx(fontBody, infoText, (prevState == STATE_PLAY) ? 15 : 20, 2.0f);
-            int startXInfo = (SCREEN_WIDTH - textSize.x) / 2;
+            int startXInfo = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, infoText, (Vector2) { startXInfo, 560 }, (prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
         }
         EndDrawing();
@@ -642,26 +768,34 @@ void showSettings(Settings* settings) {
                         currentState = STATE_CONTROLS;
                         break;
                     case 3:
-                        // Reset logic 
+                        resetHiScores();
                         break;
                     }
                 }
             }
         }
         else {
-            if (MOVE_LEFT || MOVE_RIGHT) {
+            if (MOVE_LEFT || MOVE_RIGHT || MOVE_UP || MOVE_DOWN) {
                 PlaySound(sfxMove);
                 char label[50], value[50];
                 sscanf(lines[selection], "%[^:]:%[^\n]", label, value);
                 if (strcmp(value, " On") == 0) {
                     snprintf(lines[selection], sizeof(lines[selection]), "%s: Off", label);
                     if (selection == 0) settings->music = 0;
-                    if (selection == 1) settings->sfx = 0;
+                    if (selection == 1) {
+                        settings->sfx = 0;
+                        SetSoundVolume(sfxMove, 0.0f);
+                        SetSoundVolume(sfxSelect, 0.0f);
+                    }
                 }
                 else {
                     snprintf(lines[selection], sizeof(lines[selection]), "%s: On", label);
                     if (selection == 0) settings->music = 1;
-                    if (selection == 1) settings->sfx = 1;
+                    if (selection == 1) {
+                        settings->sfx = 1;
+                        SetSoundVolume(sfxMove, 1.0f);
+                        SetSoundVolume(sfxSelect, 1.0f);
+                    }
                 }
                 saveSettings(*settings);
             }
@@ -697,24 +831,29 @@ void showSettings(Settings* settings) {
 }
 
 void showHiScore(HiScore hiscores[]) {
-    int fontSize = 20;
-    int spacing = 4;
-    int startY = 200;
+    ScaleFactor scale = GetScreenScaleFactor();
+    int fontSize = auto_y(20);
+    int spacing = auto_x(4);
 
     char lines[MAX_LEVELS][65];
     for (int i = 0; i < MAX_LEVELS; i++) {
         snprintf(lines[i], sizeof(lines[i]), "%s: %d", hiscores[i].mode, hiscores[i].score);
     }
 
-    int lineCount = sizeof(lines) / sizeof(lines[0]);
+    int lineCount = len(lines);
 
     while (currentState == STATE_HIGH_SCORES && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        int totalHeight = 0;
+        for (int i = 0; i < lineCount; i++) {
+            totalHeight += fontSize + spacing;
+        }
+        int startY = (GetScreenHeight() - totalHeight) / 2;
         {
-            Vector2 textSize = MeasureTextEx(fontHeader, "HIGH SCORE", 30, 0);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
-            DrawTextEx(fontHeader, "HIGH SCORE", (Vector2) { startX, 100 }, 30, 0, DARKGRAY);
+            Vector2 textSize = MeasureTextEx(fontHeader, "HIGH SCORE", auto_y(30), 0);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(fontHeader, "HIGH SCORE", (Vector2) { startX, auto_y(60) }, 30, 0, DARKGRAY);
         }
 
         int maxLabelWidth = 0;
@@ -733,9 +872,9 @@ void showHiScore(HiScore hiscores[]) {
             }
         }
 
-        int padding = 20;
+        int padding = auto_x(20);
         int totalWidth = maxLabelWidth + 10 + MeasureTextEx(fontBody, ":", fontSize, spacing).x + 5 + maxValueWidth;
-        int startX = (SCREEN_WIDTH - totalWidth) / 2;
+        int startX = (GetScreenWidth() - totalWidth) / 2;
 
         if (startX < padding) {
             startX = padding;
@@ -758,7 +897,7 @@ void showHiScore(HiScore hiscores[]) {
         {
             const char* controlsText = "[A]: Main Menu";
             Vector2 textSize = MeasureTextEx(fontBody, controlsText, 20, 2.0f);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, controlsText, (Vector2) { startX, 560 }, 20, 2.0f, DARKGRAY);
         }
 
@@ -771,28 +910,29 @@ void showHiScore(HiScore hiscores[]) {
     }
 }
 
-bool confirmExit() {
+bool confirmExit(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
     const char* message = "Are you sure you want to exit?";
     const char* options[] = { "Yes", "No" };
     int selection = 1;
-    int fontSize = 20;
-    int lineCount = sizeof(options) / sizeof(options[0]);
+    int fontSize = auto_y(20);
+    int lineCount = len(options);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
         Vector2 textSize = MeasureTextEx(fontHeader, message, fontSize, 2);
-        int startX = (SCREEN_WIDTH - textSize.x) / 2;
+        int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (640 - textSize.y) / 2 - 50;
         DrawTextEx(fontHeader, message, (Vector2) { startX, startY }, fontSize, 2, DARKGRAY);
 
-        startY += textSize.y + 50;
+        startY += textSize.y + auto_y(50);
         for (int i = 0; i < lineCount; i++) {
             textSize = MeasureTextEx(fontHeader, options[i], fontSize, 2);
-            startX = (SCREEN_WIDTH - textSize.x) / 2;
+            startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + 20;
+            startY += textSize.y + (auto_y(20));
         }
         EndDrawing();
         if (MOVE_UP) {
@@ -828,7 +968,7 @@ bool confirmExit() {
     return false;
 }
 
-void exitGame() {
+void exitGame(void) {
     if (confirmExit()) {
         UnloadFont(fontBody);
         UnloadFont(fontHeader);
@@ -842,41 +982,80 @@ void exitGame() {
     }
 }
 
+Bullets bullets[MAX_BULLETS];
+int bulletCount = 0;
+bool canShoot = true;
+float reloadTimer = 0;
+int playerDirection = 0;
+
 void displayGame() {
     prevState = STATE_PLAY;
-
     BeginDrawing();
     ClearBackground(DARKGRAY);
-
+    shooter(&P.x, &P.y);
+    moveSet(&P.x);
+    Vector2 playerpos = { P.x, P.y };
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
-    
-// Menambahkan blok shooter beserta movesetnya
-    shooter(&P.x, &P.y); // Ditambahkan oleh faliq
-    moveSet(&P.x); // Ditambahkan oleh faliq
+
+    MoveBullets(bullets);
+    DrawBullets(bullets);
+
+    if (IsKeyPressed(KEY_RIGHT)) {
+        playerpos.x += 5;
+        playerDirection = 1;
+    }
+
+    if (IsKeyPressed(KEY_LEFT)) {
+        playerpos.x -= 5;
+        playerDirection = -1;
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        ShootBullets(bullets, playerpos, &bulletCount, &canShoot, 0);
+    }
+
+    if (IsKeyDown(KEY_SPACE)) {
+        canShoot = true;
+    }
+
+    if (bulletCount >= MAX_BULLETS) {
+        reloadTimer += GetFrameTime();
+
+        if (reloadTimer >= GetFrameTime()) {
+            ReloadBullets(bullets, &bulletCount, &canShoot);
+            reloadTimer = 0;
+        }
+    }
 
     DrawRectangle(0, 512, 320, 1, BLACK);
     DrawText("Hi Score", 340, 20, 15, WHITE);
     DrawText("12345", 340, 40, 20, LIGHTGRAY);
 
-    DrawText("Dalam Tahap Pengembangan!", 100, 300, 20, LIGHTGRAY);
     EndDrawing();
 
+    // Test game over function with G key
+    if (IsKeyPressed(KEY_G)) {
+        gameOver();
+    }
+
+    // Handle pause
     if (IsKeyPressed(KEY_P)) {
         while (IsKeyDown(KEY_P) && !WindowShouldClose()) {
             BeginDrawing();
             EndDrawing();
         }
-        pauseMenu(GetFontDefault());
+        pauseMenu();
     }
 }
 
-bool confirmBack() {
+bool confirmBack(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
     const char* message1 = "Are you sure you want to go back";
     const char* message2 = "to the main menu?";
     const char* options[] = { "Yes", "No" };
     int selection = 1;
-    int fontSize = 20;
-    int lineCount = sizeof(options) / sizeof(options[0]);
+    int fontSize = auto_y(20);
+    int lineCount = len(options);
     bool deciding = true;
 
     while (deciding && !WindowShouldClose()) {
@@ -884,21 +1063,21 @@ bool confirmBack() {
         ClearBackground(RAYWHITE);
 
         Vector2 textSize = MeasureTextEx(fontHeader, message1, fontSize, 2);
-        int startX = (SCREEN_WIDTH - textSize.x) / 2;
-        int startY = (SCREEN_HEIGHT - textSize.y) / 2 - 50;
+        int startX = (GetScreenWidth() - textSize.x) / 2;
+        int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
         DrawTextEx(fontHeader, message1, (Vector2) { startX, startY }, fontSize, 2, DARKGRAY);
 
         textSize = MeasureTextEx(fontHeader, message2, fontSize, 2);
-        startX = (SCREEN_WIDTH - textSize.x) / 2;
-        startY += textSize.y + 20;
+        startX = (GetScreenWidth() - textSize.x) / 2;
+        startY += textSize.y + (auto_y(20));
         DrawTextEx(fontHeader, message2, (Vector2) { startX, startY }, fontSize, 2, DARKGRAY);
 
-        startY += textSize.y + 50;
+        startY += textSize.y + auto_y(50);
         for (int i = 0; i < lineCount; i++) {
             textSize = MeasureTextEx(fontBody, options[i], fontSize, 2);
-            startX = (SCREEN_WIDTH - textSize.x) / 2;
+            startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + 20;
+            startY += textSize.y + (auto_y(20));
         }
         EndDrawing();
 
@@ -925,8 +1104,9 @@ bool confirmBack() {
     return false;
 }
 
-void pauseMenu() {
+void pauseMenu(void) {
     prevState = STATE_PAUSE;
+    ScaleFactor scale = GetScreenScaleFactor();
     bool paused = true;
     const char* lines[] = {
         "RESUME",
@@ -935,18 +1115,18 @@ void pauseMenu() {
         "MAIN MENU",
         "QUIT"
     };
-    int fontSize = 20;
-    int lineCount = sizeof(lines) / sizeof(lines[0]);
+    int fontSize = auto_y(20);
+    int lineCount = len(lines);
     int selection = 0;
 
     while (paused && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(Fade(RAYWHITE, 0.9f));
-        DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Fade(RAYWHITE, 0.8f));
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(RAYWHITE, 0.8f));
         {
             const char* pausedText = "PAUSED";
             Vector2 textSize = MeasureTextEx(fontHeader, pausedText, 40, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontHeader, pausedText, (Vector2) { startX, 140 }, 40, 2, DARKGRAY);
         }
 
@@ -955,15 +1135,15 @@ void pauseMenu() {
             Vector2 textSize = MeasureTextEx(fontBody, lines[i], fontSize, 2);
             totalHeight += textSize.y + 25;
         }
-        int startY = (SCREEN_HEIGHT - totalHeight) / 2 + 20;
+        int startY = (GetScreenHeight() - totalHeight) / 2 + 20;
         for (int i = 0; i < lineCount; i++) {
             Vector2 textSize = MeasureTextEx(fontBody, lines[i], fontSize, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             if (selection == i) {
                 DrawRectangle(startX - 10, startY - 5, textSize.x + 20, textSize.y + 10, Fade(LIGHTGRAY, 0.3f));
             }
             DrawTextEx(fontBody, lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + 25;
+            startY += textSize.y + (25 * scale.y);
         }
         EndDrawing();
 
@@ -996,7 +1176,9 @@ void pauseMenu() {
             case 3: // MAIN MENU
                 if (confirmBack()) {
                     currentState = STATE_MAIN_MENU;
+                    prevState = STATE_MAIN_MENU;
                     paused = false;
+                    break;
                 }
                 break;
             case 4: // QUIT
@@ -1014,8 +1196,10 @@ void pauseMenu() {
         }
     }
 }
-void countdownPause() {
+
+void countdownPause(void) {
     if (currentState == STATE_PLAY) {
+        ScaleFactor scale = GetScreenScaleFactor();
         float counter = 3.0f;
         while (counter > 0.0f && !WindowShouldClose()) {
             counter -= GetFrameTime();
@@ -1023,23 +1207,35 @@ void countdownPause() {
             ClearBackground(RAYWHITE);
             char text[8];
             sprintf(text, "%d", (int)ceilf(counter));
-            DrawTextEx(GetFontDefault(), text, (Vector2) { 230, 300 }, 50, 2, RED);
+            Vector2 position = {
+                230 * scale.x,
+                300 * scale.y
+            };
+            DrawTextEx(GetFontDefault(), text, position, 50 * scale.y, 2 * scale.x, RED);
             EndDrawing();
         }
     }
 }
 
-void selectLevel(Settings* settings) {
+void selectMode(Settings* settings) {
+    ScaleFactor scale = GetScreenScaleFactor();
     prevState = STATE_SELECT_LEVEL;
-    const char* title = "SELECT LEVEL";
+    const char* title = "SELECT MODE";
     const char* modes[] = {
-        "Level 1", "Level 2", "Level 3", "Level 4", "Level 5",
-        "Level 6", "Level 7", "Level 8", "Level 9", "Level 10",
-        "Endless Mode"
+        "Super EZ",
+        "Easy",
+        "Beginner",
+        "Medium",
+        "Hard",
+        "Super Hard",
+        "Expert",
+        "Master",
+        "Legend",
+        "God",
+        "Endless"
     };
-    int fontSize = 20;
     int selection = settings->mode;
-    int lineCount = sizeof(modes) / sizeof(modes[0]);
+    int lineCount = len(modes);
     bool selecting = true;
 
     while (selecting && !WindowShouldClose()) {
@@ -1048,46 +1244,41 @@ void selectLevel(Settings* settings) {
 
         {
             Vector2 textSize = MeasureTextEx(fontHeader, title, 30, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontHeader, title, (Vector2) { startX, 100 }, 30, 2, DARKGRAY);
         }
+        {
+            Vector2 arrowSize = MeasureTextEx(fontHeader, ">", 40, 2);
+            int startY = (GetScreenHeight() - arrowSize.y) / 2;
 
-        int totalHeight = 0;
-        for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(fontBody, modes[i], fontSize, 2);
-            totalHeight += textSize.y + 15;
+            int windowCenterX = GetScreenWidth() / 2;
+            int arrowOffset = 200 * scale.x;  // Fixed distance from center
+
+            // Draw arrows at fixed positions from window edges
+            DrawTextEx(fontHeader, "<", (Vector2) { windowCenterX - arrowOffset, startY }, 40, 2, DARKGRAY);
+            DrawTextEx(fontHeader, ">", (Vector2) { windowCenterX + arrowOffset - arrowSize.x, startY }, 40, 2, DARKGRAY);
         }
-
-        int startY = (SCREEN_HEIGHT - totalHeight) / 2 + 20;
-        for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(fontBody, modes[i], fontSize, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
-            Color textColor = (selection == i) ? BLUE : DARKGRAY;
-
-            if (selection == i) {
-                DrawRectangle(startX - 10, startY - 5, textSize.x + 20, textSize.y + 10,
-                    Fade(LIGHTGRAY, 0.3f));
-            }
-
-            DrawTextEx(fontBody, modes[i], (Vector2) { startX, startY }, fontSize, 2, textColor);
-            startY += textSize.y + 15;
+        {
+            Vector2 textSize = MeasureTextEx(fontHeader, modes[selection], 60, 2);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
+            int startY = (GetScreenHeight() - textSize.y) / 2;
+            DrawTextEx(fontHeader, modes[selection], (Vector2) { startX, startY }, 60, 2, BLUE);
         }
-
         {
             const char* controlsText = "[↑/↓]: Select    [Enter]: Play    [B]: Back";
             Vector2 textSize = MeasureTextEx(fontBody, controlsText, 15, 2);
-            int startX = (SCREEN_WIDTH - textSize.x) / 2;
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(fontBody, controlsText, (Vector2) { startX, 560 }, 15, 2, DARKGRAY);
         }
 
         EndDrawing();
 
-        if (MOVE_UP) {
+        if (MOVE_LEFT || MOVE_DOWN) {
             PlaySound(sfxMove);
             selection--;
             if (selection < 0) selection = lineCount - 1;
         }
-        if (MOVE_DOWN) {
+        if (MOVE_RIGHT || MOVE_UP) {
             PlaySound(sfxMove);
             selection++;
             if (selection >= lineCount) selection = 0;
@@ -1105,6 +1296,153 @@ void selectLevel(Settings* settings) {
             PlaySound(sfxMove);
             currentState = STATE_MAIN_MENU;
             selecting = false;
+        }
+    }
+}
+
+bool confirmReset(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
+    const char* message = "Reset all high scores?";
+    const char* options[] = { "Yes", "No" };
+    int selection = 1;
+    int fontSize = auto_y(20);
+    int lineCount = len(options);
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        Vector2 textSize = MeasureTextEx(fontHeader, message, fontSize, 2);
+        int startX = (GetScreenWidth() - textSize.x) / 2;
+        int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
+        DrawTextEx(fontHeader, message, (Vector2) { startX, startY }, fontSize, 2, DARKGRAY);
+
+        startY += textSize.y + auto_y(50);
+        for (int i = 0; i < lineCount; i++) {
+            textSize = MeasureTextEx(fontHeader, options[i], fontSize, 2);
+            startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(fontBody, options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
+            startY += textSize.y + (auto_y(20));
+        }
+        EndDrawing();
+
+        if (MOVE_UP || MOVE_LEFT) {
+            PlaySound(sfxMove);
+            selection--;
+            if (selection < 0) selection = lineCount - 1;
+        }
+        if (MOVE_DOWN || MOVE_RIGHT) {
+            PlaySound(sfxMove);
+            selection++;
+            if (selection >= lineCount) selection = 0;
+        }
+        if (OK_KEY) {
+            PlaySound(sfxSelect);
+            return selection == 0;
+        }
+        if (IsKeyPressed(KEY_N) || BACK_KEY) {
+            PlaySound(sfxMove);
+            return false;
+        }
+    }
+    return false;
+}
+
+void resetHiScores(void) {
+    if (prevState == STATE_PAUSE) {
+        rejectReset();
+        return;
+    }
+    if (confirmReset()) {
+        HiScore scores[MAX_LEVELS];
+        for (int i = 0; i < MAX_LEVELS; i++) {
+            if (i < 10) {
+                sprintf(scores[i].mode, "Level %d", i + 1);
+            }
+            else {
+                strcpy(scores[i].mode, "Endless Mode");
+            }
+            scores[i].score = 0;
+        }
+        saveHiScores(scores);
+    }
+    else return;
+}
+
+void rejectReset(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
+    const char* message = "Cannot reset scores during gameplay!";
+    const char* subMessage = "Press any key to go back";
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        Vector2 textSize = MeasureTextEx(fontHeader, message, 20, 2);
+        int startX = (GetScreenWidth() - textSize.x) / 2;
+        int startY = (GetScreenHeight() - textSize.y) / 2 - 20;
+        DrawTextEx(fontHeader, message, (Vector2) { startX, startY }, 20, 2, RED);
+
+        Vector2 subTextSize = MeasureTextEx(fontBody, subMessage, 15, 2);
+        startX = (GetScreenWidth() - subTextSize.x) / 2;
+        startY += textSize.y + 20;
+        DrawTextEx(fontBody, subMessage, (Vector2) { startX, startY }, 15, 2, DARKGRAY);
+
+        EndDrawing();
+
+        if (GetKeyPressed() != 0) {
+            PlaySound(sfxMove);
+            break;
+        }
+    }
+}
+
+void gameOver(void) {
+    ScaleFactor scale = GetScreenScaleFactor();
+    const char* message = "GAME OVER";
+    const char* options[] = { "Retry", "Main Menu" };
+    int selection = 1;
+    int fontSize = auto_y(20);
+    int lineCount = len(options);
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        Vector2 textSize = MeasureTextEx(fontHeader, message, 30, 2);
+        int startX = (GetScreenWidth() - textSize.x) / 2;
+        int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
+        DrawTextEx(fontHeader, message, (Vector2) { startX, startY }, 30, 2, DARKGRAY);
+
+        startY += textSize.y + auto_y(50);
+        for (int i = 0; i < lineCount; i++) {
+            textSize = MeasureTextEx(fontHeader, options[i], fontSize, 2);
+            startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(fontBody, options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
+            startY += textSize.y + (auto_y(20));
+        }
+        EndDrawing();
+
+        if (MOVE_UP || MOVE_LEFT) {
+            PlaySound(sfxMove);
+            selection--;
+            if (selection < 0) selection = lineCount - 1;
+        }
+        if (MOVE_DOWN || MOVE_RIGHT) {
+            PlaySound(sfxMove);
+            selection++;
+            if (selection >= lineCount) selection = 0;
+        }
+        if (OK_KEY) {
+            PlaySound(sfxSelect);
+            switch (selection) {
+            case 0:
+                currentState = STATE_PLAY;
+                countdownPause();
+                break;
+            case 1:
+                currentState = STATE_MAIN_MENU;
+                break;
+            }
         }
     }
 }
