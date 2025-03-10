@@ -29,21 +29,9 @@ void playerInitialization(Game *game){ //Kode untuk test score player
 	game->score = 0;
 }
 
-void playerScore(Game *game, HiScore scores[]){
-    //Menunggu kode untuk blok 
-    //Kode di bawah hanya untuk test
-	int done=0, x, level = game->level-1;
-	while (!done){
-		printf("Tambah point? (0 = tidak, 1=ya): ");
-		scanf("%d", &x);
-		if (x==0){ //Nantinya if block tidak hilang/habis
-			break;	
-		} else {
-			game->score+=100;
-			printf("Skor di level %d saat ini: %d\n",game->level, game->score);
-			continue;
-		}
-	}
+void playerScore(Game *game, HiScore scores[], int posY){
+	int  level = game->level-1;
+	game->score+=100*posY; //Semakin dekat blok dengan pesawat, skor yang didapat akan lebih besar 
 	scores[level].score = getMax(scores, game);
 }
 
