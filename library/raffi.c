@@ -1,6 +1,34 @@
 #include "../include/all.h"
 #include <stdio.h>
 
+typedef enum{
+	Super_EZ,
+	Easy,
+	Beginner,
+	Medium,
+	Hard,
+	Super_Hard,
+	Expert,
+	Master,
+	Legend,
+	God,
+	Endless,
+}Level;
+
+const char* levelNames[] = {
+	"Super EZ",
+	"Easy",
+	"Beginner",
+	"Medium",
+	"Hard",
+	"Super Hard",
+	"Expert",
+	"Master",
+	"Legend",
+	"God",
+	"Endless",
+};
+
 void initializeDb(HiScore scores[]){ //Inisialisasi database dengan nilai 0.
 	FILE* file = fopen("../db/hiscores.dat", "w");
     if (!file) {
@@ -8,10 +36,7 @@ void initializeDb(HiScore scores[]){ //Inisialisasi database dengan nilai 0.
         return;
     }
     for (int i = 0; i < MAX_LEVELS; i++) {
-            sprintf(scores[i].mode, "Level %d", i + 1);
-            if (i == 10){
-            	strcpy(scores[i].mode, "Endless");
-			}
+            sprintf(scores[i].mode, "%s", levelNames[i]);
             scores[i].score = 0;
             fprintf(file, "%s,%d\n", scores[i].mode , scores[i].score);
     }  
@@ -19,13 +44,6 @@ void initializeDb(HiScore scores[]){ //Inisialisasi database dengan nilai 0.
 }
 
 void playerInitialization(Game *game){ //Kode untuk test score player
-	printf("Set level (1-10 untuk level, 11 untuk Endless: \n");
-	scanf("%d", &game->level);
-	while(game->level < 1 || game->level > 11){
-		printf("Masukkan Level Valid (1-11): \n");
-		scanf("%d", &game->level);
-	}
-	printf("Level : %d\n", game->level);
 	game->score = 0;
 }
 
