@@ -11,6 +11,7 @@ typedef struct {
     Vector2 position;
     int direction;
     bool active;
+    int x,y;
 } Bullets;
 
 

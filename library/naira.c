@@ -1,121 +1,121 @@
-#include "naira.h"
-#include "arief.h"
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <raylib.h>
-#include <math.h>
+#include "all.h"
 
-int frameCounter = 0;
-int currentRow = 0;
-
-//=====Halo, untuk check display di arief.c go to line 996
-
-void printFallingBlocks(int fallingBlocks[FALLING_BLOCKS_ROWS][FALLING_BLOCKS_COLS]) {
-    printf("Current Blocks:\n");
-    for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
-        for (int j = 0; j < FALLING_BLOCKS_COLS; j++) {
-            printf("%d ", fallingBlocks[i][j]);
-        }
-        printf("\n");
-    }
+void spawnPowerUp(Game* game) {
+    game->powerupActive = true;
+    game->currentPowerup.type = rand() % POWERUP_COUNT;
+    game->powerupPosition = (Vector2){
+        (float)(rand() % (320 - 32)), // Using 320
+        -32.0f  // Start above screen
+    };
 }
 
-void initFallingBlocks(int fallingBlocks[FALLING_BLOCKS_ROWS][FALLING_BLOCKS_COLS]) {
-    for (int i = 0; i < FALLING_BLOCKS_ROWS; i++) {
-        for (int j = 0; j < FALLING_BLOCKS_COLS; j++) {
-            fallingBlocks[i][j] = 0;
+void activatePowerUp(Game* game) {
+    if (game->activeEffectsCount >= 3) return; // Maximum 3 active effects
+
+    PowerUpType type = game->currentPowerup.type;
+    if (type == POWERUP_RANDOM) {
+        type = rand() % (POWERUP_COUNT - 1);
+    }
+
+    // Don't add temporary effects if same type is already active
+    for (int i = 0; i < game->activeEffectsCount; i++) {
+        if (game->activePowerups[i].type == type) {
+            game->activePowerups[i].duration = 10.0f; // Reset duration
+            game->powerupActive = false;
+            game->powerupTimer = 7.0f + (rand() % 8);
+            return;
         }
     }
 
-    for (int j = 0; j < FALLING_BLOCKS_COLS; j++) {
-        fallingBlocks[0][j] = 1;
+    float duration = 10.0f; // Default duration for temporary effects
+
+    switch (type) {
+    case POWERUP_SPEED_UP:
+        game->rowAddDelay /= 2;
+        break;
+    case POWERUP_SLOW_DOWN:
+        game->rowAddDelay *= 2;
+        break;
+    case POWERUP_UNLIMITED_AMMO:
+        game->bulletCount = 0;
+        break;
+    case POWERUP_EXTRA_LIFE:
+        if (game->lives < 3) game->lives++;
+        duration = 0; // Instant effect
+        break;
+    case POWERUP_BOMB:
+        game->lives--;
+        duration = 0; // Instant effect
+        break;
+    default:
+        break;
     }
 
-    printf("\n--- START GRID ---\n");
-    printFallingBlocks(fallingBlocks);
-    printf("------------------\n");
-}
-
-void drawFallingBlocks(BlockRow* row) {
-    if (row == NULL || row->numBlocks <= 0) return;
-
-    for (int i = 0; i < row->numBlocks; i++) {
-        if (i >= MAX_BLOCKS_PER_ROW) break; // Prevent out-of-bounds
-        DrawRectangle(row->blocks[i].x, row->blocks[i].y, BLOCK_SIZE, BLOCK_SIZE, RED);
+    // Only add to active effects if it's a temporary powerup
+    if (duration > 0) {
+        game->activePowerups[game->activeEffectsCount].type = type;
+        game->activePowerups[game->activeEffectsCount].duration = duration;
+        game->activePowerups[game->activeEffectsCount].active = true;
+        game->activeEffectsCount++;
     }
+
+    game->powerupActive = false;
+    game->powerupTimer = 7.0f + (rand() % 8);
 }
 
+void drawPowerUp(Game* game) {
+    if (!game->powerupActive) return;
 
-// Define speeds for 11 difficulty levels (higher index = faster speed)
-int difficultySpeeds[DIFFICULTY_LEVELS] = { 1, 2, 3, 4, 5 };
+    Color powerupColor;
+    switch (game->currentPowerup.type) {
+    case POWERUP_SPEED_UP:
+    case POWERUP_UNLIMITED_AMMO:
+    case POWERUP_EXTRA_LIFE:
+        powerupColor = GREEN;  // Beneficial powerups
+        break;
+    case POWERUP_RANDOM:
+        powerupColor = YELLOW;  // Random effect
+        break;
+    case POWERUP_SLOW_DOWN:
+    case POWERUP_BOMB:
+        powerupColor = RED;  // Harmful powerups
+        break;
+    default:
+        powerupColor = WHITE;
+        break;
+    }
 
-void InitDifficultySpeeds() {
-    // might need to tweak and change the difficulty speed dynamically..
+    // Draw powerup as a circle
+    DrawCircle((int)game->powerupPosition.x + 16,(int)game->powerupPosition.y + 16,12,powerupColor
+    );
 }
 
-void GenerateBlockRow(BlockRow* row, int difficulty) {
-    printf("Entering GenerateBlockRow\n");
-    printf("row = %p, difficulty = %d\n", (void*)row, difficulty);
-    
-    // drawFallingBlocks(row);
+void updatePowerUp(Game* game) {
+    if (!game->powerupActive) return;
 
-    if (row == NULL) {
-        printf("Error: row is NULL!\n");
+    // Move powerup down slower
+    game->powerupPosition.y += 2.0f;  // Reduced from 2.0f
+
+    // Gentler wavy motion
+    game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;  // Reduced amplitude and frequency
+
+    // Keep within screen bounds
+    if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
+    if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
+        game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
+
+    // Check if powerup went off screen
+    if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
+        game->powerupActive = false;
         return;
     }
 
-    if (difficulty < 0 || difficulty >= DIFFICULTY_LEVELS) {
-        printf("Error: difficulty index %d is out of bounds!\n", difficulty);
-        return;
-    }
+    // Check collision with shooter
+    Rectangle powerupRect = {game->powerupPosition.x,game->powerupPosition.y,32,32};
 
-    printf("row->blocks = %p\n", (void*)row->blocks);
+    Rectangle shooterRect = {P.x - 32,P.y - 32,96,64};
 
-    row->numBlocks = (rand() % 5) + 5;  // Between 5-9 blocks
-    printf("row->numBlocks = %d\n", row->numBlocks);
-
-    if (row->numBlocks > MAX_BLOCKS_PER_ROW) {  
-        printf("Warning: numBlocks exceeded MAX_BLOCKS_PER_ROW, reducing to max.\n");
-        row->numBlocks = MAX_BLOCKS_PER_ROW;
-    }
-
-    //============================this caused an error vvvv
-    for (int i = 0; i < row->numBlocks && i < MAX_BLOCKS_PER_ROW; i++) {
-        printf("Accessing block %d at address %p\n", i, (void*)&row->blocks[i]);
-        row->blocks[i].x = (rand() % (GRID_WIDTH / BLOCK_SIZE)) * BLOCK_SIZE;  
-        row->blocks[i].y = 1;
-        printf("Block %d: x = %d, y = %d\n", i, row->blocks[i].x, row->blocks[i].y);
-    }
-
-    //==============================
-
-    printf("Accessing difficultySpeeds[%d] at address %p\n", difficulty, (void*)&difficultySpeeds[difficulty]);
-    row->speed = difficultySpeeds[difficulty];  
-    printf("Generated row with %d blocks at difficulty %d.\n", row->numBlocks, difficulty);
-}
-
-
-void UpdateBlockRow(BlockRow* row) {
-    if (row == NULL) {
-        printf("Error: row is NULL!\n");
-        return;
-    }
-
-    if (row->numBlocks <= 0) {
-        printf("Error: numBlocks is 0!\n");
-        return;
-    }
-
-    printf("Updating row with %d blocks...\n", row->numBlocks);
-    
-    for (int i = 0; i < row->numBlocks; i++) {
-        if (i >= MAX_BLOCKS_PER_ROW) {
-            printf("Error: Index %d out of bounds!\n", i);
-            break;
-        }
-
-        row->blocks[i].y += row->speed;
+    if (CheckCollisionRecs(powerupRect, shooterRect)) {
+        activatePowerUp(game);
     }
 }

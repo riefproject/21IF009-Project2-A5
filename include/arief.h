@@ -105,6 +105,7 @@ typedef struct {
 // Mewakili peluru yang digunakan dalam game. Struktur ini memungkinkan manajemen daftar peluru secara dinamis.
 typedef struct Bullet {
     int x, y;        // Koordinat posisi peluru
+    bool active;
     struct Bullet* next;    // Pointer ke peluru berikutnya dalam linked list
 } Bullet;
 
