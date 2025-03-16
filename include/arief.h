@@ -1,7 +1,7 @@
 #ifndef ARIEF_H
 #define ARIEF_H
 
-#include <raylib.h>
+#include "all.h"
 
 
 // Define Values
