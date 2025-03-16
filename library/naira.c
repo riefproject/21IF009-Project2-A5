@@ -17,7 +17,7 @@ void activatePowerUp(Game* game) {
         type = rand() % (POWERUP_COUNT - 1);
     }
 
-    // Don't add temporary effects if same type is already active
+    // Dont add temporary effects if same type is already active
     for (int i = 0; i < game->activeEffectsCount; i++) {
         if (game->activePowerups[i].type == type) {
             game->activePowerups[i].duration = 10.0f; // Reset duration
@@ -86,7 +86,7 @@ void drawPowerUp(Game* game) {
     }
 
     // Draw powerup as a circle
-    DrawCircle((int)game->powerupPosition.x + 16,(int)game->powerupPosition.y + 16,12,powerupColor
+    DrawCircle((int)game->powerupPosition.x + 16, (int)game->powerupPosition.y + 16, 12, powerupColor
     );
 }
 
@@ -111,9 +111,9 @@ void updatePowerUp(Game* game) {
     }
 
     // Check collision with shooter
-    Rectangle powerupRect = {game->powerupPosition.x,game->powerupPosition.y,32,32};
+    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,32,32 };
 
-    Rectangle shooterRect = {P.x - 32,P.y - 32,96,64};
+    Rectangle shooterRect = { P.x - 32,P.y - 32,96,64 };
 
     if (CheckCollisionRecs(powerupRect, shooterRect)) {
         activatePowerUp(game);

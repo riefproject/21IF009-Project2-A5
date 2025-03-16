@@ -3,13 +3,13 @@
 #include "defines.h"
 
 // Spawn a new power-up
-void spawnPowerUp(Game* game);      
+void spawnPowerUp(Game* game);
 // Activate collected power-up
-void activatePowerUp(Game* game);   
+void activatePowerUp(Game* game);
 // Render power-up on screen
-void drawPowerUp(Game* game);       
-// Update power-up state
-void updatePowerUp(Game* game);     
+void drawPowerUp(Game* game);
+// Update power-up states
+void updatePowerUp(Game* game);
 
 
 #endif
