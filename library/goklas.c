@@ -43,7 +43,7 @@ void DrawBullets(Bullets bullets[]) {
         }
     }
 }
-
+// 
 void ReloadBullets(Bullets bullets[], int* BulletCount, bool* CanShoot) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         bullets[i].active = false;
