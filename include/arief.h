@@ -1,182 +1,94 @@
 #ifndef ARIEF_H
 #define ARIEF_H
+#include "defines.h"
 
-#include <raylib.h>
+// =====================================================================
+//                          GAME MANAGEMENT
+// =====================================================================
 
+/* Fungsi-fungsi untuk mengelola konteks game dan aset */
+Game* createGameContext(void);              // Membuat dan menginisialisasi konteks game baru
+void destroyGameContext(Game* game);        // Membersihkan dan menghapus konteks game
+Assets* createAssets(void);                 // Membuat dan memuat aset game
+void destroyAssets(Assets* assets);         // Membersihkan dan menghapus aset game
 
-// Define Values
-#define LOADING_TIME 5.0f
+// =====================================================================
+//                          BLOCK MANAGEMENT
+// =====================================================================
 
-// Screen Size
-// Screen Size Constants
-#define MIN_SCREEN_WIDTH 480
-#define MIN_SCREEN_HEIGHT 640
-#define ASPECT_RATIO_WIDTH 3
-#define ASPECT_RATIO_HEIGHT 4
-#define BASE_WIDTH MIN_SCREEN_WIDTH
-#define BASE_HEIGHT MIN_SCREEN_HEIGHT
-#define GAME_SCREEN_HEIGHT 640
-#define GAME_SCREEN_WIDTH 320
-#define GAME_SCREEN 0, 0, 320, 640
-#define auto_x(var) (int)(var * scale.x)
-#define auto_y(var) (int)(var * scale.y)
-#define len(var) sizeof(var) / sizeof(var[0])
+/* Fungsi-fungsi untuk mengelola BlockList */
+void addBlock(BlockList* list, int x, int y, int jumlah);               // Menambah blok baru ke list
+void updateBlock(BlockList* list, int pos, int x, int y, int jumlah);   // Mengupdate blok pada posisi tertentu
+void removeBlock(BlockList* list, int pos);                             // Menghapus blok dari list
+void printBlockList(BlockList* list);                                   // Menampilkan isi BlockList
+int countBlock(BlockList* list);                                        // Menghitung jumlah blok dalam list
 
-// Key Mapping
-#define OK_KEY IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_Y)
-#define MOVE_UP IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)
-#define MOVE_DOWN IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN)
-#define MOVE_LEFT IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT)
-#define MOVE_RIGHT IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT)
-#define SHOOT_KEY IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)
-#define BACK_KEY IsKeyPressed(KEY_B) || IsKeyPressed(KEY_BACKSPACE)
-#define FORWARD_KEY IsKeyPressed(KEY_F)
+/* Fungsi-fungsi untuk mengelola BlockQueue */
+void initQueue(BlockQueue* q);                 // Inisialisasi queue baru
+int isEmpty(BlockQueue* q);                    // Cek apakah queue kosong
+int isFull(BlockQueue* q);                     // Cek apakah queue penuh
+int countQueue(BlockQueue* q);                 // Menghitung jumlah item dalam queue
+void enqueue(BlockQueue* q, Block* element);   // Menambah blok ke queue
+Block* dequeue(BlockQueue* q);                 // Mengambil blok dari queue
+void displayQueue(BlockQueue* q);              // Menampilkan isi queue
+void clearQueue(BlockQueue* q);                // Mengosongkan queue
 
-// Game Constants
-#define MAX_WIDTH_BLOCKS 11
-#define MAX_LEVELS 11
-#define INIT_STATE GameState currentState, prevState;
+// =====================================================================
+//                          USER INTERFACE
+// =====================================================================
 
-// Makro Function
-#define new(var) (var *)malloc(sizeof(var)) 
-#define delete(var) \
-    free(var);      \
-    var = NULL; 
+/* Fungsi-fungsi untuk menangani tampilan dan menu */
+int loadingScreen(float* loadingTime);          // Menampilkan layar loading
+void mainWindow(void);                          // Menampilkan jendela utama
+void mainMenu(GameResources* resources);        // Menampilkan menu utama
+void resetHiScores(GameResources* resources);   // Reset skor tertinggi
+void rejectReset(GameResources* resources);     // Membatalkan reset skor
+void gameOver(GameResources* resources);        // Menampilkan layar game over
+void selectMode(GameResources* resources);      // Memilih mode permainan
+void showControls(GameResources* resources);    // Menampilkan kontrol game
+void showHiScore(GameResources* resources);     // Menampilkan skor tertinggi
+void showSettings(GameResources* resources);    // Menampilkan pengaturan
+bool confirmExit(GameResources* resources);     // Konfirmasi keluar game
+void exitGame(GameResources* resources);        // Keluar dari game
+void pauseMenu(GameResources* resources);       // Menu pause
+void countdownPause(GameResources* resources);  // Hitung mundur pause
+bool confirmBack(GameResources* resources);     // Konfirmasi kembali
 
-#define INIT_GAME_VARIABLES int gameLevel; \
-    GameState currentState, prevState;\
-    Sound sfxMove, sfxSelect;\
-    Font fontBody, fontHeader;\
-    Texture2D blockTexture;
+// =====================================================================
+//                          GAME MECHANICS
+// =====================================================================
 
-// Helper Resize Window Size
-typedef struct {
-    float x;
-    float y;
-} ScaleFactor;
+/* Fungsi-fungsi untuk logika dan mekanika game */
+float getSpeedForMode(Game* game, int mode);              // Mendapatkan kecepatan berdasarkan mode
+void displayGame(GameResources* resources);               // Menampilkan game
+bool isGameOverCheck(Game* game);                         // Cek kondisi game over
+bool isRowFull(Game* game, int row);                      // Cek apakah baris penuh
+bool hasActiveBlockBelow(Game* game, int row);            // Cek blok aktif di bawah
+void shiftRowsUp(Game* game, int startRow);               // Geser baris ke atas
+void handleFullRow(Game* game, int row);                  // Menangani baris penuh
+void updateBlocks(Game* game, GameResources* resources);  // Update status blok
+void initBlocks(Game* game, GameResources* resources);    // Inisialisasi blok
+void drawBlocks(Game* game, GameResources* resources);    // Menggambar blok
+void drawBlockUI(Game* game);                             // Menggambar UI blok
+void printGrid(Game* game);                               // Menampilkan grid game
 
-#define INIT_GAME_VARIABLES int gameLevel;\
-    GameState currentState, prevState;\
-    Sound sfxMove, sfxSelect;\
-    Font fontBody, fontHeader;\
-    Texture2D blockTexture;
+/* Fungsi-fungsi untuk pergerakan dan collision */
+void handleBlockMovement(Game* game, int minBlocks, int maxBlocks);    // Menangani pergerakan blok
+void moveBlocksDown(Game* game);                                       // Menggerakkan blok ke bawah
+void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLength, int totalEmptyColumns);     // Membuat blok baru
+int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength);                                       // Mengisi celah kritis
+void fillRemainingBlocks(Game* game, int remainingBlocks);             // Mengisi sisa blok
+void handleBulletCollisions(Game* game);                               // Menangani collision peluru
+bool isValidGridPosition(int x, int y);                                // Validasi posisi grid
+void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex);                                         // Memproses tembakan peluru
 
-// Struktur HiScore
-// Menyimpan data skor tertinggi yang pernah dicapai oleh pemain.
-typedef struct {
-    char mode[50];    // Nama pemain
-    int score;        // Skor yang dicapai
-} HiScore;
+/* Fungsi-fungsi untuk power-up dan efek khusus */
+void spawnPowerUp(Game* game);       // Memunculkan power-up
+void activatePowerUp(Game* game);    // Mengaktifkan power-up
+void drawPowerUp(Game* game);        // Menggambar power-up
+void updatePowerUp(Game* game);      // Update status power-up
+void handleLaser(Game* game);        // Menangani efek laser
+void drawGameUI(Game* game);         // Menggambar UI game
 
-// Struktur Settings
-// Menyimpan data settings yang digunakan dalam game.
-typedef struct {
-    int music;   // Status musik
-    int sfx;     // Status efek suara
-    int mode;    // Mode permainan
-} Settings;
-
-// Struktur Shooter:
-// Menyimpan posisi pemain (x, y) dan jumlah amunisi yang dimiliki.
-typedef struct {
-    int x, y;    // Koordinat posisi pemain
-    int ammo;    // Jumlah amunisi yang tersedia
-} Shooter;
-
-// Struktur Block:
-// Mewakili sebuah blok di dalam game, bisa digunakan untuk rintangan atau elemen game lainnya.
-// Disusun secara linked list untuk memudahkan manajemen blok secara dinamis.
-typedef struct Block {
-    int x, y;        // Koordinat posisi blok
-    int jumlah;      // Jumlah atau nilai yang terkait dengan blok (misalnya, kekuatan atau tipe)
-    struct Block* next;     // Pointer ke blok berikutnya dalam list
-} Block;
-
-// Struktur Data Bentukan: LinkedList
-typedef struct BlockList {
-    Block* head;
-    Block* tail;
-    int size;
-} BlockList;
-
-// Struktur BlockQueue:
-// Struktur antrian untuk mengelola blok dengan metode FIFO (First In First Out).
-typedef struct {
-    Block* items[MAX_WIDTH_BLOCKS];
-    int front;    // Pointer ke blok paling depan dalam antrian
-    int rear;     // Pointer ke blok paling belakang dalam antrian
-} BlockQueue;
-
-// Struktur Bullet:
-// Mewakili peluru yang digunakan dalam game. Struktur ini memungkinkan manajemen daftar peluru secara dinamis.
-typedef struct Bullet {
-    int x, y;        // Koordinat posisi peluru
-    struct Bullet* next;    // Pointer ke peluru berikutnya dalam linked list
-} Bullet;
-
-// Struktur Game:
-// Menyimpan status permainan seperti skor, level, dan status permainan.
-typedef struct {
-    int hiscore;     // Skor tertinggi yang pernah dicapai
-    int score;       // Skor permainan saat ini
-    int level;       // Level permainan saat ini
-    int play;        // Status permainan (misalnya, 1 untuk aktif, 0 untuk berhenti atau pause)
-} Game;
-
-typedef enum {
-    STATE_LOADING,
-    STATE_MAIN_MENU,
-    STATE_HIGH_SCORES,
-    STATE_CONTROLS,
-    STATE_SETTINGS,
-    STATE_PLAY,
-    STATE_QUIT,
-    STATE_PAUSE,
-    STATE_SELECT_LEVEL
-} GameState;
-
-// Implementasi Database
-void loadSettings(Settings* settings);
-void saveSettings(Settings settings);
-void loadHiScores(HiScore scores[]);
-void saveHiScores(HiScore scores[]);
-
-// Implementasi BlockList
-void addBlock(BlockList* list, int x, int y, int jumlah);
-void updateBlock(BlockList* list, int pos, int x, int y, int jumlah);
-void removeBlock(BlockList* list, int pos);
-void printBlockList(BlockList* list);
-int countBlock(BlockList* list);
-
-// Implementasi BlockQueue
-void initQueue(BlockQueue* q);
-int isEmpty(BlockQueue* q);
-int isFull(BlockQueue* q);
-int countQueue(BlockQueue* q);
-void enqueue(BlockQueue* q, Block* element);
-Block* dequeue(BlockQueue* q);
-void displayQueue(BlockQueue* q);
-void clearQueue(BlockQueue* q);
-
-// Tampilan
-
-void displayGame();
-int loadingScreen(float* loadingTime);
-void mainWindow(void);
-void mainMenu(void);
-void resetHiScores(void);
-void rejectReset(void);
-void gameOver(void);
-void selectMode(Settings* settings);
-void showControls(void);
-void showHiScore(HiScore scores[]);
-void showSettings(Settings* settings);
-bool confirmExit(void);
-void exitGame(void);
-void pauseMenu(void);
-void countdownPause(void);
-bool confirmBack(void);
-
-// debug
-#define DBG printf("Haiiii");
+void addScore(Game* game, int row);
 #endif
