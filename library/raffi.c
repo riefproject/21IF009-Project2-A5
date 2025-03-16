@@ -1,4 +1,3 @@
-raffi.c
 #include "defines.h"
 #include "all.h"
 
@@ -80,7 +79,7 @@ void saveHiScores(HiScore scores[]) {
 }
 
 void updateHighScore(Game* game, GameResources* resources) {
-    if (!game) return; 
+    if (!game) return;
 
     HiScore scores[MAX_LEVELS];
     loadHiScores(scores);

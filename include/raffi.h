@@ -6,7 +6,7 @@
 //Inisialisasi nilai database
 void initializeDb(HiScore scores[]);
 
-//Mencari nilai terbesar antara skor player dan HiScore
+//Mencari nilai terbesar antara skor player dan HiScores
 int getMax(HiScore scores[], Game* game, GameResources* resources);
 
 //Mengambil data dari db
