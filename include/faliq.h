@@ -17,6 +17,20 @@ void moveSet(int* x);
 
 // Mensetting lagu gameplay
 extern Music soundGameplay;
-void musicGameplay();
+void musicGameplay(GameResources* resources);
+
+// Membuat laser
+void handleLaser(Game* game);
+
+
+// Membuat animasi opening game.
+typedef struct {
+    float progress;
+}openingTransition;
+extern openingTransition opTrans;
+
+Color fadeInOpeningAnimation(float* trans);
+Color fadeOutOpeningAnimation(float* trans);
+void openingAnimation(float* trans);
 
 #endif
