@@ -8,7 +8,7 @@
 #include <raylib.h>
 #include <math.h>
 #include <unistd.h>
-#include <pthread.h>>
+#include <pthread.h>
 
 // =======================================
 //                Database 
@@ -342,6 +342,8 @@ void mainWindow(void) {
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
     P.x = 160; // Ditambahkan oleh faliq
     P.y = 598; // Ditambahkan oleh faliq
+    openingTransition opTrans;
+    opTrans.progress = 0.0f; // Ditambahkan oleh faliq
 
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     Image ico = LoadImage("assets/ico.png");
@@ -363,6 +365,11 @@ void mainWindow(void) {
     settings.sfx ? SetSoundVolume(sfxMove, 1.0f) : SetSoundVolume(sfxMove, 0.0f);
 
     currentState = STATE_LOADING;
+
+    while (opTrans.progress < 1.0f) { // Dibuat Oleh Faliq
+        openingAnimation(&opTrans.progress); // Dibuat Oleh Faliq  
+    } // Dibuat oleh faliq
+
     while (!WindowShouldClose()) {
         if (IsWindowResized() || (IsWindowState(FLAG_WINDOW_MAXIMIZED) &&
             (GetScreenWidth() != GetMonitorWidth(GetCurrentMonitor()) ||
@@ -392,11 +399,11 @@ void mainWindow(void) {
             }
         }
         switch (currentState) {
-        case STATE_LOADING:
+        case STATE_LOADING:       
             if (loadingScreen(&loadingTime)) {
                 currentState = STATE_MAIN_MENU;
             }
-            break;
+            break;  
         case STATE_MAIN_MENU:
             mainMenu();
             break;
@@ -992,22 +999,15 @@ int playerDirection = 0;
 
 void displayGame() {
     prevState = STATE_PLAY;
+
     BeginDrawing();
     ClearBackground(DARKGRAY);
-
-    pthread_t brickThread;
-
-    pthread_create(&brickThread, NULL, randomBlock, NULL);
-
-    pthread_join(brickThread, NULL);
-
     shooter(&P.x, &P.y);
     moveSet(&P.x);
 
     Vector2 playerpos = { P.x, P.y };
     DrawRectangle(GAME_SCREEN, Fade(SKYBLUE, 0.3f));
 
-    randomBlock(); // Ditambahkan oleh faliq 2.0
     MoveBullets(bullets);
     DrawBullets(bullets);
 
@@ -1015,7 +1015,6 @@ void displayGame() {
         playerpos.x += 5;
         playerDirection = 1;
     }
-
     if (IsKeyPressed(KEY_LEFT)) {
         playerpos.x -= 5;
         playerDirection = -1;

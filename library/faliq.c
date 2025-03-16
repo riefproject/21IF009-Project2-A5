@@ -52,21 +52,14 @@ void musicGameplay() {
     SetMusicVolume(soundGameplay, 0.5f); // Ditambahkan oleh faliq
 }
 
-// Algoritma brick
-void *randomBlock(){
-    int array[10];
-    int i;
-    int x = 0;
-    i = 0;
-        while(i < 10){
-            array[i] = rand() % 2;
-            if( array[i] == 1){
-                DrawRectangle(x, 10, 32, 32, WHITE);
-            }
-            x = x + 32;
-            i++;
-        }
-        // sleep(1); // Delay for brick
-
-    return NULL;
+// Membuat animasi background
+void openingAnimation(float *trans){
+    if(*trans < 1.0f){
+        *trans = *trans + 0.01f;
+    }
+    int colorValue = (int)(*trans * 255);
+    Color bgColor = {colorValue, colorValue, colorValue, 255};
+    BeginDrawing();
+        ClearBackground(bgColor);  
+    EndDrawing();
 }
