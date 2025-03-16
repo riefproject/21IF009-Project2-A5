@@ -1,6 +1,6 @@
 #ifndef FALIQ_H
 #define FALIQ_H
-
+#include "defines.h"
 // Menentukan lokasi shooter
 typedef struct {
     int x;
@@ -10,10 +10,10 @@ typedef struct {
 extern position P;
 
 // Membuat Bentuk Shooter 
-void shooter(int* x, int* y);
+void shooter(int* x, int* y, ScaleFactor scale);
 
 // Membuat Moveset Shooter
-void moveSet(int* x);
+void moveSet(int* x, GameResources* resources, ScaleFactor scale);
 
 // Mensetting lagu gameplay
 extern Music soundGameplay;

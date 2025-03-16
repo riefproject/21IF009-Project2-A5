@@ -7,36 +7,32 @@
 // 
 position P;
 Music soundGameplay;
-extern Sound sfxMove;
-void initializeSounds() {
-    sfxMove = LoadSound("assets/sounds/click.wav");
-}
 
-void shooter(int* x, int* y) {
+void shooter(int* x, int* y, ScaleFactor scale) {
     int positionx = *x;
     int positiony = *y;
 
-    if (*x + SIZE < GAME_SCREEN_WIDTH) {
-        DrawRectangle(positionx, positiony, SIZE, SIZE, WHITE);
-        DrawRectangle(positionx - SIZE, positiony, SIZE, SIZE, WHITE);
-        DrawRectangle(positionx + SIZE, positiony, SIZE, SIZE, WHITE);
-        DrawRectangle(positionx, positiony - SIZE, SIZE, SIZE, WHITE);
+    if (*x + BLOCK_SIZE < GAME_SCREEN_WIDTH) {
+        DrawRectangle(positionx, positiony, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionx - BLOCK_SIZE, positiony, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionx + BLOCK_SIZE, positiony, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionx, positiony - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, WHITE);
     }
     else {
-        DrawRectangle(positionx, positiony, SIZE, SIZE, WHITE);
-        DrawRectangle(positionx - SIZE, positiony, SIZE, SIZE, WHITE);
-        DrawRectangle(positionx, positiony - SIZE, SIZE, SIZE, WHITE);
+        DrawRectangle(positionx, positiony, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionx - BLOCK_SIZE, positiony, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionx, positiony - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, WHITE);
     }
 }
 
-void moveSet(int* x) {
-    if ((IsKeyPressed(KEY_LEFT)) && (*x > 0)) {
-        *x -= SPEED;
-        PlaySound(sfxMove);
+void moveSet(int* x, GameResources* resources, ScaleFactor scale) {
+    if ((MOVE_LEFT) && (*x > 0)) {
+        *x -= SHOOTER_STEP;
+        PlaySound(SOUND(resources, SOUND_MOVE));
     }
-    else if ((IsKeyPressed(KEY_RIGHT)) && (*x + SIZE < GAME_SCREEN_WIDTH)) {
-        *x += SPEED;
-        PlaySound(sfxMove);
+    else if ((MOVE_RIGHT) && (*x + BLOCK_SIZE < GAME_SCREEN_WIDTH)) {
+        *x += SHOOTER_STEP;
+        PlaySound(SOUND(resources, SOUND_MOVE));
     }
 }
 
