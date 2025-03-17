@@ -72,7 +72,7 @@ void handleLaser(Game* game) {
 
 // Membuat animasi background
 Color fadeInOpeningAnimation(float *trans){
-    if(*trans < 1.0f){
+    if(*trans <= 1.0f){
         *trans = *trans + 0.01f;
     }
     int colorValue = (int)(*trans * 255);
@@ -80,7 +80,7 @@ Color fadeInOpeningAnimation(float *trans){
 }
 
 Color fadeOutOpeningAnimation(float *trans){
-    if(*trans > 0.0f){
+    if(*trans >= 0.0f){
         *trans =*trans - 0.01f;
         if(*trans < 0){
             *trans = 0.0f;
@@ -92,21 +92,33 @@ Color fadeOutOpeningAnimation(float *trans){
 
 void openingAnimation(float *trans){
     while (*trans < 1.0f) { 
+        *trans = *trans + 0.01f;
+        if(*trans > 1.0f){
+            *trans = 1.0f;
+        }
         BeginDrawing();
             ClearBackground(fadeInOpeningAnimation(trans));  
         EndDrawing();
-        // fadeInOpeningAnimation(trans);  
-        if(*trans >= 1.0f){
-            BeginDrawing();
-                ClearBackground(WHITE);
-            EndDrawing();
-            WaitTime(2);
-        }
     } 
+
+    BeginDrawing();
+        ClearBackground(WHITE);
+    EndDrawing();
+    WaitTime(2);
+
     while (*trans > 0.0f){
+        *trans = *trans - 0.01f;
+        if(*trans < 0.0f){
+            *trans = 0.0f;
+        }
         BeginDrawing();
             ClearBackground(fadeOutOpeningAnimation(trans));  
         EndDrawing();
-        // fadeOutOpeningAnimation(trans);
     }
+
+    while (*trans < 1.0f) { 
+        BeginDrawing();
+            ClearBackground(fadeInOpeningAnimation(trans));  
+        EndDrawing();
+    } 
 }
