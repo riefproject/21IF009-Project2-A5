@@ -5,7 +5,6 @@
 void InitBullets(Bullets bullets[]);
 void ShootBullets(Bullets bullets[], Vector2 playerpos, int* BulletCount, bool* CanShoot, int direction);
 void MoveBullets(Bullets bullets[]);
-void DrawBullets(Bullets bullets[]);
-void ReloadBullets(Bullets bullets[], int* BulletCount, bool* CanShoot);
+void DrawBullets(Bullets bullets[],GameResources *resource);
 
 #endif

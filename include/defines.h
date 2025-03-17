@@ -164,6 +164,7 @@ typedef struct Block {
   
   typedef enum TextureAsset {
       TEXTURE_BLOCK,
+      TEXTURE_BULLET,
       TEXTURE_COUNT
   } TextureAsset;
   

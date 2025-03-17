@@ -1,5 +1,7 @@
-#include "goklas.h"
-#include <raylib.h>
+#include "all.h"
+#include "defines.h"
+
+
 
 void InitBullets(Bullets bullets[]) {
     for (int i = 0;i < MAX_BULLETS;i++) {
@@ -37,10 +39,10 @@ void MoveBullets(Bullets bullets[]) {
     }
 }
 
-void DrawBullets(Bullets bullets[]) {
+void DrawBullets(Bullets bullets[],GameResources *resource) {
     for (int i = 0;i < MAX_BULLETS;i++) {
         if (bullets[i].active) {
-            DrawRectangle(bullets[i].position.x, bullets[i].position.y, 5, 10, BLUE);
+            DrawTexture(TEXTURE(resource, TEXTURE_BULLET),bullets[i].position.x,bullets[i].position.y,WHITE);
         }
     }
 }

@@ -309,6 +309,7 @@ Assets* createAssets(void) {
 
     // Load textures
     assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
+    assets->textures[TEXTURE_BULLET] = LoadTexture("assets/sprites/bullet_brick.png");
 
     return assets;
 }
@@ -1611,7 +1612,7 @@ void displayGame(GameResources* resources) {
     moveSet(&P.x, resources, scale);
 
     MoveBullets(gameContext->bullets);
-    DrawBullets(gameContext->bullets);
+    DrawBullets(gameContext->bullets,resources);
 
     // Handle input
     if (IsKeyPressed(KEY_RIGHT)) {
@@ -1629,15 +1630,6 @@ void displayGame(GameResources* resources) {
     if (IsKeyDown(KEY_SPACE)) {
         gameContext->canShoot = true;
     }
-    if (gameContext->bulletCount >= MAX_BULLETS) {
-        gameContext->reloadTimer += GetFrameTime();
-        if (gameContext->reloadTimer >= GetFrameTime()) {
-            ReloadBullets(gameContext->bullets, &gameContext->bulletCount,
-                &gameContext->canShoot);
-            gameContext->reloadTimer = 1;
-        }
-    }
-
     EndDrawing();
 
     // Keperluan debug
