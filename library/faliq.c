@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <raylib.h>
-#include "Faliq.h"
+#include "defines.h"
 #include "all.h"
 #define BLOCK_SIZE auto_x(32)
 #define SHOOTER_STEP 32
@@ -9,29 +7,20 @@ position P;
 Music soundGameplay;
 
 
-// Membuat texture shooter
-Texture2D blockTexture[4];
-void loadTextureBlock(){
-    blockTexture[0] = LoadTexture("assets/sprites/shooter3.png");
-    blockTexture[1] = LoadTexture("assets/sprites/shooter1.png");
-    blockTexture[2] = LoadTexture("assets/sprites/shooter2.png");
-    blockTexture[3] = LoadTexture("assets/sprites/shooter4.png");
-}
-
-void shooter(int* x, int* y, ScaleFactor scale) {
+void shooter(int* x, int* y, GameResources* resources, ScaleFactor scale) {
     int positionx = *x;
     int positiony = *y;
 
     if (*x + BLOCK_SIZE < GAME_SCREEN_WIDTH) {
-        DrawTexture(blockTexture[0], positionx, positiony, WHITE);
-        DrawTexture(blockTexture[1], positionx - BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(blockTexture[2], positionx + BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(blockTexture[3], positionx, positiony - BLOCK_SIZE, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_M), positionx, positiony, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_L), positionx - BLOCK_SIZE, positiony, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_R), positionx + BLOCK_SIZE, positiony, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_T), positionx, positiony - BLOCK_SIZE, WHITE);
     }
     else {
-        DrawTexture(blockTexture[0], positionx, positiony, WHITE);
-        DrawTexture(blockTexture[1], positionx - BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(blockTexture[3], positionx, positiony - BLOCK_SIZE, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_M), positionx, positiony, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_L), positionx - BLOCK_SIZE, positiony, WHITE);
+        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_T), positionx, positiony - BLOCK_SIZE, WHITE);
     }
 }
 

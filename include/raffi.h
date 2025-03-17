@@ -1,8 +1,11 @@
 #ifndef RAFFI_H
 #define RAFFI_H
 
+//Inisialisasi Db
+void initializeDb(HiScore scores[]);
+
 //Mencari nilai terbesar antara skor player dan HiScores
-int getMax(HiScore scores[], Game* game, GameResources* resources);
+long long int getMax(HiScore scores[], Game* game, GameResources* resources);
 
 //Mengambil data dari db
 void loadHiScores(HiScore scores[]);

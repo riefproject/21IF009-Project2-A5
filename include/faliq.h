@@ -10,7 +10,7 @@ typedef struct {
 extern position P;
 
 // Membuat Bentuk Shooter 
-void shooter(int* x, int* y, ScaleFactor scale);
+void shooter(int* x, int* y, GameResources* resources, ScaleFactor scale);
 
 // Membuat Moveset Shooter
 void moveSet(int* x, GameResources* resources, ScaleFactor scale);
@@ -26,9 +26,5 @@ void handleLaser(Game* game);
 Color fadeInOpeningAnimation(float* trans);
 Color fadeOutOpeningAnimation(float* trans);
 void openingAnimation(float* trans);
-
-// Menambahkan Textur Shooter
-extern Texture2D blockTexture[4];
-void loadTextureBlock();
 
 #endif

@@ -310,6 +310,10 @@ Assets* createAssets(void) {
     // Load textures
     assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
     assets->textures[TEXTURE_BULLET] = LoadTexture("assets/sprites/bullet_brick.png");
+    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/shooter1.png");
+    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/shooter2.png");
+    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
+    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
 
     return assets;
 }
@@ -377,7 +381,7 @@ void mainWindow(void) {
     SetSoundVolume(SOUND(resources, SOUND_MOVE), resources->settings.sfx ? 1.0f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_SELECT), resources->settings.sfx ? 1.0f : 0.0f);
 
-    loadTextureBlock(); // Ditambahkan oleh Faliq
+    // loadTextureBlock(); // Ditambahkan oleh Faliq
     openingAnimation(&opTrans.progress); // Ditambahkan oleh Faliq
 
     resources->currentState = STATE_LOADING;
@@ -657,9 +661,9 @@ void showControls(GameResources* resources) {
         EndDrawing();
 
         if (resources->prevState != STATE_PLAY) {
-            if (IsKeyPressed(KEY_A)) {
+            if (IsKeyPressed(MOVE_LEFT || BACK_KEY)) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = STATE_MAIN_MENU;
+                resources->currentState = (resources->prevState == STATE_PLAY) ? STATE_PAUSE : STATE_MAIN_MENU;
             }
         }
 
@@ -755,7 +759,7 @@ void showSettings(GameResources* resources) {
             if (resources->prevState == STATE_PLAY)
                 infoText = "[R]: Resume    [P]: Pause Menu    [F]: ke Controls";
             else
-                infoText = "[A]: Pause Menu    [F]: Controls";
+                infoText = "[A]: Main Menu    [F]: Controls";
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
@@ -1310,15 +1314,7 @@ void resetHiScores(GameResources* resources) {
     }
     if (confirmReset(resources)) {
         HiScore scores[MAX_LEVELS];
-        for (int i = 0; i < MAX_LEVELS; i++) {
-            if (i < 10) {
-                sprintf(scores[i].mode, "Level %d", i + 1);
-            }
-            else {
-                strcpy(scores[i].mode, "Endless Mode");
-            }
-            scores[i].score = 0;
-        }
+        initializeDb(scores);
         saveHiScores(scores);
     }
     else return;
@@ -1364,7 +1360,7 @@ void gameOver(GameResources* resources) {
     // Load current high scores untuk tampilan
     HiScore scores[MAX_LEVELS];
     loadHiScores(scores);
-    int currentHighScore = scores[resources->gameLevel].score;
+    long long int currentHighScore = scores[resources->gameLevel].score;
 
     while (inGameOver && !WindowShouldClose()) {
         BeginDrawing();
@@ -1377,7 +1373,7 @@ void gameOver(GameResources* resources) {
 
         // Tampilkan high score juga
         char highScoreText[50];
-        sprintf(highScoreText, "High Score: %d", currentHighScore);
+        sprintf(highScoreText, "High Score: %lld", currentHighScore);
         Vector2 highScoreSize = MeasureTextEx(FONT(resources, FONT_BODY), highScoreText, fontSize, 2);
         DrawTextEx(FONT(resources, FONT_BODY), highScoreText,
             (Vector2) {
@@ -1447,54 +1443,18 @@ float getSpeedForMode(Game* game, int mode) {
 
 static void getBlockRangeForMode(int mode, int* minBlocks, int* maxBlocks) {
     switch (mode) {
-    case 0: // Super EZ
-        *minBlocks = 8;
-        *maxBlocks = 9;
-        break;
-    case 1: // Easy
-        *minBlocks = 7;
-        *maxBlocks = 9;
-        break;
-    case 2: // Beginner
-        *minBlocks = 7;
-        *maxBlocks = 8;
-        break;
-    case 3: // Medium
-        *minBlocks = 7;
-        *maxBlocks = 8;
-        break;
-    case 4: // Hard
-        *minBlocks = 6;
-        *maxBlocks = 7;
-        break;
-    case 5: // Super Hard
-        *minBlocks = 6;
-        *maxBlocks = 7;
-        break;
-    case 6: // Expert
-        *minBlocks = 6;
-        *maxBlocks = 7;
-        break;
-    case 7: // Master
-        *minBlocks = 5;
-        *maxBlocks = 6;
-        break;
-    case 8: // Legend
-        *minBlocks = 5;
-        *maxBlocks = 6;
-        break;
-    case 9: // God
-        *minBlocks = 5;
-        *maxBlocks = 5;
-        break;
-    case 10: // Endless
-        *minBlocks = 5;
-        *maxBlocks = 9;
-        break;
-    default:
-        *minBlocks = 8;
-        *maxBlocks = 9;
-        break;
+    case 0: MD1_RANGE; // Super EZ
+    case 1: MD2_RANGE; // Easy
+    case 2: MD3_RANGE; // Beginner
+    case 3: MD4_RANGE; // Medium
+    case 4: MD5_RANGE; // Hard
+    case 5: MD6_RANGE; // Super Hard
+    case 6: MD7_RANGE; // Expert
+    case 7: MD8_RANGE; // Master
+    case 8: MD9_RANGE; // Legend
+    case 9: MD10_RANGE; // God
+    case 10: MD11_RANGE; // Endless
+    default: MD1_RANGE;
     }
 }
 
@@ -1602,7 +1562,7 @@ void displayGame(GameResources* resources) {
     }
     drawBlockUI(gameContext);
     // Debug grid visualization
-    if (IsKeyDown(KEY_D)) {
+    if (IsKeyDown(KEY_LEFT_SHIFT)) {
         for (int i = 0; i <= MAX_ROWS; i++) {
             DrawLine(0, i * 32, MAX_COLUMNS * 32, i * 32, Fade(RED, 0.3f));
         }
@@ -1613,26 +1573,26 @@ void displayGame(GameResources* resources) {
 
     // Player and bullets
     Vector2 playerPos = { P.x, P.y };
-    shooter(&P.x, &P.y, scale);
+    shooter(&P.x, &P.y, resources, scale);
     moveSet(&P.x, resources, scale);
 
     MoveBullets(gameContext->bullets);
-    DrawBullets(gameContext->bullets,resources);
+    DrawBullets(gameContext->bullets, resources);
 
     // Handle input
-    if (IsKeyPressed(KEY_RIGHT)) {
+    if (MOVE_RIGHT) {
         playerPos.x += 5;
         gameContext->playerDirection = 1;
     }
-    if (IsKeyPressed(KEY_LEFT)) {
+    if (MOVE_LEFT) {
         playerPos.x -= 5;
         gameContext->playerDirection = -1;
     }
-    if (IsKeyPressed(KEY_SPACE)) {
+    if (SHOOT_KEY) {
         ShootBullets(gameContext->bullets, playerPos, &gameContext->bulletCount,
             &gameContext->canShoot, 0);
     }
-    if (IsKeyDown(KEY_SPACE)) {
+    if (SHOOT_RELEASE) {
         gameContext->canShoot = true;
     }
     EndDrawing();

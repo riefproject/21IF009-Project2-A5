@@ -88,7 +88,7 @@ void updateHighScore(Game* game, GameResources* resources) {
 }
 
 void addScore(Game* game, int row) {
-    int basePoints = 50;
+    int basePoints = 20;
     int rowMultiplier = row + 1; // Semakin bawah multiplier semakin besar
 
     game->score += basePoints * rowMultiplier;
@@ -98,8 +98,8 @@ long long int playerScore(Game* game) {
     return game->score;
 }
 
-int getMax(HiScore scores[], Game* game, GameResources* resources) {
-    int level = resources->gameLevel - 1;
+long long int getMax(HiScore scores[], Game* game, GameResources* resources) {
+    int level = resources->gameLevel;
     if (scores[level].score < game->score) {
         return game->score;
     }
