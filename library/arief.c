@@ -359,7 +359,9 @@ void mainWindow(void) {
     int screenWidth = MIN_SCREEN_WIDTH;
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
     P.x = 160; // Ditambahkan oleh faliq
-    P.y = 608; // Ditambahkan oleh faliq
+    P.y = 598; // Ditambahkan oleh faliq
+    openingTransition opTrans; // Ditambahkan oleh faliq
+    opTrans.progress = 0.0f; // Ditambahkan oleh faliq
 
     InitWindow(screenWidth, screenHeight, "Block Shooter");
     Image ico = LoadImage("assets/ico.png");
@@ -374,6 +376,9 @@ void mainWindow(void) {
     SetMusicVolume(soundGameplay, resources->settings.sfx ? 0.5f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_MOVE), resources->settings.sfx ? 1.0f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_SELECT), resources->settings.sfx ? 1.0f : 0.0f);
+
+    loadTextureBlock(); // Ditambahkan oleh Faliq
+    openingAnimation(&opTrans.progress); // Ditambahkan oleh Faliq
 
     resources->currentState = STATE_LOADING;
     while (!WindowShouldClose()) {

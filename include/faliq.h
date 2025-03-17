@@ -22,15 +22,13 @@ void musicGameplay(GameResources* resources);
 // Membuat laser
 void handleLaser(Game* game);
 
-
 // Membuat animasi opening game.
-typedef struct {
-    float progress;
-}openingTransition;
-extern openingTransition opTrans;
-
 Color fadeInOpeningAnimation(float* trans);
 Color fadeOutOpeningAnimation(float* trans);
 void openingAnimation(float* trans);
+
+// Menambahkan Textur Shooter
+extern Texture2D blockTexture[4];
+void loadTextureBlock();
 
 #endif

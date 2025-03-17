@@ -294,4 +294,9 @@ typedef struct {
       int activeEffectsCount;           // Jumlah efek yang aktif
   } Game;
   
+  typedef struct { // Ditambahkan oleh Faliq
+        float progress; // Ditambahkan oleh Faliq
+  }openingTransition;// Ditambahkan oleh Faliq
+
+   extern openingTransition opTrans; // Ditambahkan oleh Faliq
 #endif
