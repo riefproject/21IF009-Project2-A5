@@ -28,7 +28,7 @@ struct openingTransition;
 //           Game Constants
 // =======================================
 // Core Constants
-#define LOADING_TIME 5.0f
+#define LOADING_TIME 2.0f
 #define MAX_ROWS 16
 #define MAX_COLUMNS 10
 #define MAX_WIDTH_BLOCKS 11
