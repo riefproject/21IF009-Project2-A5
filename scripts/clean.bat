@@ -1,4 +1,3 @@
-REM filepath: /d:/Academic/Semester2/21IF009-Project2-A5/scripts/clean.bat
 @echo off
 echo Cleaning build directories...
 
@@ -9,4 +8,3 @@ if exist bin rmdir /s /q bin
 if exist build\output rmdir /s /q build\output
 
 echo Clean complete!
-pause

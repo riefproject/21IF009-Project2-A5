@@ -1,5 +1,5 @@
+#include "defines.h"
 #include "all.h"
-
 // =======================================
 //                Database 
 // =======================================
@@ -1192,7 +1192,7 @@ void selectMode(GameResources* resources) {
         "Master",
         "Legend",
         "God",
-        "Endless"
+        "Progressive"
     };
     int selection = resources->settings.mode;
     int lineCount = len(modes);
@@ -1436,7 +1436,7 @@ float getSpeedForMode(Game* game, int mode) {
     case 7: return MD8_SPEED;
     case 8: return MD9_SPEED;
     case 9: return MD10_SPEED;
-    case 10: return MD1_SPEED * (1.0f + game->frameCounter / 3600.0f); // Progressive speed for endless
+    case 10: return MD1_SPEED * (1.0f + game->frameCounter / 3600.0f); // Progressive speed for Progressive
     default: return MD1_SPEED;
     }
 }
@@ -1453,7 +1453,7 @@ static void getBlockRangeForMode(int mode, int* minBlocks, int* maxBlocks) {
     case 7: MD8_RANGE; // Master
     case 8: MD9_RANGE; // Legend
     case 9: MD10_RANGE; // God
-    case 10: MD11_RANGE; // Endless
+    case 10: MD11_RANGE; // Progressive
     default: MD1_RANGE;
     }
 }

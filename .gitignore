@@ -15,7 +15,10 @@
 
 # Ignore logs
 *.log
-*.dat
+*.stackdump
+
+# Ignore all .dat files anywhere in the project
+**/*.dat
 
 # Ignore OS-specific files
 .DS_Store
@@ -27,13 +30,5 @@ init.ps1
 #ignore Temp Folder
 /temp/*
 
-# keep
+# keep folders
 !*/
-
-#db
-!db
-/db/**/*
-
-#db
-db/*
-!db/.gitkeep

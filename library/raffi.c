@@ -12,7 +12,7 @@ typedef enum {
     Master,
     Legend,
     God,
-    Endless,
+    Progressive,
 }Level;
 
 const char* levelNames[] = {
@@ -26,7 +26,7 @@ const char* levelNames[] = {
     "Master",
     "Legend",
     "God",
-    "Endless",
+    "Progressive",
 };
 
 void initializeDb(HiScore scores[]) {

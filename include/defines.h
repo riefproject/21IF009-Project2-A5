@@ -48,7 +48,7 @@ struct openingTransition;
 #define MD8_RANGE GET_RANGE_LEVEL(5, 6)    // Master
 #define MD9_RANGE GET_RANGE_LEVEL(5, 6)    // Legend
 #define MD10_RANGE GET_RANGE_LEVEL(5, 5)   // God
-#define MD11_RANGE GET_RANGE_LEVEL(5, 9)   // Endless
+#define MD11_RANGE GET_RANGE_LEVEL(5, 9)   // Progressive
 
 // Block Fall Speed Per Level
 #define DFT_SPEED 0.6f
