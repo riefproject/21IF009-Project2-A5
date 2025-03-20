@@ -315,6 +315,7 @@ Assets* createAssets(void) {
     assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/shooter2.png");
     assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
     assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
+    assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
 
     return assets;
 }
@@ -1551,7 +1552,7 @@ void displayGame(GameResources* resources) {
             }
         }
     }
-    drawGameUI(gameContext);
+    drawGameUI(gameContext, resources);
     if (gameContext->lives <= 0) {
         gameContext->gameOver = true;
         resources->currentState = STATE_GAME_OVER;
@@ -1561,7 +1562,6 @@ void displayGame(GameResources* resources) {
         gameContext = NULL;
         return;
     }
-    drawBlockUI(gameContext);
     // Debug grid visualization
     if (IsKeyDown(KEY_LEFT_SHIFT)) {
         for (int i = 0; i <= MAX_ROWS; i++) {
@@ -1853,13 +1853,6 @@ void drawBlocks(Game* game, GameResources* resources) {
     }
 }
 
-// Update fungsi drawBlockUI
-void drawBlockUI(Game* game) {
-    char scoreText[30];
-    sprintf(scoreText, "Score: %lld", game->score);
-    DrawText(scoreText, 10, 10, 20, BLACK);
-}
-
 void printGrid(Game* game) {
     system("cls");
     printf("\n--- Grid State ---\n");
@@ -1872,22 +1865,29 @@ void printGrid(Game* game) {
     printf("-----------------\n");
 }
 
-void drawGameUI(Game* game) {
+void drawGameUI(Game* game, GameResources* resources) {
     char scoreText[32];
     sprintf(scoreText, "Score: %lld", playerScore(game));
-    DrawText(scoreText, 10, 10, 20, WHITE);
+    DrawText(scoreText, 330, 10, 20, WHITE);
 
     for (int i = 0; i < game->lives; i++) {
-        DrawRectangle(10 + (i * 30), 40, 20, 20, RED);
+        float scale = 40.0f / 640.0f;
+        DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
+            (Vector2) {
+            330 + (i * 35), 40
+        }, // posisi
+            0,  // rotation
+            scale, // scale factor
+            WHITE);
     }
 
     if (game->laserCooldown > 0) {
         char cooldownText[32];
         sprintf(cooldownText, "Laser: %.1fs", game->laserCooldown);
-        DrawText(cooldownText, 10, 70, 20, WHITE);
+        DrawText(cooldownText, 330, 70, 20, WHITE);
     }
 
-    int startY = 130;
+    int startY = 100;
     for (int i = 0; i < game->activeEffectsCount; i++) {
         if (game->activePowerups[i].active) {
             char effectText[64];
@@ -1913,7 +1913,7 @@ void drawGameUI(Game* game) {
             }
 
             sprintf(effectText, "%s: %.1fs", effectName, game->activePowerups[i].duration);
-            DrawText(effectText, 10, startY, 20, effectColor);
+            DrawText(effectText, 330, startY, 20, effectColor);
             startY += 30;
         }
     }

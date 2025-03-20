@@ -32,3 +32,6 @@ init.ps1
 
 # keep folders
 !*/
+!/db/
+/db/*
+!/db/.gitkeep

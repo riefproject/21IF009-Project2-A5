@@ -88,7 +88,7 @@ void activatePowerUp(Game* game);    // Mengaktifkan power-up
 void drawPowerUp(Game* game);        // Menggambar power-up
 void updatePowerUp(Game* game);      // Update status power-up
 void handleLaser(Game* game);        // Menangani efek laser
-void drawGameUI(Game* game);         // Menggambar UI game
+void drawGameUI(Game* game, GameResources* resources);         // Menggambar UI game
 
 void addScore(Game* game, int row);
 #endif
