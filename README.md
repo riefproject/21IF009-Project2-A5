@@ -20,7 +20,7 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
 ## 📂 Project Structure
 
 -   **src/** → Contains the source code files (.c), including the main game logic and entry point (`main.c`).
--   **src/modules/** → Contains core game logic modules:
+-   **src/library/** → Contains core game logic modules:
     -   `arief.c` - Core game loop and UI management
     -   `naira.c` - Power-up system implementation
     -   `raffi.c` - Score handling and persistence

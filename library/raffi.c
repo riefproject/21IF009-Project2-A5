@@ -33,7 +33,6 @@ void initializeDb(HiScore scores[]) {
     FILE* file = fopen("db/hiscores.dat", "w");
     if (!file) {
         printf("Database belum dibuat!\n");
-        return;
     }
     for (int i = 0; i < MAX_LEVELS; i++) {
         sprintf(scores[i].mode, "%s", levelNames[i]);

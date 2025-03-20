@@ -157,6 +157,7 @@ typedef struct BlockQueue {
 typedef enum SoundAsset {
     SOUND_MOVE,
     SOUND_SELECT,
+    SOUND_SHOOT,
     SOUND_COUNT
 } SoundAsset;
 
