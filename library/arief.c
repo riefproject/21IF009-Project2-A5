@@ -302,6 +302,7 @@ Assets* createAssets(void) {
     // Load sounds
     assets->sounds[SOUND_MOVE] = LoadSound("assets/sounds/click.wav");
     assets->sounds[SOUND_SELECT] = LoadSound("assets/sounds/select.wav");
+    assets->sounds[SOUND_SHOOT] = LoadSound("assets/sounds/gunshot.mp3");
 
     // Load fonts
     assets->fonts[FONT_BODY] = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
@@ -1377,7 +1378,7 @@ void gameOver(GameResources* resources) {
         Vector2 highScoreSize = MeasureTextEx(FONT(resources, FONT_BODY), highScoreText, fontSize, 2);
         DrawTextEx(FONT(resources, FONT_BODY), highScoreText,
             (Vector2) {
-            (GetScreenWidth() - highScoreSize.x) / 2, startY + 70
+            (GetScreenWidth() - highScoreSize.x) / 2, startY + 40
         },
             fontSize, 2, DARKGRAY);
 
@@ -1590,7 +1591,7 @@ void displayGame(GameResources* resources) {
     }
     if (SHOOT_KEY) {
         ShootBullets(gameContext->bullets, playerPos, &gameContext->bulletCount,
-            &gameContext->canShoot, 0);
+            &gameContext->canShoot, 0, resources);
     }
     if (SHOOT_RELEASE) {
         gameContext->canShoot = true;

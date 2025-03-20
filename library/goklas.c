@@ -10,7 +10,7 @@ void InitBullets(Bullets bullets[]) {
     }
 }
 
-void ShootBullets(Bullets bullets[], Vector2 playerpos, int* BulletCount, bool* CanShoot, int direction) {
+void ShootBullets(Bullets bullets[], Vector2 playerpos, int* BulletCount, bool* CanShoot, int direction,GameResources *resources) {
     if (*BulletCount < MAX_BULLETS && *CanShoot) {
         for (int i = 0;i < MAX_BULLETS;i++) {
             if (!bullets[i].active) {
@@ -18,6 +18,7 @@ void ShootBullets(Bullets bullets[], Vector2 playerpos, int* BulletCount, bool* 
                 bullets[i].direction = direction;
                 bullets[i].active = true;
                 (*BulletCount)++;
+                PlaySound(SOUND(resources,SOUND_SHOOT));
                 *CanShoot = false;
                 break;
             }
@@ -30,7 +31,7 @@ void MoveBullets(Bullets bullets[]) {
     for (int i = 0;i < MAX_BULLETS;i++) {
         if (bullets[i].active) {
             bullets[i].position.x += bullets[i].direction * 5;
-            bullets[i].position.y -= 5;
+            bullets[i].position.y -= 10;
             if (bullets[i].position.x < 0 || bullets[i].position.x > GetScreenWidth()) {
                 bullets[i].active = false;
             }
