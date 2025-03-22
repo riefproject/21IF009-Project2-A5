@@ -303,6 +303,7 @@ Assets* createAssets(void) {
     assets->sounds[SOUND_MOVE] = LoadSound("assets/sounds/click.wav");
     assets->sounds[SOUND_SELECT] = LoadSound("assets/sounds/select.wav");
     assets->sounds[SOUND_SHOOT] = LoadSound("assets/sounds/gunshot.mp3");
+    assets->sounds[SOUND_DEATH] = LoadSound("assets/sounds/death.mp3");
 
     // Load fonts
     assets->fonts[FONT_BODY] = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
@@ -1358,6 +1359,7 @@ void gameOver(GameResources* resources) {
     int fontSize = auto_y(20);
     int lineCount = len(options);
     bool inGameOver = true;
+    PlaySound(SOUND(resources,SOUND_DEATH));
 
     // Load current high scores untuk tampilan
     HiScore scores[MAX_LEVELS];
