@@ -21,4 +21,7 @@ void addScore(Game* game, int row);
 
 //Getter score player
 long long int playerScore(Game* game);
+
+//Getter mode
+char* gameMode(GameResources* resources);
 #endif

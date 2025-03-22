@@ -12,6 +12,7 @@ enum PowerUpType;
 enum SoundAsset;
 enum FontAsset;
 enum TextureAsset;
+enum BgTextures;
 struct PowerUp;
 struct ScaleFactor;
 struct HiScore;
@@ -115,6 +116,7 @@ struct openingTransition;
 #define SOUND(rsc, id) ((rsc)->assets->sounds[id])
 #define FONT(rsc, id) ((rsc)->assets->fonts[id])
 #define TEXTURE(rsc, id) ((rsc)->assets->textures[id])
+#define BG(rsc, id) ((rsc)->assets->bg[id])
 
 // Debug Helper
 #define DBG printf("Haiiii");
@@ -165,6 +167,7 @@ typedef enum SoundAsset {
 typedef enum FontAsset {
     FONT_BODY,
     FONT_HEADER,
+    FONT_INGAME,
     FONT_COUNT
 } FontAsset;
 
@@ -176,8 +179,14 @@ typedef enum TextureAsset {
     TEXTURE_SHOOTER_M,
     TEXTURE_SHOOTER_T,
     TEXTURE_HEART,
+    TEXTURE_LASER_BUTTON,
     TEXTURE_COUNT
 } TextureAsset;
+
+typedef enum BgTextures {
+    BG_PLAY,
+    BG_COUNT
+}BgTextures;
 
 typedef enum GameState {
     STATE_LOADING,
@@ -249,6 +258,7 @@ typedef struct Assets {
     Sound sounds[SOUND_COUNT];           // Array untuk menyimpan efek suara
     Font fonts[FONT_COUNT];              // Array untuk menyimpan font
     Texture2D textures[TEXTURE_COUNT];   // Array untuk menyimpan tekstur
+    Texture2D bg[BG_COUNT];              // Array untuk menyimpan background
 } Assets;
 
 /* Struktur PowerUp:

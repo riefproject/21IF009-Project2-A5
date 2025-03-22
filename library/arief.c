@@ -296,7 +296,7 @@ void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight)
 
 // Tambahkan fungsi ini di arief.c
 Assets* createAssets(void) {
-    Assets* assets = (Assets*)malloc(sizeof(Assets));
+    Assets* assets = new(Assets);
     if (!assets) return NULL;
 
     // Load sounds
@@ -308,6 +308,7 @@ Assets* createAssets(void) {
     // Load fonts
     assets->fonts[FONT_BODY] = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
     assets->fonts[FONT_HEADER] = LoadFont("assets/fonts/Ubuntu-Medium.ttf");
+    assets->fonts[FONT_INGAME] = LoadFont("assets/fonts/assets/fonts/Orbitron-Medium.ttf");
 
     // Load textures
     assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
@@ -317,6 +318,10 @@ Assets* createAssets(void) {
     assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
     assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
     assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
+    assets->textures[TEXTURE_LASER_BUTTON] = LoadTexture("assets/sprites/laser_button.png");
+
+    // Load Bg
+    assets->bg[BG_PLAY] = LoadTexture("assets/background/play.png");
 
     return assets;
 }
@@ -337,6 +342,11 @@ void destroyAssets(Assets* assets) {
     // Unload textures
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         UnloadTexture(assets->textures[i]);
+    }
+
+    // Unload bg
+    for (int i = 0; i < BG_COUNT; i++) {
+        UnloadTexture(assets->bg[i]);
     }
 
     free(assets);
@@ -1505,11 +1515,16 @@ void displayGame(GameResources* resources) {
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    // Draw game area
-    DrawRectangle(0, 0, 320, 512, Fade(SKYBLUE, 0.3f));
+    DrawRectangle(auto_x(0), auto_y(0), auto_x(320), auto_y(640), (Color) { 236, 244, 255, 255 });
+    DrawRectangle(auto_x(320), auto_y(0), auto_x(3), auto_y(640), (Color) { 27, 45, 4, 255 });
+    DrawRectangle(auto_x(323), auto_y(0), auto_x(7), auto_y(640), (Color) { 65, 71, 71, 255 });
+    DrawRectangle(auto_x(330), auto_y(0), auto_x(150), auto_y(640), (Color) { 25, 38, 47, 255 });
+    DrawRectangle(auto_x(0), auto_y(512), auto_x(320), auto_y(1), BLACK);
+
 
     drawBlocks(gameContext, resources);
     drawPowerUp(gameContext);
+
     if (IsKeyPressed(KEY_E) && gameContext->laserCooldown <= 0) {
         gameContext->laserActive = true;
         gameContext->laserDuration = 5.0f;
@@ -1567,10 +1582,8 @@ void displayGame(GameResources* resources) {
     // Debug grid visualization
     if (IsKeyDown(KEY_LEFT_SHIFT)) {
         for (int i = 0; i <= MAX_ROWS; i++) {
-            DrawLine(0, i * 32, MAX_COLUMNS * 32, i * 32, Fade(RED, 0.3f));
         }
         for (int j = 0; j <= MAX_COLUMNS; j++) {
-            DrawLine(j * 32, 0, j * 32, MAX_ROWS * 32, Fade(RED, 0.3f));
         }
     }
 
@@ -1868,25 +1881,137 @@ void printGrid(Game* game) {
 }
 
 void drawGameUI(Game* game, GameResources* resources) {
-    char scoreText[32];
-    sprintf(scoreText, "Score: %lld", playerScore(game));
-    DrawText(scoreText, 330, 10, 20, WHITE);
+    ScaleFactor scale = GetScreenScaleFactor();
+
+    {
+        char obj[32];
+        Vector2 textSize;
+        int startX, areaWidth;
+        const int mid = auto_x(405);
+        const int linespacing = auto_y(30);
+
+        // Mode ==========================================================
+        int curY = 50;
+        textSize = MeasureTextEx(GetFontDefault(), "MODE", 20, 2);
+        startX = mid - (textSize.x / 2);
+        DrawTextEx(GetFontDefault(), "MODE", (Vector2) { startX, curY }, 20, 2, WHITE);
+        curY += linespacing;
+
+        sprintf(obj, "%s", gameMode(resources));
+        textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+        startX = rect.x + (rect.width - textSize.x) / 2;
+        int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+        curY += linespacing;
+        curY += auto_y(30);
+        // High-Score ====================================================
+        {
+            textSize = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
+            startX = mid - (textSize.x / 2);
+            DrawTextEx(GetFontDefault(), "HIGH-SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
+            curY += linespacing;
+
+
+            sprintf(obj, "%lld", getMax(resources->scores, game, resources));
+            textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+            Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+            DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+            startX = rect.x + (rect.width - textSize.x) / 2;
+            int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+            DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+            curY += linespacing;
+            curY += auto_y(30);
+        }
+        // Score =========================================================
+        {
+            textSize = MeasureTextEx(GetFontDefault(), "SCORE", 20, 2);
+            startX = mid - (textSize.x / 2);
+            DrawTextEx(GetFontDefault(), "SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
+            curY += linespacing;
+
+
+            sprintf(obj, "%lld", playerScore(game));
+            textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+            Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+            DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+            startX = rect.x + (rect.width - textSize.x) / 2;
+            int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+            DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+            curY += linespacing;
+            curY += auto_y(30);
+        }
+        {
+            textSize = MeasureTextEx(GetFontDefault(), "POWERUP", 20, 2);
+            startX = mid - (textSize.x / 2);
+            DrawTextEx(GetFontDefault(), "POWER-UP", (Vector2) { startX, curY }, 20, 2, ORANGE);
+            curY += linespacing;
+
+
+            // sprintf(obj, "%lld", playerScore(game));
+            // textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+            // Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+            // DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+            // startX = rect.x + (rect.width - textSize.x) / 2;
+            // int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+            // DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+            // curY += linespacing;
+        }
+    }
 
     for (int i = 0; i < game->lives; i++) {
-        float scale = 40.0f / 640.0f;
+        float scale = 30.0f / 640.0f;
         DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
             (Vector2) {
-            330 + (i * 35), 40
+            345 + (i * 35), 480
         }, // posisi
             0,  // rotation
             scale, // scale factor
             WHITE);
     }
 
+    float local_scale = 80.0f / 640.0f;
+    Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
+    Rectangle buttonRect = {
+        buttonPos.x,
+        buttonPos.y,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
+    };
+
     if (game->laserCooldown > 0) {
-        char cooldownText[32];
-        sprintf(cooldownText, "Laser: %.1fs", game->laserCooldown);
-        DrawText(cooldownText, 330, 70, 20, WHITE);
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale,
+            (Color) {
+            255, 255, 255, 80
+        });
+
+        char cooldownText[5];
+        sprintf(cooldownText, "%.1f", game->laserCooldown);
+        Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
+        float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
+        float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
+        DrawTextEx(GetFontDefault(), cooldownText,
+            (Vector2) {
+            textX, textY
+        }, 20, 2, WHITE);
+    }
+    else {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale, WHITE);
     }
 
     int startY = 100;

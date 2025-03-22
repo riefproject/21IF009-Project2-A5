@@ -106,3 +106,7 @@ long long int getMax(HiScore scores[], Game* game, GameResources* resources) {
         return scores[level].score;
     }
 }
+
+char* gameMode(GameResources* resources) {
+    return levelNames[resources->gameLevel];
+}
