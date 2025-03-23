@@ -30,7 +30,7 @@ struct openingTransition;
 // =======================================
 // Core Constants
 #define LOADING_TIME 2.0f
-#define MAX_ROWS 16
+#define MAX_ROWS 17
 #define MAX_COLUMNS 10
 #define MAX_WIDTH_BLOCKS 11
 #define MAX_LEVELS 11

@@ -43,7 +43,7 @@ void mainWindow(void);                          // Menampilkan jendela utama
 void mainMenu(GameResources* resources);        // Menampilkan menu utama
 void resetHiScores(GameResources* resources);   // Reset skor tertinggi
 void rejectReset(GameResources* resources);     // Membatalkan reset skor
-void gameOver(GameResources* resources);        // Menampilkan layar game over
+void gameOver(GameResources* resources, long long int currentScore);        // Menampilkan layar game over
 void selectMode(GameResources* resources);      // Memilih mode permainan
 void showControls(GameResources* resources);    // Menampilkan kontrol game
 void showHiScore(GameResources* resources);     // Menampilkan skor tertinggi

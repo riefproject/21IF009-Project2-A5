@@ -110,7 +110,9 @@ void drawPowerUp(Game* game, GameResources* resources) {
         local_scale = 40.0f / 1024.0f;
         break;
     default:
-        return; // Tidak perlu menggambar untuk tipe lainnya
+        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
+        local_scale = 40.0f / 1024.0f;
+        break;
     }
 
     DrawTextureEx(powerupTexture,

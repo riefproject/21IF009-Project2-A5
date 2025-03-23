@@ -318,10 +318,10 @@ Assets* createAssets(void) {
     // Load textures
     assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
     assets->textures[TEXTURE_BULLET] = LoadTexture("assets/sprites/bullet_brick.png");
-    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/left.png");
-    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/right.png");
-    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/mid.png");
-    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/Top.png");
+    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/shooter1.png");
+    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/shooter2.png");
+    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
+    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
     assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
     assets->textures[TEXTURE_LASER_BUTTON] = LoadTexture("assets/sprites/laser_button.png");
     assets->textures[TEXTURE_RANDOM] = LoadTexture("assets/sprites/random.png");
@@ -570,7 +570,7 @@ void mainMenu(GameResources* resources) {
         }
         if (IsKeyPressed(KEY_F1)) { // Use any function key for testing
             PlaySound(SOUND(resources, SOUND_SELECT));
-            gameOver(resources);
+            gameOver(resources, 0);
         }
         if (MOVE_UP) {
             PlaySound(SOUND(resources, SOUND_MOVE));
@@ -826,7 +826,7 @@ void showSettings(GameResources* resources) {
                     snprintf(lines[selection], sizeof(lines[selection]), "%s: Off", label);
                     if (selection == 0) {
                         resources->settings.music = 0;
-                        SetMusicVolume(soundGameplay, 0.0f);  // Add this
+                        SetMusicVolume(soundGameplay, 0.0f);
                     }
                     if (selection == 1) {
                         resources->settings.sfx = 0;
@@ -838,7 +838,7 @@ void showSettings(GameResources* resources) {
                     snprintf(lines[selection], sizeof(lines[selection]), "%s: On", label);
                     if (selection == 0) {
                         resources->settings.music = 1;
-                        SetMusicVolume(soundGameplay, 0.5f);  // Add this
+                        SetMusicVolume(soundGameplay, 0.5f);
                     }
                     if (selection == 1) {
                         resources->settings.sfx = 1;
@@ -1024,7 +1024,7 @@ void exitGame(GameResources* resources) {
         destroyAssets(resources->assets);
         UnloadMusicStream(soundGameplay);
         CloseWindow();
-        exit(0); // Exit program
+        exit(0);
     }
     else {
         resources->currentState = resources->prevState;
@@ -1235,9 +1235,8 @@ void selectMode(GameResources* resources) {
             int startY = (GetScreenHeight() - arrowSize.y) / 2;
 
             int windowCenterX = GetScreenWidth() / 2;
-            int arrowOffset = 200 * scale.x;  // Fixed distance from center
+            int arrowOffset = 200 * scale.x;
 
-            // Draw arrows at fixed positions from window edges
             DrawTextEx(FONT(resources, FONT_HEADER), "<", (Vector2) { windowCenterX - arrowOffset, startY }, 40, 2, DARKGRAY);
             DrawTextEx(FONT(resources, FONT_HEADER), ">", (Vector2) { windowCenterX + arrowOffset - arrowSize.x, startY }, 40, 2, DARKGRAY);
         }
@@ -1371,7 +1370,7 @@ void rejectReset(GameResources* resources) {
     }
 }
 
-void gameOver(GameResources* resources) {
+void gameOver(GameResources* resources, long long int currentScore) {
     ScaleFactor scale = GetScreenScaleFactor();
     const char* message = "GAME OVER";
     const char* options[] = { "Retry", "Main Menu" };
@@ -1386,61 +1385,121 @@ void gameOver(GameResources* resources) {
     loadHiScores(scores);
     long long int currentHighScore = scores[resources->gameLevel].score;
 
+    float countdown = 2.0f;  // 2 second countdown
+    bool canSelect = false;
+
     while (inGameOver && !WindowShouldClose()) {
+        float deltaTime = GetFrameTime();
+        countdown -= deltaTime;
+        if (countdown <= 0) canSelect = true;
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, 30, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
-        int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
+        int startY = (GetScreenHeight() - textSize.y) / 2 - 200;
         DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, 30, 2, DARKGRAY);
+        startY += 100;
 
-        // Tampilkan high score juga
         char highScoreText[50];
         sprintf(highScoreText, "High Score: %lld", currentHighScore);
         Vector2 highScoreSize = MeasureTextEx(FONT(resources, FONT_BODY), highScoreText, fontSize, 2);
+        if (currentScore > (resources->scores[resources->gameLevel].score)) {
+            const char* newTag = "[NEW]";
+            Vector2 newTagSize = MeasureTextEx(FONT(resources, FONT_BODY), newTag, 12, 2);
+            Rectangle newBox = {
+                (GetScreenWidth() - highScoreSize.x) / 2,
+                startY + auto_y(3),
+                newTagSize.x + 10,
+                newTagSize.y + auto_y(6)
+            };
+            DrawRectangle(newBox.x, newBox.y, newBox.width, newBox.height, ORANGE);
+            DrawTextEx(FONT(resources, FONT_BODY), newTag,
+                (Vector2) {
+                newBox.x + 5,
+                    newBox.y + 3
+            },
+                12, 2, WHITE);
+            startY += 25;
+        }
+
+        // Draw High Score
         DrawTextEx(FONT(resources, FONT_BODY), highScoreText,
             (Vector2) {
-            (GetScreenWidth() - highScoreSize.x) / 2, startY + 40
+            (GetScreenWidth() - highScoreSize.x) / 2,
+                startY
         },
             fontSize, 2, DARKGRAY);
 
-        startY += textSize.y + auto_y(50);
-        for (int i = 0; i < lineCount; i++) {
-            textSize = MeasureTextEx(FONT(resources, FONT_HEADER), options[i], fontSize, 2);
-            startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), options[i], (Vector2) { startX, startY }, fontSize, 2,
-                selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + (auto_y(20));
-        }
-        EndDrawing();
+        // 3. Draw Current Score
+        startY += 30;
+        char scoreText[50];
+        sprintf(scoreText, "Score: %lld", currentScore);
+        Vector2 scoreSize = MeasureTextEx(FONT(resources, FONT_BODY), scoreText, fontSize, 2);
+        DrawTextEx(FONT(resources, FONT_BODY), scoreText,
+            (Vector2) {
+            (GetScreenWidth() - scoreSize.x) / 2,
+                startY
+        },
+            fontSize, 2, BLUE);
 
-        if (MOVE_UP || MOVE_LEFT) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection--;
-            if (selection < 0) selection = lineCount - 1;
+        startY += 60;
+        if (!canSelect) {
+            char countdownText[20];
+            sprintf(countdownText, "%.1f", countdown);
+            Vector2 countSize = MeasureTextEx(FONT(resources, FONT_BODY), countdownText, fontSize, 2);
+            DrawTextEx(FONT(resources, FONT_BODY), countdownText,
+                (Vector2) {
+                (GetScreenWidth() - countSize.x) / 2,
+                    startY
+            },
+                fontSize, 2, RED);
         }
-        if (MOVE_DOWN || MOVE_RIGHT) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection++;
-            if (selection >= lineCount) selection = 0;
-        }
-        if (OK_KEY) {
-            PlaySound(SOUND(resources, SOUND_SELECT));
-            switch (selection) {
-            case 0: // Retry
-                resources->currentState = STATE_PLAY;
-                inGameOver = false;
-                countdownPause(resources);
-                break;
-            case 1: // Main Menu
-                resources->currentState = STATE_MAIN_MENU;
-                inGameOver = false;
-                break;
+        else {
+            startY += 20;
+            for (int i = 0; i < lineCount; i++) {
+                textSize = MeasureTextEx(FONT(resources, FONT_HEADER), options[i], fontSize, 2);
+                startX = (GetScreenWidth() - textSize.x) / 2;
+                DrawTextEx(FONT(resources, FONT_BODY), options[i],
+                    (Vector2) {
+                    startX, startY
+                },
+                    fontSize, 2,
+                    selection == i ? BLUE : DARKGRAY);
+                startY += textSize.y + auto_y(20);
+            }
+
+            // Handle input only when countdown is finished
+            if (MOVE_UP || MOVE_LEFT) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                selection--;
+                if (selection < 0) selection = lineCount - 1;
+            }
+            if (MOVE_DOWN || MOVE_RIGHT) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                selection++;
+                if (selection >= lineCount) selection = 0;
+            }
+            if (OK_KEY) {
+                PlaySound(SOUND(resources, SOUND_SELECT));
+                switch (selection) {
+                case 0: // Retry
+                    resources->currentState = STATE_PLAY;
+                    inGameOver = false;
+                    countdownPause(resources);
+                    break;
+                case 1: // Main Menu
+                    resources->currentState = STATE_MAIN_MENU;
+                    inGameOver = false;
+                    break;
+                }
             }
         }
+        EndDrawing();
     }
 }
+
 // =================================================================================================
 //                                       ... BLOCKS ...
 // =================================================================================================
@@ -1514,7 +1573,7 @@ void displayGame(GameResources* resources) {
             gameContext->gameOver = true;
             resources->currentState = STATE_GAME_OVER;
             updateHighScore(gameContext, resources);
-            gameOver(resources);
+            gameOver(resources, gameContext->score);
             free(gameContext);
             gameContext = NULL;
             return;
@@ -1584,7 +1643,7 @@ void displayGame(GameResources* resources) {
         gameContext->gameOver = true;
         resources->currentState = STATE_GAME_OVER;
         updateHighScore(gameContext, resources);
-        gameOver(resources);
+        gameOver(resources, gameContext->score);
         free(gameContext);
         gameContext = NULL;
         return;
@@ -1641,7 +1700,6 @@ void displayGame(GameResources* resources) {
     }
 }
 
-// Update fungsi isGameOverCheck untuk menerima Game
 bool isGameOverCheck(Game* game) {
     for (int j = 0; j < MAX_COLUMNS; j++) {
         if (game->grid[MAX_ROWS - 1][j]) {
@@ -1651,7 +1709,6 @@ bool isGameOverCheck(Game* game) {
     return false;
 }
 
-// Update fungsi isRowFull
 bool isRowFull(Game* game, int row) {
     for (int j = 0; j < MAX_COLUMNS; j++) {
         if (!game->grid[row][j]) return false;
@@ -1659,7 +1716,6 @@ bool isRowFull(Game* game, int row) {
     return true;
 }
 
-// Update fungsi hasActiveBlockBelow
 bool hasActiveBlockBelow(Game* game, int row) {
     for (int i = row + 1; i < MAX_ROWS; i++) {
         for (int j = 0; j < MAX_COLUMNS; j++) {
@@ -1669,7 +1725,6 @@ bool hasActiveBlockBelow(Game* game, int row) {
     return false;
 }
 
-// Update fungsi shiftRowsUp
 void shiftRowsUp(Game* game, int startRow) {
     for (int i = startRow; i < MAX_ROWS - 1; i++) {
         for (int j = 0; j < MAX_COLUMNS; j++) {
@@ -1681,7 +1736,6 @@ void shiftRowsUp(Game* game, int startRow) {
     }
 }
 
-// Update fungsi handleFullRow
 void handleFullRow(Game* game, int row) {
     if (isRowFull(game, row)) {
         if (hasActiveBlockBelow(game, row)) {
@@ -1697,13 +1751,10 @@ void handleFullRow(Game* game, int row) {
     }
 }
 
-// Handle block movement and generation
 void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
-    // Analyze current column states
     int emptyColLength[MAX_COLUMNS] = { 0 };
     int totalEmptyColumns = 0;
 
-    // Count empty spaces in each column from top
     for (int j = 0; j < MAX_COLUMNS; j++) {
         int emptyCount = 0;
         for (int i = 0; i < MAX_ROWS; i++) {
@@ -1720,14 +1771,11 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
         }
     }
 
-    // Move existing blocks down
     moveBlocksDown(game);
 
-    // Generate new blocks
     generateNewBlocks(game, minBlocks, maxBlocks, emptyColLength, totalEmptyColumns);
 }
 
-// Move all blocks down one row
 void moveBlocksDown(Game* game) {
     for (int i = MAX_ROWS - 1; i > 0; i--) {
         for (int j = 0; j < MAX_COLUMNS; j++) {
@@ -1735,27 +1783,22 @@ void moveBlocksDown(Game* game) {
         }
     }
 
-    // Clear top row
     for (int j = 0; j < MAX_COLUMNS; j++) {
         game->grid[0][j] = false;
     }
 }
 
-// Generate new blocks in the top row
 void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLength, int totalEmptyColumns) {
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     int remainingBlocks = numBlocks;
 
-    // First pass: Fill critical gaps
     if (totalEmptyColumns > 0) {
         remainingBlocks = fillCriticalGaps(game, remainingBlocks, emptyColLength);
     }
 
-    // Second pass: Random placement with balance
     fillRemainingBlocks(game, remainingBlocks);
 }
 
-// Fill gaps that are too large
 int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     for (int j = 0; j < MAX_COLUMNS && remainingBlocks > 0; j++) {
         if (emptyColLength[j] >= 4) {
@@ -1766,7 +1809,6 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     return remainingBlocks;
 }
 
-// Fill remaining blocks with some randomness but maintaining balance
 void fillRemainingBlocks(Game* game, int remainingBlocks) {
     int maxAttemptsPerBlock = 3;
     while (remainingBlocks > 0) {
@@ -1781,7 +1823,6 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
     }
 }
 
-// Handle bullet collisions with blocks
 void handleBulletCollisions(Game* game) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (game->bullets[i].active) {
@@ -1795,14 +1836,11 @@ void handleBulletCollisions(Game* game) {
     }
 }
 
-// Check if grid position is valid
 bool isValidGridPosition(int x, int y) {
     return x >= 0 && x < MAX_COLUMNS && y >= 0 && y < MAX_ROWS;
 }
 
-// Process what happens when a bullet hits a block
 void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
-    // Check if special bullet powerup is active
     bool hasSpecialBullet = false;
     for (int i = 0; i < game->activeEffectsCount; i++) {
         if (game->activePowerups[i].active &&
@@ -1813,19 +1851,16 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
     }
 
     if (hasSpecialBullet) {
-        // Destroy entire row
         for (int col = 0; col < MAX_COLUMNS; col++) {
             game->grid[gridY][col] = false;
         }
     }
     else {
-        // Normal single block behavior
         if (gridY < MAX_ROWS - 1) {
             game->grid[gridY + 1][gridX] = true;
         }
     }
 
-    // Common actions
     for (int row = 0; row < MAX_ROWS; row++) {
         handleFullRow(game, row);
     }
@@ -1833,7 +1868,6 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
     game->score += 10;
 }
 
-// Updated main updateBlocks function
 void updateBlocks(Game* game, GameResources* resources) {
     if (!game || !resources) return;
 
@@ -1852,23 +1886,18 @@ void updateBlocks(Game* game, GameResources* resources) {
     handleBulletCollisions(game);
 }
 
-// Update fungsi initBlocks
 void initBlocks(Game* game, GameResources* resources) {
-    // Clear all blocks
     for (int i = 0; i < MAX_ROWS; i++) {
         for (int j = 0; j < MAX_COLUMNS; j++) {
             game->grid[i][j] = false;
         }
     }
 
-    // Get correct initial block range
     int minBlocks, maxBlocks;
     getBlockRangeForMode(resources->gameLevel, &minBlocks, &maxBlocks);
 
-    // Generate blocks within the defined range
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
 
-    // Place blocks randomly
     while (numBlocks > 0) {
         int pos = rand() % MAX_COLUMNS;
         if (!game->grid[0][pos]) {
@@ -1882,17 +1911,19 @@ void initBlocks(Game* game, GameResources* resources) {
     game->gameOver = false;
 }
 
-// Update fungsi drawBlocks
 void drawBlocks(Game* game, GameResources* resources) {
     ScaleFactor scale = GetScreenScaleFactor();
+    float blockSize = auto_x(32);
+
     for (int i = 0; i < MAX_ROWS; i++) {
         for (int j = 0; j < MAX_COLUMNS; j++) {
             if (game->grid[i][j]) {
                 if (TEXTURE(resources, TEXTURE_BLOCK).id != 0) {
-                    DrawTexture(TEXTURE(resources, TEXTURE_BLOCK), j * auto_x(32), i * auto_y(32), WHITE);
+                    float texScale = (float)blockSize / (float)TEXTURE(resources, TEXTURE_BLOCK).width;
+                    DrawTextureEx(TEXTURE(resources, TEXTURE_BLOCK), (Vector2) { j* blockSize, i* blockSize }, 0.0f, texScale, WHITE);
                 }
                 else {
-                    DrawRectangle(j * auto_x(32), i * auto_y(32), auto_x(32), auto_y(32), BLUE);
+                    DrawRectangle(j * blockSize, i * blockSize, blockSize, blockSize, BLUE);
                 }
             }
         }
@@ -1914,15 +1945,15 @@ void printGrid(Game* game) {
 void drawGameUI(Game* game, GameResources* resources) {
     ScaleFactor scale = GetScreenScaleFactor();
 
-    {
-        char obj[32];
-        Vector2 textSize;
-        int startX, areaWidth;
-        const int mid = auto_x(405);
-        const int linespacing = auto_y(30);
+    char obj[32];
+    Vector2 textSize;
+    int startX, areaWidth;
+    const int mid = auto_x(405);
+    const int linespacing = auto_y(30);
+    int curY = 50;
 
-        // Mode ==========================================================
-        int curY = 50;
+    // Mode ==========================================================
+    {
         textSize = MeasureTextEx(GetFontDefault(), "MODE", 20, 2);
         startX = mid - (textSize.x / 2);
         DrawTextEx(GetFontDefault(), "MODE", (Vector2) { startX, curY }, 20, 2, WHITE);
@@ -1940,160 +1971,191 @@ void drawGameUI(Game* game, GameResources* resources) {
         DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
         curY += linespacing;
         curY += auto_y(30);
-        // High-Score ====================================================
-        {
-            textSize = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
-            startX = mid - (textSize.x / 2);
-            DrawTextEx(GetFontDefault(), "HIGH-SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
-            curY += linespacing;
-
-
-            sprintf(obj, "%lld", getMax(resources->scores, game, resources));
-            textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
-
-            Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-            DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
-
-            startX = rect.x + (rect.width - textSize.x) / 2;
-            int centerY = rect.y + (rect.height - textSize.y) / 2;
-
-            DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-            curY += linespacing;
-            curY += auto_y(30);
-        }
-        // Score =========================================================
-        {
-            textSize = MeasureTextEx(GetFontDefault(), "SCORE", 20, 2);
-            startX = mid - (textSize.x / 2);
-            DrawTextEx(GetFontDefault(), "SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
-            curY += linespacing;
-
-
-            sprintf(obj, "%lld", playerScore(game));
-            textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
-
-            Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-            DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
-
-            startX = rect.x + (rect.width - textSize.x) / 2;
-            int centerY = rect.y + (rect.height - textSize.y) / 2;
-
-            DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-            curY += linespacing;
-            curY += auto_y(30);
-        }
-        {
-            textSize = MeasureTextEx(GetFontDefault(), "POWERUP", 20, 2);
-            startX = mid - (textSize.x / 2);
-            DrawTextEx(GetFontDefault(), "POWER-UP", (Vector2) { startX, curY }, 20, 2, ORANGE);
-            curY += linespacing;
-
-            // Power-up icons container
-            {
-                const int ICON_SIZE = auto_x(40);   // Ukuran yang diinginkan untuk semua icon
-                const int SPACING = auto_x(10);     // Spacing antar icon
-                const int startIconX = auto_x(345); // Align left dengan hearts
-
-                // Draw active power-ups
-                for (int i = 0; i < game->activeEffectsCount; i++) {
-                    if (game->activePowerups[i].active) {
-                        Texture2D iconTexture;
-                        Color timerColor;
-                        float scale;
-
-                        // Pilih texture, warna, dan scale berdasarkan tipe
-                        switch (game->activePowerups[i].type) {
-                        case POWERUP_SPEED_UP:
-                            iconTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
-                            scale = (float)ICON_SIZE / 640.0f;
-                            timerColor = GREEN;
-                            break;
-                        case POWERUP_SLOW_DOWN:
-                            iconTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
-                            scale = (float)ICON_SIZE / 1024.0f;
-                            timerColor = RED;
-                            break;
-                        case POWERUP_SPECIAL_BULLET:
-                            iconTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET); // Temporary
-                            scale = (float)ICON_SIZE / 1024.0f;
-                            timerColor = BLUE;
-                            break;
-                        default:
-                            iconTexture = TEXTURE(resources, TEXTURE_RANDOM);
-                            scale = (float)ICON_SIZE / 1024.0f;
-                            timerColor = WHITE;
-                        }
-
-                        // Calculate position for current icon
-                        int iconX = startIconX + (i * (ICON_SIZE + SPACING));
-
-                        // Draw icon
-                        DrawTextureEx(iconTexture,
-                            (Vector2) {
-                            iconX, curY
-                        },
-                            0, scale, WHITE);
-
-                        // Draw timer below icon
-                        char timerText[8];
-                        sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
-                        Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
-                        float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
-                        float timerY = curY + ICON_SIZE + 5;
-
-                        DrawTextEx(GetFontDefault(), timerText,
-                            (Vector2) {
-                            timerX, timerY
-                        },
-                            15, 2, timerColor);
-                    }
-                }
-
-                curY += ICON_SIZE + auto_y(40);
-            }
-        }
-
-        for (int i = 0; i < game->lives; i++) {
-            float scale = 30.0f / 640.0f;
-            DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
-                (Vector2) {
-                345 + (i * 35), 480
-            }, // posisi
-                0,  // rotation
-                scale, // scale factor
-                WHITE);
-        }
-
-        float local_scale = 80.0f / 640.0f;
-        Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-        Rectangle buttonRect = {
-            buttonPos.x,
-            buttonPos.y,
-            TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
-            TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
-        };
-
-        if (game->laserCooldown > 0) {
-            DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-                buttonPos, 0, local_scale,
-                (Color) {
-                255, 255, 255, 80
-            });
-
-            char cooldownText[5];
-            sprintf(cooldownText, "%.1f", game->laserCooldown);
-            Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
-            float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
-            float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-            DrawTextEx(GetFontDefault(), cooldownText,
-                (Vector2) {
-                textX, textY
-            }, 20, 2, WHITE);
-        }
-        else {
-            DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-                buttonPos, 0, local_scale, WHITE);
-        }
-
     }
+    // High-Score ====================================================
+    {
+        if (game->score > (resources->scores[resources->gameLevel].score)) {
+            const char* newTag = "[NEW]";
+            Vector2 title = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
+            Vector2 tag = MeasureTextEx(GetFontDefault(), newTag, 12, 2);
+            Rectangle newBox = {
+                mid - (title.x / 2),
+                curY + auto_y(3),
+                tag.x + auto_x(10),
+                tag.y + auto_y(6)
+            };
+            DrawRectangle(newBox.x, newBox.y, newBox.width, newBox.height, ORANGE);
+            DrawTextEx(GetFontDefault(), newTag,
+                (Vector2) {
+                newBox.x + 5,
+                    newBox.y + auto_y(3)
+            },
+                12, 2, WHITE);
+        }
+        curY += auto_y(21);
+        textSize = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
+        startX = mid - (textSize.x / 2);
+        DrawTextEx(GetFontDefault(), "HIGH-SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
+        curY += linespacing;
+
+
+        sprintf(obj, "%lld", getMax(resources->scores, game, resources));
+        textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+        startX = rect.x + (rect.width - textSize.x) / 2;
+        int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+        curY += linespacing;
+        curY += auto_y(30);
+    }
+    // Score =========================================================
+    {
+        textSize = MeasureTextEx(GetFontDefault(), "SCORE", 20, 2);
+        startX = mid - (textSize.x / 2);
+        DrawTextEx(GetFontDefault(), "SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
+        curY += linespacing;
+
+
+        sprintf(obj, "%lld", playerScore(game));
+        textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+
+        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
+        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+
+        startX = rect.x + (rect.width - textSize.x) / 2;
+        int centerY = rect.y + (rect.height - textSize.y) / 2;
+
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
+        curY += linespacing;
+        curY += auto_y(30);
+    }
+    {
+        textSize = MeasureTextEx(GetFontDefault(), "POWERUP", 20, 2);
+        startX = mid - (textSize.x / 2);
+        DrawTextEx(GetFontDefault(), "POWER-UP", (Vector2) { startX, curY }, 20, 2, ORANGE);
+        curY += linespacing;
+
+        // Power-up icons container
+        {
+            const int ICON_SIZE = auto_x(40);   // Ukuran yang diinginkan untuk semua icon
+            const int SPACING = auto_x(10);     // Spacing antar icon
+            const int startIconX = auto_x(345); // Align left dengan hearts
+
+            // Draw active power-ups
+            for (int i = 0; i < game->activeEffectsCount; i++) {
+                if (game->activePowerups[i].active) {
+                    Texture2D iconTexture;
+                    Color timerColor;
+                    float scale;
+
+                    // Pilih texture, warna, dan scale berdasarkan tipe
+                    switch (game->activePowerups[i].type) {
+                    case POWERUP_SPEED_UP:
+                        iconTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
+                        scale = (float)ICON_SIZE / 640.0f;
+                        timerColor = GREEN;
+                        break;
+                    case POWERUP_SLOW_DOWN:
+                        iconTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
+                        scale = (float)ICON_SIZE / 1024.0f;
+                        timerColor = RED;
+                        break;
+                    case POWERUP_SPECIAL_BULLET:
+                        iconTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET); // Temporary
+                        scale = (float)ICON_SIZE / 1024.0f;
+                        timerColor = BLUE;
+                        break;
+                    default:
+                        iconTexture = TEXTURE(resources, TEXTURE_RANDOM);
+                        scale = (float)ICON_SIZE / 1024.0f;
+                        timerColor = WHITE;
+                    }
+
+                    int iconX = startIconX + (i * (ICON_SIZE + SPACING));
+
+                    // Draw icon
+                    DrawTextureEx(iconTexture,
+                        (Vector2) {
+                        iconX, curY
+                    },
+                        0, scale, WHITE);
+
+                    // Draw timer below icon
+                    char timerText[8];
+                    sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
+                    Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
+                    float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
+                    float timerY = curY + ICON_SIZE + 5;
+
+                    DrawTextEx(GetFontDefault(), timerText,
+                        (Vector2) {
+                        timerX, timerY
+                    },
+                        15, 2, timerColor);
+                }
+            }
+
+            curY += ICON_SIZE + auto_y(40);
+        }
+    }
+    textSize = MeasureTextEx(GetFontDefault(), "HITPOINT", 18, 2);
+    startX = mid - (textSize.x / 2);
+    DrawTextEx(GetFontDefault(), "HITPOINT", (Vector2) { auto_x(345), auto_y(480) - textSize.y }, 18, 2, WHITE);
+    curY += linespacing;
+    for (int i = 0; i < game->lives; i++) {
+        float local_scale = 30.0f / 640.0f;
+        DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
+            (Vector2) {
+            auto_x(345) + (i * auto_x(35)), auto_y(480)
+        }, // posisi
+            0,  // rotation
+            local_scale, // local_scale factor
+            WHITE);
+    }
+
+    float local_scale = (float)auto_x(80.0f) / 640.0f;
+    Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
+    Rectangle buttonRect = {
+        buttonPos.x,
+        buttonPos.y,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
+    };
+
+    if (game->laserCooldown > 0) {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale,
+            (Color) {
+            255, 255, 255, 80
+        });
+
+        char cooldownText[5];
+        sprintf(cooldownText, "%.1f", game->laserCooldown);
+        Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
+        float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
+        float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
+        DrawTextEx(GetFontDefault(), cooldownText,
+            (Vector2) {
+            textX, textY
+        }, 20, 2, WHITE);
+    }
+    else {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale, WHITE);
+    }
+    textSize = MeasureTextEx(GetFontDefault(), "E", 15, 2);
+    float boxX = buttonRect.x + buttonRect.width - (textSize.x + auto_x(8)); // 8 untuk padding
+    float boxY = buttonRect.y + buttonRect.height - (textSize.y + auto_y(8));
+
+    DrawRectangle(boxX, boxY, textSize.x + auto_x(8), textSize.y + auto_y(8), DARKGRAY);
+    DrawTextEx(GetFontDefault(), "E",
+        (Vector2) {
+        boxX + auto_x(4),  // +4 untuk padding
+            boxY + auto_y(4)   // +4 untuk padding
+    },
+        15, 2, WHITE);
 }
