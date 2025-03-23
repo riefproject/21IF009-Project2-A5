@@ -75,7 +75,7 @@ void handleLaser(Game* game) {
 // Membuat animasi background
 Color fadeInOpeningAnimation(float* trans) {
     if (*trans < 1.0f) {
-        *trans = *trans + 0.01f;
+        *trans = *trans + 0.005f;
     }
     int colorValue = (int)(*trans * 255);
     return (Color) { colorValue, colorValue, colorValue, 255 };
@@ -83,7 +83,7 @@ Color fadeInOpeningAnimation(float* trans) {
 
 Color fadeOutOpeningAnimation(float* trans) {
     if (*trans > 0.0f) {
-        *trans = *trans - 0.01f;
+        *trans = *trans - 0.005f;
         if (*trans < 0) {
             *trans = 0.0f;
         }
@@ -98,13 +98,16 @@ void openingAnimation(float* trans) {
         ClearBackground(fadeInOpeningAnimation(trans));
         EndDrawing();
         // fadeInOpeningAnimation(trans);  
-        if (*trans >= 1.0f) {
+    }
+    if (*trans >= 1.0f) {
+        for (int i = 0; i < 60; i++) { // Tampilkan layar putih selama 1 detik (60 FPS)
             BeginDrawing();
             ClearBackground(WHITE);
             EndDrawing();
-            WaitTime(2);
         }
+        WaitTime(2);
     }
+
     while (*trans > 0.0f) {
         BeginDrawing();
         ClearBackground(fadeOutOpeningAnimation(trans));

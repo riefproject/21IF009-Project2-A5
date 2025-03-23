@@ -318,10 +318,10 @@ Assets* createAssets(void) {
     // Load textures
     assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
     assets->textures[TEXTURE_BULLET] = LoadTexture("assets/sprites/bullet_brick.png");
-    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/shooter1.png");
-    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/shooter2.png");
-    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
-    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
+    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/left.png");
+    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/right.png");
+    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/mid.png");
+    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/Top.png");
     assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
     assets->textures[TEXTURE_LASER_BUTTON] = LoadTexture("assets/sprites/laser_button.png");
     assets->textures[TEXTURE_RANDOM] = LoadTexture("assets/sprites/random.png");
