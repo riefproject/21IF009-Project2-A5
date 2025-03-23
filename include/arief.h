@@ -81,14 +81,5 @@ void fillRemainingBlocks(Game* game, int remainingBlocks);             // Mengis
 void handleBulletCollisions(Game* game);                               // Menangani collision peluru
 bool isValidGridPosition(int x, int y);                                // Validasi posisi grid
 void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex);                                         // Memproses tembakan peluru
-
-/* Fungsi-fungsi untuk power-up dan efek khusus */
-void spawnPowerUp(Game* game);       // Memunculkan power-up
-void activatePowerUp(Game* game);    // Mengaktifkan power-up
-void drawPowerUp(Game* game);        // Menggambar power-up
-void updatePowerUp(Game* game);      // Update status power-up
-void handleLaser(Game* game);        // Menangani efek laser
 void drawGameUI(Game* game, GameResources* resources);         // Menggambar UI game
-
-void addScore(Game* game, int row);
 #endif

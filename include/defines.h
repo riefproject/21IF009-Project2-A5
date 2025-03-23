@@ -52,7 +52,7 @@ struct openingTransition;
 #define MD11_RANGE GET_RANGE_LEVEL(5, 9)   // Progressive
 
 // Block Fall Speed Per Level
-#define DFT_SPEED 0.6f
+#define DFT_SPEED 0.3f
 #define MD1_SPEED DFT_SPEED                  // 0.60 - Super EZ
 #define MD2_SPEED (4.0f/3.0f) * DFT_SPEED    // 0.80 - Easy
 #define MD3_SPEED (5.0f/3.0f) * DFT_SPEED    // 1.00 - Beginner
@@ -161,6 +161,11 @@ typedef enum SoundAsset {
     SOUND_SELECT,
     SOUND_SHOOT,
     SOUND_DEATH,
+    SOUND_SPECIAL_BULLET,
+    SOUND_HEAL,
+    SOUND_POISON,
+    SOUND_SLOWDOWN,
+    SOUND_SPEEDUP,
     SOUND_COUNT
 } SoundAsset;
 
@@ -180,6 +185,12 @@ typedef enum TextureAsset {
     TEXTURE_SHOOTER_T,
     TEXTURE_HEART,
     TEXTURE_LASER_BUTTON,
+    TEXTURE_RANDOM,
+    TEXTURE_SPEEDUP,
+    TEXTURE_SLOWDOWN,
+    TEXTURE_MIN1_HP,
+    TEXTURE_PLS1_HP,
+    TEXTURE_SPECIAL_BULLET,
     TEXTURE_COUNT
 } TextureAsset;
 
@@ -205,7 +216,6 @@ typedef enum PowerUpType {
     POWERUP_NONE = 0,
     POWERUP_SPEED_UP,
     POWERUP_SLOW_DOWN,
-    POWERUP_UNLIMITED_AMMO,
     POWERUP_EXTRA_LIFE,
     POWERUP_BOMB,
     POWERUP_SPECIAL_BULLET,

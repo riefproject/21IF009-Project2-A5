@@ -11,8 +11,10 @@ The assets follow standardized formats:
 
 ## Directory Structure
 
+```
 📂 assets/
 ├── 🖼️ sprites/
 ├── 🎵 sounds/
 ├── 🔤 fonts/
 └── 🎮 icon/
+```

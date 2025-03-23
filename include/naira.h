@@ -5,11 +5,11 @@
 // Spawn a new power-up
 void spawnPowerUp(Game* game);
 // Activate collected power-up
-void activatePowerUp(Game* game);
+void activatePowerUp(Game* game, GameResources* resources);
 // Render power-up on screen
-void drawPowerUp(Game* game);
+void drawPowerUp(Game* game, GameResources* resources);
 // Update power-up states
-void updatePowerUp(Game* game);
+void updatePowerUp(Game* game, GameResources* resources);
 
 
 #endif

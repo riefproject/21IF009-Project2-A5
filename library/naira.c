@@ -1,3 +1,4 @@
+#include "defines.h"
 #include "all.h"
 
 void spawnPowerUp(Game* game) {
@@ -9,12 +10,15 @@ void spawnPowerUp(Game* game) {
     };
 }
 
-void activatePowerUp(Game* game) {
+void activatePowerUp(Game* game, GameResources* resources) {
     if (game->activeEffectsCount >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
-        type = rand() % (POWERUP_COUNT - 1);
+        // Keep randomizing until we get a non-RANDOM powerup
+        do {
+            type = rand() % POWERUP_COUNT;
+        } while (type == POWERUP_RANDOM);
     }
 
     // Dont add temporary effects if same type is already active
@@ -31,20 +35,29 @@ void activatePowerUp(Game* game) {
 
     switch (type) {
     case POWERUP_SPEED_UP:
-        game->rowAddDelay /= 2;
+        game->rowAddDelay = (int)(game->rowAddDelay * 0.25f);
+        if (game->rowAddDelay < 10) game->rowAddDelay = 10;
+        PlaySound(SOUND(resources, SOUND_SPEEDUP));
         break;
     case POWERUP_SLOW_DOWN:
-        game->rowAddDelay *= 2;
+        game->rowAddDelay = (int)(game->rowAddDelay * 2.5f);
+        if (game->rowAddDelay > 240) game->rowAddDelay = 240;
+        PlaySound(SOUND(resources, SOUND_SLOWDOWN));
         break;
-    case POWERUP_UNLIMITED_AMMO:
+    case POWERUP_SPECIAL_BULLET:
         game->bulletCount = 0;
+        PlaySound(SOUND(resources, SOUND_SPECIAL_BULLET));
         break;
     case POWERUP_EXTRA_LIFE:
-        if (game->lives < 3) game->lives++;
+        if (game->lives < 3) {
+            game->lives++;
+            PlaySound(SOUND(resources, SOUND_HEAL));
+        }
         duration = 0; // Instant effect
         break;
     case POWERUP_BOMB:
         game->lives--;
+        PlaySound(SOUND(resources, SOUND_POISON));
         duration = 0; // Instant effect
         break;
     default:
@@ -63,34 +76,51 @@ void activatePowerUp(Game* game) {
     game->powerupTimer = 7.0f + (rand() % 8);
 }
 
-void drawPowerUp(Game* game) {
+void drawPowerUp(Game* game, GameResources* resources) {
     if (!game->powerupActive) return;
 
-    Color powerupColor;
+    Texture2D powerupTexture;
+    float local_scale;
+
+
     switch (game->currentPowerup.type) {
     case POWERUP_SPEED_UP:
-    case POWERUP_UNLIMITED_AMMO:
-    case POWERUP_EXTRA_LIFE:
-        powerupColor = GREEN;  // Beneficial powerups
-        break;
-    case POWERUP_RANDOM:
-        powerupColor = YELLOW;  // Random effect
+        powerupTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
+        local_scale = 40.0f / 640.0f;
         break;
     case POWERUP_SLOW_DOWN:
-    case POWERUP_BOMB:
-        powerupColor = RED;  // Harmful powerups
+        powerupTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
+        local_scale = 40.0f / 1024.0f;
+        break;
+    case POWERUP_SPECIAL_BULLET:  // Efek temporal
+        powerupTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET);
+        game->bulletCount = 0;
+        local_scale = 40.0f / 1024.0f;
+        break;
+    case POWERUP_EXTRA_LIFE:      // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_PLS1_HP);
+        local_scale = 40.0f / 672.0f;
+        break;
+    case POWERUP_BOMB:            // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_MIN1_HP);
+        local_scale = 40.0f / 762.0f;
+        break;
+    case POWERUP_RANDOM:      // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
+        local_scale = 40.0f / 1024.0f;
         break;
     default:
-        powerupColor = WHITE;
-        break;
+        return; // Tidak perlu menggambar untuk tipe lainnya
     }
 
-    // Draw powerup as a circle
-    DrawCircle((int)game->powerupPosition.x + 16, (int)game->powerupPosition.y + 16, 12, powerupColor
-    );
+    DrawTextureEx(powerupTexture,
+        game->powerupPosition,
+        0,
+        local_scale,
+        WHITE);
 }
 
-void updatePowerUp(Game* game) {
+void updatePowerUp(Game* game, GameResources* resources) {
     if (!game->powerupActive) return;
 
     // Move powerup down slower
@@ -111,11 +141,11 @@ void updatePowerUp(Game* game) {
     }
 
     // Check collision with shooter
-    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,32,32 };
+    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,40,40 };
 
     Rectangle shooterRect = { P.x - 32,P.y - 32,96,64 };
 
     if (CheckCollisionRecs(powerupRect, shooterRect)) {
-        activatePowerUp(game);
+        activatePowerUp(game, resources);
     }
 }

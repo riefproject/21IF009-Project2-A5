@@ -304,6 +304,11 @@ Assets* createAssets(void) {
     assets->sounds[SOUND_SELECT] = LoadSound("assets/sounds/select.wav");
     assets->sounds[SOUND_SHOOT] = LoadSound("assets/sounds/gunshot.mp3");
     assets->sounds[SOUND_DEATH] = LoadSound("assets/sounds/death.mp3");
+    assets->sounds[SOUND_SPECIAL_BULLET] = LoadSound("assets/sounds/special_bullet.mp3");
+    assets->sounds[SOUND_HEAL] = LoadSound("assets/sounds/heal.mp3");
+    assets->sounds[SOUND_POISON] = LoadSound("assets/sounds/poison.mp3");
+    assets->sounds[SOUND_SLOWDOWN] = LoadSound("assets/sounds/slowdown.mp3");
+    assets->sounds[SOUND_SPEEDUP] = LoadSound("assets/sounds/speedup.mp3");
 
     // Load fonts
     assets->fonts[FONT_BODY] = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
@@ -319,8 +324,13 @@ Assets* createAssets(void) {
     assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
     assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
     assets->textures[TEXTURE_LASER_BUTTON] = LoadTexture("assets/sprites/laser_button.png");
+    assets->textures[TEXTURE_RANDOM] = LoadTexture("assets/sprites/random.png");
+    assets->textures[TEXTURE_SPEEDUP] = LoadTexture("assets/sprites/speed_up.png");
+    assets->textures[TEXTURE_SLOWDOWN] = LoadTexture("assets/sprites/slow_down.png");
+    assets->textures[TEXTURE_MIN1_HP] = LoadTexture("assets/sprites/minushp.png");
+    assets->textures[TEXTURE_PLS1_HP] = LoadTexture("assets/sprites/heal.png");
+    assets->textures[TEXTURE_SPECIAL_BULLET] = LoadTexture("assets/sprites/bomb.png");
 
-    // Load Bg
     assets->bg[BG_PLAY] = LoadTexture("assets/background/play.png");
 
     return assets;
@@ -514,7 +524,7 @@ int loadingScreen(float* loadingTime) {
             currentPos.x + (nextPos.x - currentPos.x) * alpha,
             currentPos.y + (nextPos.y - currentPos.y) * alpha
         };
-        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, ORANGE);
+        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color) { 34, 104, 8, 255 });
     }
     EndDrawing();
 
@@ -1369,7 +1379,7 @@ void gameOver(GameResources* resources) {
     int fontSize = auto_y(20);
     int lineCount = len(options);
     bool inGameOver = true;
-    PlaySound(SOUND(resources,SOUND_DEATH));
+    PlaySound(SOUND(resources, SOUND_DEATH));
 
     // Load current high scores untuk tampilan
     HiScore scores[MAX_LEVELS];
@@ -1497,7 +1507,7 @@ void displayGame(GameResources* resources) {
             gameContext->powerupTimer = 3.0f;
         }
 
-        updatePowerUp(gameContext);
+        updatePowerUp(gameContext, resources);
         updateBlocks(gameContext, resources);
 
         if (isGameOverCheck(gameContext)) {
@@ -1523,7 +1533,7 @@ void displayGame(GameResources* resources) {
 
 
     drawBlocks(gameContext, resources);
-    drawPowerUp(gameContext);
+    drawPowerUp(gameContext, resources);
 
     if (IsKeyPressed(KEY_E) && gameContext->laserCooldown <= 0) {
         gameContext->laserActive = true;
@@ -1553,10 +1563,10 @@ void displayGame(GameResources* resources) {
                 // Reverse efek
                 switch (gameContext->activePowerups[i].type) {
                 case POWERUP_SPEED_UP:
-                    gameContext->rowAddDelay /= 2;
+                    gameContext->rowAddDelay *= 4;
                     break;
                 case POWERUP_SLOW_DOWN:
-                    gameContext->rowAddDelay *= 2;
+                    gameContext->rowAddDelay = (int)(gameContext->rowAddDelay / 2.5f);
                     break;
                 }
 
@@ -1792,11 +1802,32 @@ bool isValidGridPosition(int x, int y) {
 
 // Process what happens when a bullet hits a block
 void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
-    if (gridY < MAX_ROWS - 1) {
-        game->grid[gridY + 1][gridX] = true;
-        for (int row = 0; row < MAX_ROWS; row++) {
-            handleFullRow(game, row);
+    // Check if special bullet powerup is active
+    bool hasSpecialBullet = false;
+    for (int i = 0; i < game->activeEffectsCount; i++) {
+        if (game->activePowerups[i].active &&
+            game->activePowerups[i].type == POWERUP_SPECIAL_BULLET) {
+            hasSpecialBullet = true;
+            break;
         }
+    }
+
+    if (hasSpecialBullet) {
+        // Destroy entire row
+        for (int col = 0; col < MAX_COLUMNS; col++) {
+            game->grid[gridY][col] = false;
+        }
+    }
+    else {
+        // Normal single block behavior
+        if (gridY < MAX_ROWS - 1) {
+            game->grid[gridY + 1][gridX] = true;
+        }
+    }
+
+    // Common actions
+    for (int row = 0; row < MAX_ROWS; row++) {
+        handleFullRow(game, row);
     }
     game->bullets[bulletIndex].active = false;
     game->score += 10;
@@ -1957,91 +1988,112 @@ void drawGameUI(Game* game, GameResources* resources) {
             DrawTextEx(GetFontDefault(), "POWER-UP", (Vector2) { startX, curY }, 20, 2, ORANGE);
             curY += linespacing;
 
+            // Power-up icons container
+            {
+                const int ICON_SIZE = auto_x(40);   // Ukuran yang diinginkan untuk semua icon
+                const int SPACING = auto_x(10);     // Spacing antar icon
+                const int startIconX = auto_x(345); // Align left dengan hearts
 
-            // sprintf(obj, "%lld", playerScore(game));
-            // textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+                // Draw active power-ups
+                for (int i = 0; i < game->activeEffectsCount; i++) {
+                    if (game->activePowerups[i].active) {
+                        Texture2D iconTexture;
+                        Color timerColor;
+                        float scale;
 
-            // Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-            // DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
+                        // Pilih texture, warna, dan scale berdasarkan tipe
+                        switch (game->activePowerups[i].type) {
+                        case POWERUP_SPEED_UP:
+                            iconTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
+                            scale = (float)ICON_SIZE / 640.0f;
+                            timerColor = GREEN;
+                            break;
+                        case POWERUP_SLOW_DOWN:
+                            iconTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
+                            scale = (float)ICON_SIZE / 1024.0f;
+                            timerColor = RED;
+                            break;
+                        case POWERUP_SPECIAL_BULLET:
+                            iconTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET); // Temporary
+                            scale = (float)ICON_SIZE / 1024.0f;
+                            timerColor = BLUE;
+                            break;
+                        default:
+                            iconTexture = TEXTURE(resources, TEXTURE_RANDOM);
+                            scale = (float)ICON_SIZE / 1024.0f;
+                            timerColor = WHITE;
+                        }
 
-            // startX = rect.x + (rect.width - textSize.x) / 2;
-            // int centerY = rect.y + (rect.height - textSize.y) / 2;
+                        // Calculate position for current icon
+                        int iconX = startIconX + (i * (ICON_SIZE + SPACING));
 
-            // DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-            // curY += linespacing;
-        }
-    }
+                        // Draw icon
+                        DrawTextureEx(iconTexture,
+                            (Vector2) {
+                            iconX, curY
+                        },
+                            0, scale, WHITE);
 
-    for (int i = 0; i < game->lives; i++) {
-        float scale = 30.0f / 640.0f;
-        DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
-            (Vector2) {
-            345 + (i * 35), 480
-        }, // posisi
-            0,  // rotation
-            scale, // scale factor
-            WHITE);
-    }
+                        // Draw timer below icon
+                        char timerText[8];
+                        sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
+                        Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
+                        float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
+                        float timerY = curY + ICON_SIZE + 5;
 
-    float local_scale = 80.0f / 640.0f;
-    Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-    Rectangle buttonRect = {
-        buttonPos.x,
-        buttonPos.y,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
-    };
+                        DrawTextEx(GetFontDefault(), timerText,
+                            (Vector2) {
+                            timerX, timerY
+                        },
+                            15, 2, timerColor);
+                    }
+                }
 
-    if (game->laserCooldown > 0) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale,
-            (Color) {
-            255, 255, 255, 80
-        });
-
-        char cooldownText[5];
-        sprintf(cooldownText, "%.1f", game->laserCooldown);
-        Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
-        float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
-        float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-        DrawTextEx(GetFontDefault(), cooldownText,
-            (Vector2) {
-            textX, textY
-        }, 20, 2, WHITE);
-    }
-    else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale, WHITE);
-    }
-
-    int startY = 100;
-    for (int i = 0; i < game->activeEffectsCount; i++) {
-        if (game->activePowerups[i].active) {
-            char effectText[64];
-            const char* effectName;
-            Color effectColor;
-
-            switch (game->activePowerups[i].type) {
-            case POWERUP_SPEED_UP:
-                effectName = "Speed Up";
-                effectColor = GREEN;
-                break;
-            case POWERUP_SLOW_DOWN:
-                effectName = "Slow Down";
-                effectColor = RED;
-                break;
-            case POWERUP_UNLIMITED_AMMO:
-                effectName = "Unlimited Ammo";
-                effectColor = GREEN;
-                break;
-            default:
-                effectName = "Unknown";
-                effectColor = WHITE;
+                curY += ICON_SIZE + auto_y(40);
             }
-
-            sprintf(effectText, "%s: %.1fs", effectName, game->activePowerups[i].duration);
-            DrawText(effectText, 330, startY, 20, effectColor);
-            startY += 30;
         }
+
+        for (int i = 0; i < game->lives; i++) {
+            float scale = 30.0f / 640.0f;
+            DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
+                (Vector2) {
+                345 + (i * 35), 480
+            }, // posisi
+                0,  // rotation
+                scale, // scale factor
+                WHITE);
+        }
+
+        float local_scale = 80.0f / 640.0f;
+        Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
+        Rectangle buttonRect = {
+            buttonPos.x,
+            buttonPos.y,
+            TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
+            TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
+        };
+
+        if (game->laserCooldown > 0) {
+            DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+                buttonPos, 0, local_scale,
+                (Color) {
+                255, 255, 255, 80
+            });
+
+            char cooldownText[5];
+            sprintf(cooldownText, "%.1f", game->laserCooldown);
+            Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
+            float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
+            float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
+            DrawTextEx(GetFontDefault(), cooldownText,
+                (Vector2) {
+                textX, textY
+            }, 20, 2, WHITE);
+        }
+        else {
+            DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+                buttonPos, 0, local_scale, WHITE);
+        }
+
     }
 }
