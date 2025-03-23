@@ -24,7 +24,6 @@ void handleLaser(Game* game);
 
 // Membuat animasi opening game.
 Color fadeInOpeningAnimation(float* trans);
-Color fadeOutOpeningAnimation(float* trans);
 void openingAnimation(float* trans);
 
 #endif

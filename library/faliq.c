@@ -93,25 +93,18 @@ Color fadeOutOpeningAnimation(float* trans) {
 }
 
 void openingAnimation(float* trans) {
-    while (*trans < 1.0f) {
+    BeginDrawing();
+    while (*trans < 1.0f) {  // Fade-in
         BeginDrawing();
         ClearBackground(fadeInOpeningAnimation(trans));
-        EndDrawing();
-        // fadeInOpeningAnimation(trans);  
-    }
-    if (*trans >= 1.0f) {
-        for (int i = 0; i < 60; i++) { // Tampilkan layar putih selama 1 detik (60 FPS)
+        if(*trans >= 1.0f){
             BeginDrawing();
             ClearBackground(WHITE);
             EndDrawing();
+            WaitTime(2); 
         }
-        WaitTime(2);
-    }
-
-    while (*trans > 0.0f) {
-        BeginDrawing();
-        ClearBackground(fadeOutOpeningAnimation(trans));
         EndDrawing();
-        // fadeOutOpeningAnimation(trans);
     }
+    ClearBackground(WHITE);
+    EndDrawing();
 }
