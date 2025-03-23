@@ -1875,6 +1875,7 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         for (int col = 0; col < MAX_COLUMNS; col++) {
             game->grid[gridY][col] = false;
         }
+        game->score += 40;
     }
     else {
         if (gridY < MAX_ROWS - 1) {
