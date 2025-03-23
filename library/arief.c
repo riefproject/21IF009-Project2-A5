@@ -330,6 +330,7 @@ Assets* createAssets(void) {
     assets->textures[TEXTURE_MIN1_HP] = LoadTexture("assets/sprites/minushp.png");
     assets->textures[TEXTURE_PLS1_HP] = LoadTexture("assets/sprites/heal.png");
     assets->textures[TEXTURE_SPECIAL_BULLET] = LoadTexture("assets/sprites/bomb.png");
+    assets->textures[TEXTURE_WHITE_ICON] = LoadTexture("assets/icon/icon.png");
 
     assets->bg[BG_PLAY] = LoadTexture("assets/background/play.png");
 
@@ -391,7 +392,7 @@ void mainWindow(void) {
     opTrans.progress = 0.0f; // Ditambahkan oleh faliq
 
     InitWindow(screenWidth, screenHeight, "Block Shooter");
-    Image ico = LoadImage("assets/ico.png");
+    Image ico = LoadImage("assets/icon/icon.png");
     SetWindowIcon(ico);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(MIN_SCREEN_WIDTH, MIN_SCREEN_HEIGHT);
@@ -405,7 +406,7 @@ void mainWindow(void) {
     SetSoundVolume(SOUND(resources, SOUND_SELECT), resources->settings.sfx ? 1.0f : 0.0f);
 
     // loadTextureBlock(); // Ditambahkan oleh Faliq
-    openingAnimation(&opTrans.progress); // Ditambahkan oleh Faliq
+    openingAnimation(&opTrans.progress, resources); // Ditambahkan oleh Faliq
 
     resources->currentState = STATE_LOADING;
     while (!WindowShouldClose()) {
@@ -673,10 +674,12 @@ void showControls(GameResources* resources) {
         {
             const char* infoText;
             // Jika game dijeda (resources->prevState == STATE_SELECT_LEVEL) tampilkan tiga shortcut
-            if (resources->prevState == STATE_PLAY)
+            if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
                 infoText = "[R]: Resume    [P]: Pause Menu    [F]: ke Settings";
-            else
+            }
+            else {
                 infoText = "[A]: Main Menu    [F]: Settings";
+            }
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
@@ -684,9 +687,17 @@ void showControls(GameResources* resources) {
         EndDrawing();
 
         if (resources->prevState != STATE_PLAY) {
-            if (IsKeyPressed(MOVE_LEFT || BACK_KEY)) {
+            if (MOVE_LEFT || BACK_KEY) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = (resources->prevState == STATE_PLAY) ? STATE_PAUSE : STATE_MAIN_MENU;
+                if (resources->prevState == STATE_PLAY) {
+                    resources->currentState = STATE_PAUSE;
+                }
+                else if (resources->prevState == STATE_PAUSE) {
+                    resources->currentState = STATE_PAUSE;
+                }
+                else {
+                    resources->currentState = STATE_MAIN_MENU;
+                }
             }
         }
 
@@ -779,10 +790,12 @@ void showSettings(GameResources* resources) {
         }
         {
             const char* infoText;
-            if (resources->prevState == STATE_PLAY)
+            if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
                 infoText = "[R]: Resume    [P]: Pause Menu    [F]: ke Controls";
-            else
+            }
+            else {
                 infoText = "[A]: Main Menu    [F]: Controls";
+            }
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
@@ -869,7 +882,15 @@ void showSettings(GameResources* resources) {
         else {
             if (MOVE_LEFT || BACK_KEY) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = (resources->prevState == STATE_PLAY) ? STATE_PAUSE : STATE_MAIN_MENU;
+                if (resources->prevState == STATE_PLAY) {
+                    resources->currentState = STATE_PAUSE;
+                }
+                else if (resources->prevState == STATE_PAUSE) {
+                    resources->currentState = STATE_PAUSE;
+                }
+                else {
+                    resources->currentState = STATE_MAIN_MENU;
+                }
             }
         }
         if (FORWARD_KEY) {

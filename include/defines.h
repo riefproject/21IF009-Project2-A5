@@ -191,6 +191,7 @@ typedef enum TextureAsset {
     TEXTURE_MIN1_HP,
     TEXTURE_PLS1_HP,
     TEXTURE_SPECIAL_BULLET,
+    TEXTURE_WHITE_ICON,
     TEXTURE_COUNT
 } TextureAsset;
 

@@ -130,13 +130,13 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
 
 ## 📝 Team Members
 
-| Name   | Role           | Contributions                          |
-| ------ | -------------- | -------------------------------------- |
-| Arief  | Lead Developer | Core logic, UI, Game Loop, Integration |
-| Naira  | Developer      | Power-ups, Block Animations            |
-| Raffi  | Developer      | Score System, High Score Persistence   |
-| Faliq  | Developer      | Player Controls, Shooting Mechanics    |
-| Goklas | Developer      | Projectile Physics, Collision System   |
+| Name   | Role           | Contributions                                |
+| ------ | -------------- | -------------------------------------------- |
+| Arief  | Lead Developer | Core logic, UI, Game Loop, Integration       |
+| Naira  | Developer      | Power-ups, Block Animations, Assets          |
+| Raffi  | Developer      | Score System, High Score Persistence, Assets |
+| Faliq  | Developer      | Player Controls, Shooting Mechanics, Assets  |
+| Goklas | Developer      | Projectile Physics, Collision System, Assets |
 
 ## 🤝 Contributing
 

@@ -92,19 +92,36 @@ Color fadeOutOpeningAnimation(float* trans) {
     return (Color) { colorValue, colorValue, colorValue, 255 };
 }
 
-void openingAnimation(float* trans) {
+void openingAnimation(float* trans, GameResources* resources) {
     BeginDrawing();
-    while (*trans < 1.0f) {  // Fade-in
+
+    Texture2D icon = TEXTURE(resources, TEXTURE_WHITE_ICON);
+
+    float targetWidth = 400;
+    float scaleFactor = targetWidth / icon.width;
+    float scaledWidth = icon.width * scaleFactor;
+    float scaledHeight = icon.height * scaleFactor;
+
+    int iconX = (GetScreenWidth() - scaledWidth) / 2;
+    int iconY = (GetScreenHeight() - scaledHeight) / 2;
+
+    while (*trans < 1.0f) {
         BeginDrawing();
         ClearBackground(fadeInOpeningAnimation(trans));
-        if(*trans >= 1.0f){
-            BeginDrawing();
-            ClearBackground(WHITE);
-            EndDrawing();
-            WaitTime(2); 
-        }
+        DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
         EndDrawing();
     }
+
+    BeginDrawing();
     ClearBackground(WHITE);
+    DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, WHITE);
     EndDrawing();
+    WaitTime(1);
+
+    while (*trans > 0.0f) {
+        BeginDrawing();
+        ClearBackground(fadeOutOpeningAnimation(trans));
+        DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
+        EndDrawing();
+    }
 }
