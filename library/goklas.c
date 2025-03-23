@@ -1,8 +1,6 @@
 #include "all.h"
 #include "defines.h"
 
-
-
 void InitBullets(Bullets bullets[]) {
     for (int i = 0;i < MAX_BULLETS;i++) {
         bullets[i].active = false;
@@ -46,12 +44,4 @@ void DrawBullets(Bullets bullets[],GameResources *resource) {
             DrawTexture(TEXTURE(resource, TEXTURE_BULLET),bullets[i].position.x,bullets[i].position.y,WHITE);
         }
     }
-}
-// 
-void ReloadBullets(Bullets bullets[], int* BulletCount, bool* CanShoot) {
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        bullets[i].active = false;
-    }
-    *BulletCount = 0;
-    *CanShoot = true;
 }

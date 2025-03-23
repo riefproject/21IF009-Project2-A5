@@ -255,10 +255,12 @@ typedef struct Shooter {
 } Shooter;
 
 
+/* Struktur Bullets:
+ * Menyimpan informasi tentang peluru yang ditembakkan dalam game. */
 typedef struct {
-    Vector2 position;
-    int direction;
-    bool active;
+    Vector2 position;  // Posisi peluru di dalam game
+    int direction;     // Arah pergerakan peluru (1 ke kanan, -1 ke kiri)
+    bool active;       // Status apakah peluru sedang aktif atau tidak
 } Bullets;
 
 /* Struktur Assets:
