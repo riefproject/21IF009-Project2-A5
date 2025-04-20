@@ -14,9 +14,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <raylib.h>
 #include <math.h>
 #include <time.h>
+#include "raylib.h"
 
 /* ADDED/MOVED BY: ARIEF
  *==============================*/

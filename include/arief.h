@@ -15,24 +15,6 @@ void destroyAssets(Assets* assets);         // Membersihkan dan menghapus aset g
 // =====================================================================
 //                          BLOCK MANAGEMENT
 // =====================================================================
-
-/* Fungsi-fungsi untuk mengelola BlockList */
-void addBlock(BlockList* list, int x, int y, int jumlah);               // Menambah blok baru ke list
-void updateBlock(BlockList* list, int pos, int x, int y, int jumlah);   // Mengupdate blok pada posisi tertentu
-void removeBlock(BlockList* list, int pos);                             // Menghapus blok dari list
-void printBlockList(BlockList* list);                                   // Menampilkan isi BlockList
-int countBlock(BlockList* list);                                        // Menghitung jumlah blok dalam list
-
-/* Fungsi-fungsi untuk mengelola BlockQueue */
-void initQueue(BlockQueue* q);                 // Inisialisasi queue baru
-int isEmpty(BlockQueue* q);                    // Cek apakah queue kosong
-int isFull(BlockQueue* q);                     // Cek apakah queue penuh
-int countQueue(BlockQueue* q);                 // Menghitung jumlah item dalam queue
-void enqueue(BlockQueue* q, Block* element);   // Menambah blok ke queue
-Block* dequeue(BlockQueue* q);                 // Mengambil blok dari queue
-void displayQueue(BlockQueue* q);              // Menampilkan isi queue
-void clearQueue(BlockQueue* q);                // Mengosongkan queue
-
 // =====================================================================
 //                          USER INTERFACE
 // =====================================================================

@@ -1,9 +1,9 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#include <raylib.h>
 #include <stdbool.h>
-
+#include "raylib.h"
+#include "linkedlist.h"
 // =======================================
 //            Game Variables
 // =======================================
@@ -18,7 +18,6 @@ struct ScaleFactor;
 struct HiScore;
 struct Settings;
 struct Shooter;
-struct Block;
 struct BlockList;
 struct BlockQueue;
 struct Assets;
@@ -105,11 +104,6 @@ struct openingTransition;
 // =======================================
 //           Helper Macros
 // =======================================
-// Memory Management
-#define new(var) (var *)malloc(sizeof(var)) 
-#define delete(var) \
-      free(var);      \
-      var = NULL; 
 #define len(var) sizeof(var) / sizeof(var[0])
 
  // Resource Access
@@ -121,36 +115,18 @@ struct openingTransition;
 // Debug Helper
 #define DBG printf("Haiiii");
 
+typedef unsigned int uint;
+typedef long long int ll;
+typedef unsigned long long int ull;
 
 // =====================================================================
 //                          STRUKTUR DATA BENTUKAN
 // =====================================================================
 
-/* Struktur Block:
- * Mewakili sebuah blok di dalam game, bisa digunakan untuk rintangan atau elemen game lainnya.
- * Disusun secara linked list untuk memudahkan manajemen blok secara dinamis.*/
 typedef struct Block {
-    int x, y;               // Koordinat posisi blok
-    int jumlah;             // Jumlah atau nilai yang terkait dengan blok (misalnya, kekuatan atau tipe)
-    struct Block* next;     // Pointer ke blok berikutnya dalam list
-} Block;
-
-/* Struktur Data Bentukan: LinkedList
- * Struktur linear dinamis untuk menampung blok */
-typedef struct BlockList {
-    Block* head;
-    Block* tail;
-    int size;
-} BlockList;
-
-/* Struktur BlockQueue:
- * Struktur antrian untuk mengelola blok dengan metode FIFO (First In First Out). */
-typedef struct BlockQueue {
-    Block* items[MAX_WIDTH_BLOCKS];
-    int front;    // Pointer ke blok paling depan dalam antrian
-    int rear;     // Pointer ke blok paling belakang dalam antrian
-} BlockQueue;
-
+    bool active; // Status aktif block
+    int pos;     // Posisi block dalam grid
+}Block;
 
 // =====================================================================
 //                          GAME VARIABLES
@@ -237,7 +213,7 @@ typedef struct ScaleFactor {
  * Menyimpan data skor tertinggi yang pernah dicapai oleh pemain. */
 typedef struct HiScore {
     char mode[50];              // Nama pemain
-    long long int score;        // Skor yang dicapai
+    ll score;        // Skor yang dicapai
 } HiScore;
 
 /* Struktur Settings
@@ -305,10 +281,11 @@ typedef struct Game {
     bool canShoot;                     // Status bisa menembak
     float reloadTimer;                 // Timer untuk reload
     int playerDirection;               // Arah hadap pemain
-    bool grid[MAX_ROWS][MAX_COLUMNS];  // Grid permainan
+    // grid with nested linkedlist
+    DoublyLinkedList* grid;
     int frameCounter;                  // Penghitung frame
     int rowAddDelay;                   // Delay penambahan baris
-    long long int score;               // Skor pemain
+    ll score;                          // Skor pemain
     float blockFallTimer;              // Timer jatuhnya block
     bool gameOver;                     // Status game over
     int lives;                         // Jumlah nyawa pemain

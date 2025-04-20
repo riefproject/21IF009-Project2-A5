@@ -47,6 +47,35 @@ void saveSettings(Settings settings) {
 // =======================================
 //            Game Variables
 // =======================================
+
+DoublyLinkedList* initGameGrid(void) {
+    DoublyLinkedList* grid = createDoublyLinkedList();
+    if (!grid) return NULL;
+
+    for (int i = 0; i < MAX_ROWS; i++) {
+        DoublyLinkedList* row = createDoublyLinkedList();
+        if (!row) {
+            DLL_freeList(grid);
+            return NULL;
+        }
+
+        for (int j = 0; j < MAX_COLUMNS; j++) {
+            Block* block = new(Block);
+            if (!block) {
+                DLL_freeList(grid);
+                return NULL;
+            }
+            block->active = false;
+            block->pos = j;
+            DLL_insertBack(row, block);  // kolom
+        }
+
+        DLL_insertBack(grid, row);  // baris
+    }
+
+    return grid;
+}
+
 Game* createGameContext(void) {
     Game* game = new(Game);
     if (!game) return NULL;
@@ -80,11 +109,7 @@ Game* createGameContext(void) {
         game->bullets[i].active = false;
         game->bullets[i].position = (Vector2){ 0, 0 };
     }
-    for (int i = 0; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            game->grid[i][j] = false;
-        }
-    }
+    game->grid = initGameGrid();
 
     return game;
 }
@@ -93,163 +118,6 @@ void destroyGameContext(Game* game) {
     if (!game) return;
     free(game);
 }
-
-// =======================================
-//          Tipe Data Bentukan
-// =======================================
-
-/* Linked List Operations
- * ====================== */
-void addBlock(BlockList* list, const int x, const int y, const int jumlah) {
-    Block* newBlock = new(Block);
-
-    newBlock->x = x;
-    newBlock->y = y;
-    newBlock->jumlah = jumlah;
-
-    newBlock->next = list->head;
-    list->head = newBlock;
-
-    if (list->size == 0) {
-        list->tail = newBlock;
-    }
-
-    list->size++;
-}
-
-void updateBlock(BlockList* list, const int pos, const int x, const int y, int jumlah) {
-    if (pos < 1 || pos > list->size) {
-        printf("position out of range\n");
-        return;
-    }
-    if (pos == list->size) {
-        updateBlock(list, countBlock(list), x, y, jumlah);
-        return;
-    }
-
-    Block* cur = list->head;
-    for (int i = 1; i < pos; i++) {
-        cur = cur->next;
-    }
-
-    cur->x = x;
-    cur->y = y;
-    cur->jumlah = jumlah;
-}
-
-void removeBlock(BlockList* list, int pos) {
-    if (pos < -1 || pos > list->size || pos == 0) {
-        printf("position out of range\n");
-        return;
-    }
-    if (pos == -1) {
-        removeBlock(list, countBlock(list));
-    }
-
-    Block* cur = list->head;
-    Block* before = NULL;
-    for (int i = 1; i < pos; ++i) {
-        before = cur;
-        cur = cur->next;
-    }
-
-    before->next = cur->next;
-    delete(cur);
-
-    list->size--;
-}
-
-void printBlockList(BlockList* list) {
-    printf("Number of Blocks: %d\n", countBlock(list));
-    Block* cur = list->head;
-    int i = 1;
-    while (cur != NULL) {
-        printf("Block %d\n", i);
-        printf("{%d, %d}\tjumlah: %d\n", cur->x, cur->y, cur->jumlah);
-        cur = cur->next;
-        i++;
-    }
-}
-
-int countBlock(BlockList* list) {
-    Block* cur = list->head;
-    int count = 0;
-    while (cur != NULL) {
-        count++;
-        cur = cur->next;
-    }
-    return count;
-}
-
-/*    Queue Operations
- * ====================== */
-void initQueue(BlockQueue* q) {
-    q->front = -1;
-    q->rear = -1;
-}
-
-int isEmpty(BlockQueue* q) {
-    return q->rear == -1;
-}
-
-int isFull(BlockQueue* q) {
-    return q->rear == MAX_WIDTH_BLOCKS - 1;
-}
-
-int countQueue(BlockQueue* q) {
-    if (isEmpty(q)) return 0;
-    return q->rear - q->front + 1;
-}
-
-void enqueue(BlockQueue* q, Block* element) {
-    if (isFull(q)) {
-        printf("BlockQueue is full!\n");
-    }
-    else {
-        if (q->front == -1) q->front = 0;
-        q->rear++;
-        q->items[q->rear] = element;
-        printf("Inserted -> %p\n", (void*)element);
-    }
-}
-
-Block* dequeue(BlockQueue* q) {
-    if (isEmpty(q)) {
-        printf("BlockQueue is empty!\n");
-        return NULL;
-    }
-    else {
-        Block* element = q->items[q->front];
-        if (q->front >= q->rear) {
-            q->front = -1;
-            q->rear = -1;
-        }
-        else {
-            q->front++;
-        }
-        printf("Deleted -> %p\n", (void*)element);
-        return element;
-    }
-}
-
-void displayQueue(BlockQueue* q) {
-    if (isEmpty(q)) {
-        printf("BlockQueue is empty!\n");
-    }
-    else {
-        printf("BlockQueue elements are:\n");
-        for (int i = q->front; i <= q->rear; i++)
-            printf("%p ", (void*)q->items[i]);
-        printf("\n");
-    }
-}
-
-void clearQueue(BlockQueue* q) {
-    q->front = -1;
-    q->rear = -1;
-    printf("BlockQueue cleared!\n");
-}
-
 
 // =======================================
 //                Display
@@ -1391,7 +1259,7 @@ void rejectReset(GameResources* resources) {
     }
 }
 
-void gameOver(GameResources* resources, long long int currentScore) {
+void gameOver(GameResources* resources, ll currentScore) {
     ScaleFactor scale = GetScreenScaleFactor();
     const char* message = "GAME OVER";
     const char* options[] = { "Retry", "Main Menu" };
@@ -1404,7 +1272,7 @@ void gameOver(GameResources* resources, long long int currentScore) {
     // Load current high scores untuk tampilan
     HiScore scores[MAX_LEVELS];
     loadHiScores(scores);
-    long long int currentHighScore = scores[resources->gameLevel].score;
+    ll currentHighScore = scores[resources->gameLevel].score;
 
     float countdown = 2.0f;  // 2 second countdown
     bool canSelect = false;
@@ -1707,6 +1575,7 @@ void displayGame(GameResources* resources) {
     // if (IsKeyPressed(KEY_G)) {
     //     gameOver(resources);
     // }
+
     if (IsKeyPressed(KEY_P)) {
         pauseMenu(resources);
         if (resources->currentState == STATE_MAIN_MENU) {
@@ -1716,44 +1585,135 @@ void displayGame(GameResources* resources) {
             return;
         }
     }
+
     if (IsKeyPressed(KEY_F1)) {
         printGrid(gameContext);
     }
 }
 
 bool isGameOverCheck(Game* game) {
-    for (int j = 0; j < MAX_COLUMNS; j++) {
-        if (game->grid[MAX_ROWS - 1][j]) {
+    if (!game || !game->grid) return false;
+
+    // Get the last row (tail) of the grid
+    DLLNode* lastRowNode = game->grid->tail;
+    if (!lastRowNode) return false;
+
+    // Get the linked list representing the last row
+    DoublyLinkedList* lastRow = (DoublyLinkedList*)lastRowNode->data;
+    if (!lastRow) return false;
+
+    // Check each block in the last row
+    DLLNode* blockNode = lastRow->head;
+    while (blockNode) {
+        Block* block = (Block*)blockNode->data;
+        if (block && block->active) {
             return true;
         }
+        blockNode = blockNode->next;
     }
+
     return false;
 }
 
 bool isRowFull(Game* game, int row) {
-    for (int j = 0; j < MAX_COLUMNS; j++) {
-        if (!game->grid[row][j]) return false;
+    if (!game || !game->grid) return false;
+
+    // Find the desired row node
+    DLLNode* rowNode = game->grid->head;
+    for (int i = 0; i < row && rowNode; i++) {
+        rowNode = rowNode->next;
     }
+
+    if (!rowNode) return false;
+
+    // Get the linked list representing this row
+    DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
+    if (!currentRow) return false;
+
+    // Check each block in this row
+    DLLNode* blockNode = currentRow->head;
+    while (blockNode) {
+        Block* block = (Block*)blockNode->data;
+        if (!block || !block->active) {
+            return false;
+        }
+        blockNode = blockNode->next;
+    }
+
     return true;
 }
 
 bool hasActiveBlockBelow(Game* game, int row) {
-    for (int i = row + 1; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            if (game->grid[i][j]) return true;
-        }
+    if (!game || !game->grid) return false;
+
+    // Find the row node
+    DLLNode* rowNode = game->grid->head;
+    for (int i = 0; i < row && rowNode; i++) {
+        rowNode = rowNode->next;
     }
+
+    if (!rowNode) return false;
+
+    // Check all rows below current row
+    rowNode = rowNode->next;
+    while (rowNode) {
+        DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
+        if (!currentRow) continue;
+
+        // Check each block in this row
+        DLLNode* blockNode = currentRow->head;
+        while (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            if (block && block->active) {
+                return true;
+            }
+            blockNode = blockNode->next;
+        }
+        rowNode = rowNode->next;
+    }
+
     return false;
 }
 
 void shiftRowsUp(Game* game, int startRow) {
-    for (int i = startRow; i < MAX_ROWS - 1; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            game->grid[i][j] = game->grid[i + 1][j];
-        }
+    if (!game || !game->grid) return;
+
+    // Find the starting row node
+    DLLNode* rowNode = game->grid->head;
+    for (int i = 0; i < startRow && rowNode; i++) {
+        rowNode = rowNode->next;
     }
-    for (int j = 0; j < MAX_COLUMNS; j++) {
-        game->grid[MAX_ROWS - 1][j] = false;
+
+    // Shift rows up from startRow to second-to-last row
+    while (rowNode && rowNode->next) {
+        DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
+        DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
+
+        // Copy blocks from next row to current row
+        DLLNode* currentBlock = currentRow->head;
+        DLLNode* nextBlock = nextRow->head;
+
+        while (currentBlock && nextBlock) {
+            Block* current = (Block*)currentBlock->data;
+            Block* next = (Block*)nextBlock->data;
+            current->active = next->active;
+
+            currentBlock = currentBlock->next;
+            nextBlock = nextBlock->next;
+        }
+
+        rowNode = rowNode->next;
+    }
+
+    // Clear the last row
+    if (rowNode) {
+        DoublyLinkedList* lastRow = (DoublyLinkedList*)rowNode->data;
+        DLLNode* blockNode = lastRow->head;
+        while (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            block->active = false;
+            blockNode = blockNode->next;
+        }
     }
 }
 
@@ -1764,8 +1724,20 @@ void handleFullRow(Game* game, int row) {
             addScore(game, row);
         }
         else {
-            for (int j = 0; j < MAX_COLUMNS; j++) {
-                game->grid[row][j] = false;
+            // Clear blocks in the specified row
+            DLLNode* rowNode = game->grid->head;
+            for (int i = 0; i < row && rowNode; i++) {
+                rowNode = rowNode->next;
+            }
+
+            if (rowNode) {
+                DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
+                DLLNode* blockNode = currentRow->head;
+                while (blockNode) {
+                    Block* block = (Block*)blockNode->data;
+                    block->active = false;
+                    blockNode = blockNode->next;
+                }
             }
             addScore(game, row);
         }
@@ -1776,16 +1748,33 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
     int emptyColLength[MAX_COLUMNS] = { 0 };
     int totalEmptyColumns = 0;
 
+    // Count empty columns from top
+    DLLNode* rowNode = game->grid->head;
     for (int j = 0; j < MAX_COLUMNS; j++) {
         int emptyCount = 0;
-        for (int i = 0; i < MAX_ROWS; i++) {
-            if (!game->grid[i][j]) {
-                emptyCount++;
+        DLLNode* currentRowNode = rowNode;
+
+        while (currentRowNode) {
+            DoublyLinkedList* row = (DoublyLinkedList*)currentRowNode->data;
+            DLLNode* blockNode = row->head;
+
+            // Navigate to correct column
+            for (int col = 0; col < j && blockNode; col++) {
+                blockNode = blockNode->next;
             }
-            else {
-                break;
+
+            if (blockNode) {
+                Block* block = (Block*)blockNode->data;
+                if (!block->active) {
+                    emptyCount++;
+                }
+                else {
+                    break;
+                }
             }
+            currentRowNode = currentRowNode->next;
         }
+
         emptyColLength[j] = emptyCount;
         if (emptyCount >= 4) {
             totalEmptyColumns++;
@@ -1793,54 +1782,179 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
     }
 
     moveBlocksDown(game);
-
     generateNewBlocks(game, minBlocks, maxBlocks, emptyColLength, totalEmptyColumns);
 }
 
 void moveBlocksDown(Game* game) {
-    for (int i = MAX_ROWS - 1; i > 0; i--) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            game->grid[i][j] = game->grid[i - 1][j];
+    if (!game || !game->grid) return;
+
+    // Start from the second-to-last row (tail->prev) and move up
+    DLLNode* rowNode = game->grid->tail->prev;
+
+    while (rowNode) {
+        DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
+        DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
+
+        // Copy blocks from current row to next row
+        DLLNode* currentBlock = currentRow->head;
+        DLLNode* nextBlock = nextRow->head;
+
+        while (currentBlock && nextBlock) {
+            Block* current = (Block*)currentBlock->data;
+            Block* next = (Block*)nextBlock->data;
+            next->active = current->active;
+
+            currentBlock = currentBlock->next;
+            nextBlock = nextBlock->next;
         }
+
+        rowNode = rowNode->prev;
     }
 
-    for (int j = 0; j < MAX_COLUMNS; j++) {
-        game->grid[0][j] = false;
+    // Clear the first row (head)
+    DoublyLinkedList* firstRow = (DoublyLinkedList*)game->grid->head->data;
+    DLLNode* blockNode = firstRow->head;
+    while (blockNode) {
+        Block* block = (Block*)blockNode->data;
+        block->active = false;
+        blockNode = blockNode->next;
     }
 }
 
 void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLength, int totalEmptyColumns) {
+    if (!game || !game->grid) return;
+
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     int remainingBlocks = numBlocks;
 
+    // Get the first row
+    DLLNode* firstRowNode = game->grid->head;
+    if (!firstRowNode) return;
+
+    DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
+    if (!firstRow) return;
+
+    // Step 1: Fill critical gaps first (kolom dengan 4+ blok kosong berturut-turut)
     if (totalEmptyColumns > 0) {
-        remainingBlocks = fillCriticalGaps(game, remainingBlocks, emptyColLength);
+        DLLNode* blockNode = firstRow->head;
+        int col = 0;
+
+        while (blockNode && remainingBlocks > 0) {
+            if (emptyColLength[col] >= 4) {
+                Block* block = (Block*)blockNode->data;
+                block->active = true;
+                remainingBlocks--;
+            }
+            blockNode = blockNode->next;
+            col++;
+        }
     }
 
-    fillRemainingBlocks(game, remainingBlocks);
+    // Step 2: Distribusi blok dengan gap maksimal 2 kolom
+    if (remainingBlocks > 0) {
+        int lastPlacedCol = -3; // Start dengan offset negatif
+        int attempts = 0;
+        int maxAttempts = MAX_COLUMNS * 2; // Prevent infinite loop
+
+        while (remainingBlocks > 0 && attempts < maxAttempts) {
+            int pos = rand() % MAX_COLUMNS;
+
+            // Cek apakah posisi valid (tidak terlalu dekat dengan blok terakhir)
+            if (pos - lastPlacedCol >= 2) {
+                DLLNode* blockNode = firstRow->head;
+                for (int i = 0; i < pos && blockNode; i++) {
+                    blockNode = blockNode->next;
+                }
+
+                if (blockNode) {
+                    Block* block = (Block*)blockNode->data;
+                    if (!block->active) {
+                        block->active = true;
+                        lastPlacedCol = pos;
+                        remainingBlocks--;
+                    }
+                }
+            }
+            attempts++;
+        }
+
+        // Step 3: Jika masih ada blok tersisa, tempatkan di posisi random
+        while (remainingBlocks > 0) {
+            int pos = rand() % MAX_COLUMNS;
+            DLLNode* blockNode = firstRow->head;
+
+            for (int i = 0; i < pos && blockNode; i++) {
+                blockNode = blockNode->next;
+            }
+
+            if (blockNode) {
+                Block* block = (Block*)blockNode->data;
+                if (!block->active) {
+                    block->active = true;
+                    remainingBlocks--;
+                }
+            }
+        }
+    }
 }
 
 int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
-    for (int j = 0; j < MAX_COLUMNS && remainingBlocks > 0; j++) {
-        if (emptyColLength[j] >= 4) {
-            game->grid[0][j] = true;
+    if (!game || !game->grid) return remainingBlocks;
+
+    // Get first row
+    DLLNode* firstRowNode = game->grid->head;
+    if (!firstRowNode) return remainingBlocks;
+
+    DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
+    if (!firstRow) return remainingBlocks;
+
+    DLLNode* blockNode = firstRow->head;
+    int col = 0;
+
+    // Check each column for critical gaps
+    while (blockNode && remainingBlocks > 0) {
+        if (emptyColLength[col] >= 4) {
+            Block* block = (Block*)blockNode->data;
+            block->active = true;
             remainingBlocks--;
         }
+        blockNode = blockNode->next;
+        col++;
     }
+
     return remainingBlocks;
 }
 
 void fillRemainingBlocks(Game* game, int remainingBlocks) {
     int maxAttemptsPerBlock = 3;
+
+    // Get first row
+    DLLNode* firstRowNode = game->grid->head;
+    if (!firstRowNode) return;
+
+    DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
+    if (!firstRow) return;
+
     while (remainingBlocks > 0) {
         for (int attempt = 0; attempt < maxAttemptsPerBlock && remainingBlocks > 0; attempt++) {
             int pos = rand() % MAX_COLUMNS;
-            if (!game->grid[0][pos]) {
-                game->grid[0][pos] = true;
-                remainingBlocks--;
-                break;
+
+            // Navigate to the desired column
+            DLLNode* blockNode = firstRow->head;
+            for (int i = 0; i < pos && blockNode; i++) {
+                blockNode = blockNode->next;
+            }
+
+            if (blockNode) {
+                Block* block = (Block*)blockNode->data;
+                if (!block->active) {
+                    block->active = true;
+                    remainingBlocks--;
+                    break;
+                }
             }
         }
+        remainingBlocks--; // Prevent infinite loop if can't place all blocks
     }
 }
 
@@ -1850,8 +1964,30 @@ void handleBulletCollisions(Game* game) {
             int gridX = game->bullets[i].position.x / 32;
             int gridY = game->bullets[i].position.y / 32;
 
-            if (isValidGridPosition(gridX, gridY) && game->grid[gridY][gridX]) {
-                processBulletHit(game, gridX, gridY, i);
+            if (isValidGridPosition(gridX, gridY)) {
+                // Find the row at gridY
+                DLLNode* rowNode = game->grid->head;
+                for (int y = 0; y < gridY && rowNode; y++) {
+                    rowNode = rowNode->next;
+                }
+
+                if (rowNode) {
+                    // Get the linked list representing this row
+                    DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+
+                    // Find the block at gridX
+                    DLLNode* blockNode = row->head;
+                    for (int x = 0; x < gridX && blockNode; x++) {
+                        blockNode = blockNode->next;
+                    }
+
+                    if (blockNode) {
+                        Block* block = (Block*)blockNode->data;
+                        if (block->active) {
+                            processBulletHit(game, gridX, gridY, i);
+                        }
+                    }
+                }
             }
         }
     }
@@ -1871,21 +2007,44 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         }
     }
 
-    if (hasSpecialBullet) {
-        for (int col = 0; col < MAX_COLUMNS; col++) {
-            game->grid[gridY][col] = false;
+    // Find the target row
+    DLLNode* rowNode = game->grid->head;
+    for (int y = 0; y < gridY && rowNode; y++) {
+        rowNode = rowNode->next;
+    }
+
+    if (hasSpecialBullet && rowNode) {
+        // Clear entire row for special bullet
+        DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+        DLLNode* blockNode = row->head;
+        while (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            block->active = false;
+            blockNode = blockNode->next;
         }
         game->score += 40;
     }
-    else {
-        if (gridY < MAX_ROWS - 1) {
-            game->grid[gridY + 1][gridX] = true;
+    else if (gridY < MAX_ROWS - 1) {
+        // Set block below target to active
+        DLLNode* nextRowNode = rowNode->next;
+        if (nextRowNode) {
+            DoublyLinkedList* nextRow = (DoublyLinkedList*)nextRowNode->data;
+            DLLNode* blockNode = nextRow->head;
+            for (int x = 0; x < gridX && blockNode; x++) {
+                blockNode = blockNode->next;
+            }
+            if (blockNode) {
+                Block* block = (Block*)blockNode->data;
+                block->active = true;
+            }
         }
     }
 
+    // Check for full rows
     for (int row = 0; row < MAX_ROWS; row++) {
         handleFullRow(game, row);
     }
+
     game->bullets[bulletIndex].active = false;
     game->score += 10;
 }
@@ -1909,22 +2068,48 @@ void updateBlocks(Game* game, GameResources* resources) {
 }
 
 void initBlocks(Game* game, GameResources* resources) {
-    for (int i = 0; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            game->grid[i][j] = false;
+    // Get first row node
+    DLLNode* firstRowNode = game->grid->head;
+    if (!firstRowNode) return;
+
+    // Get the linked list representing first row
+    DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
+    if (!firstRow) return;
+
+    // Clear all blocks first
+    DLLNode* rowNode = game->grid->head;
+    while (rowNode) {
+        DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+        DLLNode* blockNode = row->head;
+        while (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            block->active = false;
+            blockNode = blockNode->next;
         }
+        rowNode = rowNode->next;
     }
 
+    // Calculate number of initial blocks
     int minBlocks, maxBlocks;
     getBlockRangeForMode(resources->gameLevel, &minBlocks, &maxBlocks);
-
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
 
+    // Place random blocks in first row
     while (numBlocks > 0) {
         int pos = rand() % MAX_COLUMNS;
-        if (!game->grid[0][pos]) {
-            game->grid[0][pos] = true;
-            numBlocks--;
+        DLLNode* blockNode = firstRow->head;
+
+        // Navigate to desired column
+        for (int i = 0; i < pos && blockNode; i++) {
+            blockNode = blockNode->next;
+        }
+
+        if (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            if (!block->active) {
+                block->active = true;
+                numBlocks--;
+            }
         }
     }
 
@@ -1937,30 +2122,67 @@ void drawBlocks(Game* game, GameResources* resources) {
     ScaleFactor scale = GetScreenScaleFactor();
     float blockSize = auto_x(32);
 
-    for (int i = 0; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            if (game->grid[i][j]) {
+    // Iterate through rows
+    DLLNode* rowNode = game->grid->head;
+    int rowIndex = 0;
+
+    while (rowNode && rowIndex < MAX_ROWS) {
+        DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+        DLLNode* blockNode = row->head;
+        int colIndex = 0;
+
+        // Iterate through blocks in current row
+        while (blockNode && colIndex < MAX_COLUMNS) {
+            Block* block = (Block*)blockNode->data;
+            if (block && block->active) {
                 if (TEXTURE(resources, TEXTURE_BLOCK).id != 0) {
                     float texScale = (float)blockSize / (float)TEXTURE(resources, TEXTURE_BLOCK).width;
-                    DrawTextureEx(TEXTURE(resources, TEXTURE_BLOCK), (Vector2) { j* blockSize, i* blockSize }, 0.0f, texScale, WHITE);
+                    DrawTextureEx(
+                        TEXTURE(resources, TEXTURE_BLOCK),
+                        (Vector2) {
+                        colIndex* blockSize, rowIndex* blockSize
+                    },
+                        0.0f,
+                        texScale,
+                        WHITE
+                    );
                 }
                 else {
-                    DrawRectangle(j * blockSize, i * blockSize, blockSize, blockSize, BLUE);
+                    DrawRectangle(
+                        colIndex * blockSize,
+                        rowIndex * blockSize,
+                        blockSize,
+                        blockSize,
+                        BLUE
+                    );
                 }
             }
+            blockNode = blockNode->next;
+            colIndex++;
         }
+        rowNode = rowNode->next;
+        rowIndex++;
     }
 }
 
 void printGrid(Game* game) {
     system("cls");
     printf("\n--- Grid State ---\n");
-    for (int i = 0; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLUMNS; j++) {
-            printf(game->grid[i][j] ? "[x]" : "   ");
+
+    DLLNode* rowNode = game->grid->head;
+    while (rowNode) {
+        DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+        DLLNode* blockNode = row->head;
+
+        while (blockNode) {
+            Block* block = (Block*)blockNode->data;
+            printf(block->active ? "[x]" : "   ");
+            blockNode = blockNode->next;
         }
         printf("\n");
+        rowNode = rowNode->next;
     }
+
     printf("-----------------\n");
 }
 

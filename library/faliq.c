@@ -48,11 +48,31 @@ void handleLaser(Game* game) {
     int gridX = shooterX / 32;
     float intersectionY = P.y;
 
-    for (int i = MAX_ROWS - 1; i >= 0; i--) {
-        if (gridX >= 0 && gridX < MAX_COLUMNS && game->grid[i][gridX]) {
-            intersectionY = (i + 1) * 32;
-            break;
+    DLLNode* currentRowNode = game->grid->tail;
+    int currentRowIndex = MAX_ROWS - 1;
+
+    // Iterasi dari baris terakhir ke baris pertama
+    while (currentRowNode != NULL) {
+        if (gridX >= 0 && gridX < MAX_COLUMNS) {
+            DoublyLinkedList* currentRow = (DoublyLinkedList*)currentRowNode->data;
+            DLLNode* blockNode = currentRow->head;
+
+            // Navigasi ke kolom `gridX`
+            for (int col = 0; col < gridX && blockNode != NULL; col++) {
+                blockNode = blockNode->next;
+            }
+
+            if (blockNode != NULL) {
+                Block* block = (Block*)blockNode->data;
+                if (block->active) {
+                    intersectionY = (currentRowIndex + 1) * 32;
+                    break;
+                }
+            }
         }
+
+        currentRowNode = currentRowNode->prev;
+        currentRowIndex--;
     }
 
     shooterX += 16;
