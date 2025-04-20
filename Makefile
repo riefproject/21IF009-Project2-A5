@@ -2,8 +2,10 @@
 CC = gcc
 
 # Flags
-CFLAGS = -Wall -Wextra -Iinclude -Ivendor/raylib-5.5/include
-LDFLAGS = vendor/raylib-5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+CFLAGS = -Wall -Wextra -Iinclude -Ivendor/raylib-v5.5/include -Ivendor/reestruct-v0.1.0/include
+LDFLAGS = vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+RSTFLAGS =  vendor/reestruct-v0.1.0/lib/libreestruct.a 
+
 # Graphics library flags (cuma kompatibel di compiler 32-bit)
 GRFLAGS = -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
 
@@ -14,7 +16,7 @@ BIN_PATH = bin
 TMP_PATH = temp
 
 # Source files
-SRC = src/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c library/linkedlist.c
+SRC = src/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c 
 
 # Object files (replace src/library with build/output)
 OBJ = $(patsubst %.c,$(OBJ_PATH)/%.o,$(SRC))
@@ -29,7 +31,7 @@ $(TARGET): $(OBJ)
 	@echo "Creating necessary directories..."
 	@mkdir -p $(BIN_PATH)
 	@echo "🔧 Linking..."
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) $^ -o $@ $(LDFLAGS) $(RSTFLAGS) 
 	# tambahkan cls bang di line ini
 	@echo "✅ Build successful! Run './$(TARGET)'"
 

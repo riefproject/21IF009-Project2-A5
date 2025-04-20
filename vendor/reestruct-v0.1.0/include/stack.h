@@ -16,28 +16,28 @@ typedef struct Stack {
 
 /*      CONSTRUCTOR
  * ==================== */
-Stack* createStack(void);
+RSTAPI Stack* createStack(void);
 
 /*      STATUS CHECKS
  * ==================== */
-bool isStackEmpty(Stack* stack);
-bool isStackFull(Stack* stack);
-uint getStackSize(Stack* stack);
+RSTAPI bool isStackEmpty(Stack* stack);
+RSTAPI bool isStackFull(Stack* stack);
+RSTAPI uint getStackSize(Stack* stack);
 
 /*     STACK OPERATIONS
  * ==================== */
-void push(Stack* stack, void* data);
-void* pop(Stack* stack);
-void* peek(Stack* stack);
+RSTAPI void push(Stack* stack, void* data);
+RSTAPI void* pop(Stack* stack);
+RSTAPI void* Stack_Peek(Stack* stack);
 
 /*  DEALOC AND DESTRUCT
  * ==================== */
-void clearStack(Stack* stack);
-void freeStack(Stack* stack);
+RSTAPI void clearStack(Stack* stack);
+RSTAPI void freeStack(Stack* stack);
 
 /*      PRINT STACK
  * ==================== */
-void printStack(Stack* stack, void (*printFunc)(void*));
-void printStackReverse(Stack* stack, void (*printFunc)(void*));
+RSTAPI void printStack(Stack* stack, void (*printFunc)(void*));
+RSTAPI void printStackReverse(Stack* stack, void (*printFunc)(void*));
 
 #endif

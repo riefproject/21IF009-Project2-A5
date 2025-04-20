@@ -17,28 +17,28 @@ typedef struct Queue {
 
 /*      CONSTRUCTOR
  * ==================== */
-Queue* createQueue(void);
+RSTAPI Queue* createQueue(void);
 
 /*      STATUS CHECKS
  * ==================== */
-bool isQueueEmpty(Queue* queue);
-bool isQueueFull(Queue* queue);
-uint getQueueSize(Queue* queue);
+RSTAPI bool isQueueEmpty(Queue* queue);
+RSTAPI bool isQueueFull(Queue* queue);
+RSTAPI uint getQueueSize(Queue* queue);
 
 /*     QUEUE OPERATIONS
  * ==================== */
-void enqueue(Queue* queue, void* data);
-void* dequeue(Queue* queue);
-void* peek(Queue* queue);
+RSTAPI void Enqueue(Queue* queue, void* data);
+RSTAPI void* Dequeue(Queue* queue);
+RSTAPI void* Queue_Peek(Queue* queue);
 
 /*  DEALOC AND DESTRUCT
  * ==================== */
-void clearQueue(Queue* queue);
-void freeQueue(Queue* queue);
+RSTAPI void clearQueue(Queue* queue);
+RSTAPI void freeQueue(Queue* queue);
 
 /*      PRINT QUEUE
  * ==================== */
-void printQueue(Queue* queue, void (*printFunc)(void*));
-void printQueueReverse(Queue* queue, void (*printFunc)(void*));
+RSTAPI void printQueue(Queue* queue, void (*printFunc)(void*));
+RSTAPI void printQueueReverse(Queue* queue, void (*printFunc)(void*));
 
 #endif

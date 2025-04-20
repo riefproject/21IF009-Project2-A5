@@ -5,16 +5,21 @@ echo "Compiling Block Shooter Game..."
 # Ensure necessary directories exist
 mkdir -p bin build/output/src build/output/library
 
+# Set compiler flags to match Makefile
+CFLAGS="-Wall -Wextra -Iinclude -Ivendor/raylib-v5.5/include -Ivendor/reestruct-v0.1.0/include"
+LDFLAGS="vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+RSTFLAGS="vendor/reestruct-v0.1.0/lib/libreestruct.a"
+
 # Function to compile source files
 compile() {
     local src_file=$1
     local out_file=$2
 
-    echo "Compiling $src_file..."
-    gcc -Wall -Wextra -Iinclude -c "$src_file" -o "$out_file"
+    echo "🔨 Compiling $src_file..."
+    gcc $CFLAGS -c "$src_file" -o "$out_file"
 
     if [ $? -ne 0 ]; then
-        echo "Compilation of $src_file failed!"
+        echo "❌ Compilation of $src_file failed!"
         exit 1
     fi
 }
@@ -28,21 +33,21 @@ compile "library/faliq.c" "build/output/library/faliq.o"
 compile "library/goklas.c" "build/output/library/goklas.o"
 
 # Linking all object files into the final executable
-echo "Linking object files..."
+echo "🔧 Linking..."
 gcc build/output/src/main.o \
     build/output/library/arief.o \
     build/output/library/naira.o \
     build/output/library/raffi.o \
     build/output/library/faliq.o \
     build/output/library/goklas.o \
-    -o bin/game -lm -lraylib
+    -o bin/game.exe $LDFLAGS $RSTFLAGS
 
 if [ $? -ne 0 ]; then
-    echo "Linking failed!"
+    echo "❌ Linking failed!"
     exit 1
 fi
 
-# Run the game (Fix untuk Git Bash & WSL)
-echo "Running game..."
+# Run the game
+echo "🚀 Running game..."
 sleep 1
-exec ./bin/game || echo "Game failed to start! Check for errors."
+./bin/game.exe || echo "❌ Game failed to start! Check for errors."
