@@ -10,10 +10,10 @@ typedef struct {
 extern position P;
 
 // Membuat Bentuk Shooter 
-void shooter(int* x, int* y, GameResources* resources, ScaleFactor scale);
+void shooter(int* x, int* y, GameResources* resources);
 
 // Membuat Moveset Shooter
-void moveSet(int* x, GameResources* resources, ScaleFactor scale);
+void moveSet(int* x, GameResources* resources);
 
 // Mensetting lagu gameplay
 extern Music soundGameplay;

@@ -99,6 +99,20 @@ Game* createGameContext(void) {
     game->currentPowerup.active = false;
     game->powerupPosition = (Vector2){ 0, 0 };
 
+    /* 
+
+    // SLL activePowerupsQ;
+    // activePowerUpsQ berisi:
+    // SLLNode* activePowerUpsQ.rear = NULL
+    // SLLNode* activePowerUpsQ.front = NULL
+    // uint activePowerUpsQ.size = 0;
+
+    // SLLNode berisi:
+    // void* data; -> casting (PowerUp*) data
+    // SLLNode* next = NULL;
+    game->activePowerupsQ = NULL;
+    
+    */
     game->activeEffectsCount = 0;
     for (int i = 0; i < 3; i++) {
         game->activePowerups[i].type = POWERUP_NONE;
@@ -201,7 +215,19 @@ Assets* createAssets(void) {
     assets->textures[TEXTURE_WHITE_ICON] = LoadTexture("assets/icon/icon.png");
 
     assets->bg[BG_PLAY] = LoadTexture("assets/background/play.png");
+    assets->bg[BG_MAIN_MENU] = LoadTexture("assets/background/main_menu.png");
 
+    assets->bgMode[BGMODE_SUPER_EZ] = LoadTexture("assets/background/SuperEZ.png");
+    assets->bgMode[BGMODE_EZ] = LoadTexture("assets/background/EZ.png");
+    assets->bgMode[BGMODE_BEGINNER] = LoadTexture("assets/background/Beginner.png");
+    assets->bgMode[BGMODE_MEDIUM] = LoadTexture("assets/background/Medium.png");
+    assets->bgMode[BGMODE_HARD] = LoadTexture("assets/background/Hard.png");
+    assets->bgMode[BGMODE_SUPER_HARD] = LoadTexture("assets/background/SuperHard.png");
+    assets->bgMode[BGMODE_EXPERT] = LoadTexture("assets/background/Expert.png");
+    assets->bgMode[BGMODE_MASTER] = LoadTexture("assets/background/Master.png");
+    assets->bgMode[BGMODE_LEGEND] = LoadTexture("assets/background/Legend.png");
+    assets->bgMode[BGMODE_GOD] = LoadTexture("assets/background/God.png");
+    assets->bgMode[BGMODE_PROGRESSIVE] = LoadTexture("assets/background/Progressive.png");
     return assets;
 }
 
@@ -226,6 +252,11 @@ void destroyAssets(Assets* assets) {
     // Unload bg
     for (int i = 0; i < BG_COUNT; i++) {
         UnloadTexture(assets->bg[i]);
+    }
+
+    // Unload bg
+    for (int i = 0; i < BGMODE_COUNT; i++) {
+        UnloadTexture(assets->bgMode[i]);
     }
 
     free(assets);
@@ -344,7 +375,7 @@ void mainWindow(void) {
 }
 
 int loadingScreen(float* loadingTime) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const int blockSize = 50;
     const float stepDuration = 0.25f;
     const int totalSteps = 9;
@@ -411,36 +442,49 @@ void mainMenu(GameResources* resources) {
         "QUIT"
     };
 
-    ScaleFactor scale = GetScreenScaleFactor();
-    int fontSize = auto_x(30);
+
+    int fontSize = auto_y(30);
+    int spacing = auto_y(51);
     int lineCount = len(lines);
     int selection = 0;
+
     while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
         EndDrawing();
     }
+
     while (resources->currentState == STATE_MAIN_MENU && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        int totalTextHeight = 0;
-        for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
-            totalTextHeight += textSize.y + 30;
+
+        // Draw background scaled to screen height
+        {
+            float imgScale = (float)GetScreenHeight() / resources->assets->bg[BG_MAIN_MENU].height;
+            float scaledWidth = BG(resources, BG_MAIN_MENU).width * imgScale;
+            float xPos = (GetScreenWidth() - scaledWidth) / 2;
+
+            DrawTextureEx(BG(resources, BG_MAIN_MENU), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
         }
 
-        int startY = (GetScreenHeight() - totalTextHeight) / 2;
+        float totalHeight = 0;
+        for (int i = 0; i < lineCount; i++) {
+            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
+            totalHeight += textSize.y + spacing;
+        }
+        totalHeight -= spacing;
+
+        int startY = auto_y(1023) * MIN_SCREEN_HEIGHT / BG(resources, BG_MAIN_MENU).height;
+
         for (int i = 0; i < lineCount; i++) {
             Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
             int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + auto_y(50);
+
+            DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? ORANGE : DARKGRAY);
+            startY += textSize.y + spacing;
         }
-        if (IsKeyPressed(KEY_F1)) { // Use any function key for testing
-            PlaySound(SOUND(resources, SOUND_SELECT));
-            gameOver(resources, 0);
-        }
+
+        // Handle input
         if (MOVE_UP) {
             PlaySound(SOUND(resources, SOUND_MOVE));
             selection--;
@@ -455,18 +499,10 @@ void mainMenu(GameResources* resources) {
         if (OK_KEY) {
             PlaySound(SOUND(resources, SOUND_SELECT));
             switch (selection) {
-            case 0:
-                resources->currentState = STATE_SELECT_LEVEL;
-                break;
-            case 1:
-                resources->currentState = STATE_HIGH_SCORES;
-                break;
-            case 2:
-                resources->currentState = STATE_CONTROLS;
-                break;
-            case 3:
-                resources->currentState = STATE_SETTINGS;
-                break;
+            case 0: resources->currentState = STATE_SELECT_LEVEL; break;
+            case 1: resources->currentState = STATE_HIGH_SCORES; break;
+            case 2: resources->currentState = STATE_CONTROLS; break;
+            case 3: resources->currentState = STATE_SETTINGS; break;
             case 4:
                 resources->prevState = STATE_MAIN_MENU;
                 resources->currentState = STATE_QUIT;
@@ -479,7 +515,7 @@ void mainMenu(GameResources* resources) {
 }
 
 void showControls(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     int fontSize = auto_y(20);
     int spacing = auto_x(4);
 
@@ -591,7 +627,7 @@ void showControls(GameResources* resources) {
 }
 
 void showSettings(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     int fontSize = auto_y(20);
     int spacing = auto_x(4);
     int menuSpacing = auto_y(25);
@@ -769,7 +805,7 @@ void showSettings(GameResources* resources) {
 }
 
 void showHiScore(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     int fontSize = auto_y(20);
     int spacing = auto_x(4);
     loadHiScores(resources->scores);
@@ -850,7 +886,7 @@ void showHiScore(GameResources* resources) {
 }
 
 bool confirmExit(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const char* message = "Are you sure you want to exit?";
     const char* options[] = { "Yes", "No" };
     int selection = 1;
@@ -921,7 +957,7 @@ void exitGame(GameResources* resources) {
 }
 
 bool confirmBack(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const char* message1 = "Are you sure you want to go back";
     const char* message2 = "to the main menu?";
     const char* options[] = { "Yes", "No" };
@@ -978,7 +1014,7 @@ bool confirmBack(GameResources* resources) {
 
 void pauseMenu(GameResources* resources) {
     resources->prevState = STATE_PAUSE;
-    ScaleFactor scale = GetScreenScaleFactor();
+
     bool paused = true;
     const char* lines[] = {
         "RESUME",
@@ -1015,7 +1051,7 @@ void pauseMenu(GameResources* resources) {
                 DrawRectangle(startX - 10, startY - 5, textSize.x + 20, textSize.y + 10, Fade(LIGHTGRAY, 0.3f));
             }
             DrawTextEx(FONT(resources, FONT_BODY), lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
-            startY += textSize.y + (25 * scale.y);
+            startY += textSize.y + auto_y(25);
         }
         EndDrawing();
 
@@ -1071,7 +1107,7 @@ void pauseMenu(GameResources* resources) {
 
 void countdownPause(GameResources* resources) {
     if (resources->currentState == STATE_PLAY) {
-        ScaleFactor scale = GetScreenScaleFactor();
+
         float counter = 3.0f;
         while (counter > 0.0f && !WindowShouldClose()) {
             counter -= GetFrameTime();
@@ -1079,18 +1115,15 @@ void countdownPause(GameResources* resources) {
             ClearBackground(RAYWHITE);
             char text[8];
             sprintf(text, "%d", (int)ceilf(counter));
-            Vector2 position = {
-                230 * scale.x,
-                300 * scale.y
-            };
-            DrawTextEx(GetFontDefault(), text, position, 50 * scale.y, 2 * scale.x, RED);
+            Vector2 position = { auto_y(230), auto_x(300) };
+            DrawTextEx(GetFontDefault(), text, position, auto_y(50), auto_x(2), RED);
             EndDrawing();
         }
     }
 }
 
 void selectMode(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     resources->prevState = STATE_SELECT_LEVEL;
     const char* title = "SELECT MODE";
     const char* modes[] = {
@@ -1113,7 +1146,13 @@ void selectMode(GameResources* resources) {
     while (selecting && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        {
+            float imgScale = (float)GetScreenHeight() / BGMODE(resources, selection).height;
+            float scaledWidth = BGMODE(resources, selection).width * imgScale;
+            float xPos = (GetScreenWidth() - scaledWidth) / 2;
 
+            DrawTextureEx(BGMODE(resources, selection), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
+        }
         {
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), title, 30, 2);
             int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1124,7 +1163,7 @@ void selectMode(GameResources* resources) {
             int startY = (GetScreenHeight() - arrowSize.y) / 2;
 
             int windowCenterX = GetScreenWidth() / 2;
-            int arrowOffset = 200 * scale.x;
+            int arrowOffset = auto_x(200);
 
             DrawTextEx(FONT(resources, FONT_HEADER), "<", (Vector2) { windowCenterX - arrowOffset, startY }, 40, 2, DARKGRAY);
             DrawTextEx(FONT(resources, FONT_HEADER), ">", (Vector2) { windowCenterX + arrowOffset - arrowSize.x, startY }, 40, 2, DARKGRAY);
@@ -1172,7 +1211,7 @@ void selectMode(GameResources* resources) {
 }
 
 bool confirmReset(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const char* message = "Reset all high scores?";
     const char* options[] = { "Yes", "No" };
     int selection = 1;
@@ -1232,7 +1271,7 @@ void resetHiScores(GameResources* resources) {
 }
 
 void rejectReset(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const char* message = "Cannot reset scores during gameplay!";
     const char* subMessage = "Press any key to go back";
 
@@ -1260,7 +1299,7 @@ void rejectReset(GameResources* resources) {
 }
 
 void gameOver(GameResources* resources, ll currentScore) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     const char* message = "GAME OVER";
     const char* options[] = { "Retry", "Main Menu" };
     int selection = 1;
@@ -1431,7 +1470,7 @@ static void getBlockRangeForMode(int mode, int* minBlocks, int* maxBlocks) {
 }
 
 void displayGame(GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     if (!resources) return;
     resources->prevState = STATE_PLAY;
     static Game* gameContext = NULL;
@@ -1471,15 +1510,35 @@ void displayGame(GameResources* resources) {
 
 
     BeginDrawing();
-    ClearBackground(DARKGRAY);
+    ClearBackground(WHITE);
 
-    DrawRectangle(auto_x(0), auto_y(0), auto_x(320), auto_y(640), (Color) { 236, 244, 255, 255 });
-    DrawRectangle(auto_x(320), auto_y(0), auto_x(3), auto_y(640), (Color) { 27, 45, 4, 255 });
-    DrawRectangle(auto_x(323), auto_y(0), auto_x(7), auto_y(640), (Color) { 65, 71, 71, 255 });
-    DrawRectangle(auto_x(330), auto_y(0), auto_x(150), auto_y(640), (Color) { 25, 38, 47, 255 });
-    DrawRectangle(auto_x(0), auto_y(512), auto_x(320), auto_y(1), BLACK);
+    float blockSize = auto_x(32);
+    float gameWidth = blockSize * MAX_COLUMNS;
+    float gameHeight = blockSize * MAX_ROWS - blockSize;
+
+    float gameAreaX = 0;
+    float gameAreaY = 0;
+
+    // main game area
+    DrawRectangle(gameAreaX, gameAreaY, gameWidth, GetScreenHeight(), (Color) { 236, 244, 255, 255 });
+
+    float sidebarX = gameWidth;
+    float sidebarWidth = GetScreenWidth() - gameWidth;
+
+    // Left border
+    DrawRectangle(sidebarX, 0, auto_x(3), GetScreenHeight(), (Color) { 27, 45, 4, 255 });
+
+    // Middle border
+    DrawRectangle(sidebarX + auto_x(3), 0, auto_x(7), GetScreenHeight(), (Color) { 65, 71, 71, 255 });
+
+    // UI area
+    DrawRectangle(sidebarX + auto_x(10), 0, sidebarWidth - auto_x(10), GetScreenHeight(), (Color) { 25, 38, 47, 255 });
+
+    // Bottom boundary 
+    DrawRectangle(gameAreaX, gameHeight, gameWidth, auto_y(1), BLACK);
 
 
+    // (Color) { 25, 38, 47, 255 }
     drawBlocks(gameContext, resources);
     drawPowerUp(gameContext, resources);
 
@@ -1546,25 +1605,16 @@ void displayGame(GameResources* resources) {
     }
 
     // Player and bullets
-    Vector2 playerPos = { P.x, P.y };
-    shooter(&P.x, &P.y, resources, scale);
-    moveSet(&P.x, resources, scale);
+    shooter(&P.x, &P.y, resources);
+    moveSet(&P.x, resources);
 
     MoveBullets(gameContext->bullets);
     DrawBullets(gameContext->bullets, resources);
 
     // Handle input
-    if (MOVE_RIGHT) {
-        playerPos.x += 5;
-        gameContext->playerDirection = 1;
-    }
-    if (MOVE_LEFT) {
-        playerPos.x -= 5;
-        gameContext->playerDirection = -1;
-    }
     if (SHOOT_KEY) {
-        ShootBullets(gameContext->bullets, playerPos, &gameContext->bulletCount,
-            &gameContext->canShoot, 0, resources);
+        ShootBullets(gameContext->bullets, (Vector2) { P.x, P.y }, & gameContext->bulletCount,
+            & gameContext->canShoot, 0, resources);
     }
     if (SHOOT_RELEASE) {
         gameContext->canShoot = true;
@@ -1961,21 +2011,20 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
 void handleBulletCollisions(Game* game) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (game->bullets[i].active) {
-            int gridX = game->bullets[i].position.x / 32;
-            int gridY = game->bullets[i].position.y / 32;
+            float blockSize = auto_x(32);
+
+            int gridX = (int)(game->bullets[i].position.x / blockSize);
+            int gridY = (int)(game->bullets[i].position.y / blockSize);
 
             if (isValidGridPosition(gridX, gridY)) {
-                // Find the row at gridY
                 DLLNode* rowNode = game->grid->head;
                 for (int y = 0; y < gridY && rowNode; y++) {
                     rowNode = rowNode->next;
                 }
 
                 if (rowNode) {
-                    // Get the linked list representing this row
                     DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
 
-                    // Find the block at gridX
                     DLLNode* blockNode = row->head;
                     for (int x = 0; x < gridX && blockNode; x++) {
                         blockNode = blockNode->next;
@@ -2119,7 +2168,7 @@ void initBlocks(Game* game, GameResources* resources) {
 }
 
 void drawBlocks(Game* game, GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
     float blockSize = auto_x(32);
 
     // Iterate through rows
@@ -2187,7 +2236,7 @@ void printGrid(Game* game) {
 }
 
 void drawGameUI(Game* game, GameResources* resources) {
-    ScaleFactor scale = GetScreenScaleFactor();
+
 
     char obj[32];
     Vector2 textSize;

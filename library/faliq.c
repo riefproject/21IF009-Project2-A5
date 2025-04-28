@@ -1,38 +1,48 @@
 #include "defines.h"
 #include "all.h"
 #define BLOCK_SIZE auto_x(32)
-#define SHOOTER_STEP 32
-// 
+#define SHOOTER_STEP auto_x(32)
+#define GAME_WIDTH (BLOCK_SIZE * MAX_COLUMNS)
+#define GAME_HEIGHT (BLOCK_SIZE * MAX_ROWS)
 position P;
 Music soundGameplay;
 
 
-void shooter(int* x, int* y, GameResources* resources, ScaleFactor scale) {
-    int positionx = *x;
-    int positiony = *y;
+void shooter(int* x, int* y, GameResources* resources) {
+    float blockSize = BLOCK_SIZE;
+    float positionX = (float)*x;
+    float positionY = (float)*y;
 
-    if (*x + BLOCK_SIZE < GAME_SCREEN_WIDTH) {
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_M), positionx, positiony, WHITE);
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_L), positionx - BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_R), positionx + BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_T), positionx, positiony - BLOCK_SIZE, WHITE);
-    }
-    else {
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_M), positionx, positiony, WHITE);
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_L), positionx - BLOCK_SIZE, positiony, WHITE);
-        DrawTexture(TEXTURE(resources, TEXTURE_SHOOTER_T), positionx, positiony - BLOCK_SIZE, WHITE);
+    float imgScale = blockSize / (float)TEXTURE(resources, TEXTURE_SHOOTER_M).width;
+
+    DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_M), (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
+    if (positionX >= blockSize) {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_L), (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
+        DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_T), (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
+
+        // Draw bagian kanan jika dalam batas area game
+        if (positionX + blockSize < GAME_WIDTH) {
+            DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_R), (Vector2) { positionX + blockSize, positionY }, 0, imgScale, WHITE);
+        }
     }
 }
 
-void moveSet(int* x, GameResources* resources, ScaleFactor scale) {
-    if ((MOVE_LEFT) && (*x > 0)) {
-        *x -= SHOOTER_STEP;
+void moveSet(int* x, GameResources* resources) {
+    float blockSize = BLOCK_SIZE;
+    float gameWidth = GAME_WIDTH;
+
+    // Movement dengan boundary checking
+    if (MOVE_LEFT && *x > 0) {
+        *x -= (int)SHOOTER_STEP;
         PlaySound(SOUND(resources, SOUND_MOVE));
     }
-    else if ((MOVE_RIGHT) && (*x + BLOCK_SIZE < GAME_SCREEN_WIDTH)) {
-        *x += SHOOTER_STEP;
+    else if (MOVE_RIGHT && *x + blockSize < gameWidth) {
+        *x += (int)SHOOTER_STEP;
         PlaySound(SOUND(resources, SOUND_MOVE));
     }
+
+    *x = (*x < 0) ? 0 : *x;
+    *x = (*x + (int)blockSize > (int)gameWidth) ? (int)(gameWidth - blockSize) : *x;
 }
 
 void musicGameplay(GameResources* resources) {
@@ -43,21 +53,22 @@ void musicGameplay(GameResources* resources) {
 
 void handleLaser(Game* game) {
     if (!game->laserActive) return;
+    float blockSize = BLOCK_SIZE;
 
-    int shooterX = P.x;
-    int gridX = shooterX / 32;
+    // Sesuaikan posisi shooter dengan grid
+    float shooterX = roundf(P.x / blockSize) * blockSize;
+    int gridX = (int)(shooterX / blockSize);
     float intersectionY = P.y;
 
     DLLNode* currentRowNode = game->grid->tail;
     int currentRowIndex = MAX_ROWS - 1;
 
-    // Iterasi dari baris terakhir ke baris pertama
     while (currentRowNode != NULL) {
         if (gridX >= 0 && gridX < MAX_COLUMNS) {
             DoublyLinkedList* currentRow = (DoublyLinkedList*)currentRowNode->data;
             DLLNode* blockNode = currentRow->head;
 
-            // Navigasi ke kolom `gridX`
+            // Navigate to correct column
             for (int col = 0; col < gridX && blockNode != NULL; col++) {
                 blockNode = blockNode->next;
             }
@@ -65,33 +76,25 @@ void handleLaser(Game* game) {
             if (blockNode != NULL) {
                 Block* block = (Block*)blockNode->data;
                 if (block->active) {
-                    intersectionY = (currentRowIndex + 1) * 32;
+                    // Sesuaikan Y dengan grid
+                    intersectionY = currentRowIndex * blockSize;
                     break;
                 }
             }
         }
-
         currentRowNode = currentRowNode->prev;
         currentRowIndex--;
     }
 
-    shooterX += 16;
-    DrawLineEx(
-        (Vector2) {
-        shooterX, P.y
-    },
-        (Vector2) {
-        shooterX, intersectionY
-    },
-        2.0f,
-        (Color) {
-        255, 0, 0, 128
-    }
-    );
+    shooterX += blockSize / 2;
 
-    DrawCircle(shooterX, intersectionY, 3, RED);
+    float laserThickness = auto_x(2.0f);
+    float dotRadius = auto_x(3.0f);
+    intersectionY += blockSize;
+
+    DrawLineEx((Vector2) { shooterX, P.y }, (Vector2) { shooterX, intersectionY }, laserThickness, (Color) { 255, 0, 0, 128 });
+    DrawCircle(shooterX, intersectionY, dotRadius, RED);
 }
-
 // Membuat animasi background
 Color fadeInOpeningAnimation(float* trans) {
     if (*trans < 1.0f) {

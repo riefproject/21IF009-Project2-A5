@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "raylib.h"
 #include "linkedlist.h"
+#include "queue.h"
+#include "scale.h"
 // =======================================
 //            Game Variables
 // =======================================
@@ -13,8 +15,8 @@ enum SoundAsset;
 enum FontAsset;
 enum TextureAsset;
 enum BgTextures;
+enum BgModeTextures;
 struct PowerUp;
-struct ScaleFactor;
 struct HiScore;
 struct Settings;
 struct Shooter;
@@ -81,8 +83,8 @@ struct openingTransition;
 #define GAME_SCREEN 0, 0, 320, 640
 
 // Screen Helpers
-#define auto_x(var) (int)(var * scale.x)
-#define auto_y(var) (int)(var * scale.y)
+#define auto_x(var) (int)(var * GetScreenScaleFactor().x)
+#define auto_y(var) (int)(var * GetScreenScaleFactor().y)
 
 // =======================================
 //           Input Controls
@@ -111,6 +113,7 @@ struct openingTransition;
 #define FONT(rsc, id) ((rsc)->assets->fonts[id])
 #define TEXTURE(rsc, id) ((rsc)->assets->textures[id])
 #define BG(rsc, id) ((rsc)->assets->bg[id])
+#define BGMODE(rsc, id) ((rsc)->assets->bgMode[id])
 
 // Debug Helper
 #define DBG printf("Haiiii");
@@ -173,8 +176,24 @@ typedef enum TextureAsset {
 
 typedef enum BgTextures {
     BG_PLAY,
+    BG_MAIN_MENU,
     BG_COUNT
 }BgTextures;
+
+typedef enum BgModeTextures {
+    BGMODE_SUPER_EZ,
+    BGMODE_EZ,
+    BGMODE_BEGINNER,
+    BGMODE_MEDIUM,
+    BGMODE_HARD,
+    BGMODE_SUPER_HARD,
+    BGMODE_EXPERT,
+    BGMODE_MASTER,
+    BGMODE_LEGEND,
+    BGMODE_GOD,
+    BGMODE_PROGRESSIVE,
+    BGMODE_COUNT
+}BgModeTextures;
 
 typedef enum GameState {
     STATE_LOADING,
@@ -199,15 +218,6 @@ typedef enum PowerUpType {
     POWERUP_RANDOM,
     POWERUP_COUNT
 } PowerUpType;
-
-/* Strukture ScaleFactor
- * Menyimpan faktor skala untuk mengubah ukuran objek dalam game.
- * Digunakan untuk mengubah ukuran objek dalam game agar sesuai dengan resolusi layar.
- */
-typedef struct ScaleFactor {
-    float x;
-    float y;
-} ScaleFactor;
 
 /* Struktur HiScore
  * Menyimpan data skor tertinggi yang pernah dicapai oleh pemain. */
@@ -248,6 +258,7 @@ typedef struct Assets {
     Font fonts[FONT_COUNT];              // Array untuk menyimpan font
     Texture2D textures[TEXTURE_COUNT];   // Array untuk menyimpan tekstur
     Texture2D bg[BG_COUNT];              // Array untuk menyimpan background
+    Texture2D bgMode[BGMODE_COUNT];              // Array untuk menyimpan background for mode
 } Assets;
 
 /* Struktur PowerUp:
@@ -297,6 +308,7 @@ typedef struct Game {
     PowerUp currentPowerup;            // Power-up yang sedang aktif
     Vector2 powerupPosition;           // Posisi power-up
     bool powerupActive;                // Status power-up aktif
+    Queue activePowerupsQ;
     struct {
         PowerUpType type;              // Tipe power-up
         float duration;                // Durasi power-up
