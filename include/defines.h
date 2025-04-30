@@ -16,6 +16,7 @@ enum FontAsset;
 enum TextureAsset;
 enum BgTextures;
 enum BgModeTextures;
+enum TypeofAssets;
 struct PowerUp;
 struct HiScore;
 struct Settings;
@@ -108,12 +109,6 @@ struct openingTransition;
 // =======================================
 #define len(var) sizeof(var) / sizeof(var[0])
 
- // Resource Access
-#define SOUND(rsc, id) ((rsc)->assets->sounds[id])
-#define FONT(rsc, id) ((rsc)->assets->fonts[id])
-#define TEXTURE(rsc, id) ((rsc)->assets->textures[id])
-#define BG(rsc, id) ((rsc)->assets->bg[id])
-#define BGMODE(rsc, id) ((rsc)->assets->bgMode[id])
 
 // Debug Helper
 #define DBG printf("Haiiii");
@@ -219,6 +214,11 @@ typedef enum PowerUpType {
     POWERUP_COUNT
 } PowerUpType;
 
+typedef enum TypeofAssets {
+    TYPE_SOUND,
+    TYPE_FONT,
+    TYPE_TEXTURE
+}TypeofAssets;
 /* Struktur HiScore
  * Menyimpan data skor tertinggi yang pernah dicapai oleh pemain. */
 typedef struct HiScore {
@@ -254,12 +254,28 @@ typedef struct {
 * Menyimpan sumber daya game seperti suara, font, dan tekstur.
 * Digunakan untuk mengelola semua aset yang dibutuhkan game. */
 typedef struct Assets {
-    Sound sounds[SOUND_COUNT];           // Array untuk menyimpan efek suara
-    Font fonts[FONT_COUNT];              // Array untuk menyimpan font
-    Texture2D textures[TEXTURE_COUNT];   // Array untuk menyimpan tekstur
-    Texture2D bg[BG_COUNT];              // Array untuk menyimpan background
-    Texture2D bgMode[BGMODE_COUNT];              // Array untuk menyimpan background for mode
+    SingleLinkedList sounds;    // Array untuk menyimpan efek suara
+    SingleLinkedList fonts;     // Array untuk menyimpan font
+    SingleLinkedList textures;  // Array untuk menyimpan tekstur
+    SingleLinkedList bg;        // Array untuk menyimpan background
+    SingleLinkedList bgMode;    // Array untuk menyimpan background for mode
 } Assets;
+
+// Resources Function
+#ifndef ASSET_INPUT_HELPERS
+#define ASSET_INPUT_HELPERS
+Assets* createAssets(void);
+void* getAsset(SLLNode* node, uint id);
+void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
+void destroyAssets(Assets* assets);
+#endif
+
+// Resource Access
+#define SOUND(rsc, id) (*(Sound*)(getAsset((rsc)->assets->sounds.head, (id))))
+#define FONT(rsc, id) (*(Font*)(getAsset((rsc)->assets->fonts.head, (id))))
+#define TEXTURE(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->textures.head, (id))))
+#define BG(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->bg.head, (id))))
+#define BGMODE(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->bgMode.head, (id))))
 
 /* Struktur PowerUp:
 * Mengelola power-up yang dapat diambil pemain dalam permainan.
@@ -321,4 +337,8 @@ typedef struct openingTransition { // Ditambahkan oleh Faliq
     float progress; // Ditambahkan oleh Faliq
 }openingTransition;// Ditambahkan oleh Faliq
 
+typedef struct InputAsset {
+    uint id;
+    void* data;
+}InputAsset;
 #endif

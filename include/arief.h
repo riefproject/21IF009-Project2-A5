@@ -9,8 +9,15 @@
 /* Fungsi-fungsi untuk mengelola konteks game dan aset */
 Game* createGameContext(void);              // Membuat dan menginisialisasi konteks game baru
 void destroyGameContext(Game* game);        // Membersihkan dan menghapus konteks game
-Assets* createAssets(void);                 // Membuat dan memuat aset game
-void destroyAssets(Assets* assets);         // Membersihkan dan menghapus aset game
+
+// Resources Function
+#ifndef ASSET_INPUT_HELPERS
+#define ASSET_INPUT_HELPERS
+Assets* createAssets(void);
+void* getAsset(SLLNode* node, uint id);
+void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
+void destroyAssets(Assets* assets);
+#endif
 
 // =====================================================================
 //                          BLOCK MANAGEMENT

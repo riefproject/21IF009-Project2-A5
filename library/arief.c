@@ -99,7 +99,7 @@ Game* createGameContext(void) {
     game->currentPowerup.active = false;
     game->powerupPosition = (Vector2){ 0, 0 };
 
-    /* 
+    /*
 
     // SLL activePowerupsQ;
     // activePowerUpsQ berisi:
@@ -111,7 +111,7 @@ Game* createGameContext(void) {
     // void* data; -> casting (PowerUp*) data
     // SLLNode* next = NULL;
     game->activePowerupsQ = NULL;
-    
+
     */
     game->activeEffectsCount = 0;
     for (int i = 0; i < 3; i++) {
@@ -176,90 +176,154 @@ void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight)
     *outHeight = (*outHeight < MIN_SCREEN_HEIGHT) ? MIN_SCREEN_HEIGHT : *outHeight;
 }
 
-// Tambahkan fungsi ini di arief.c
+InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
+    InputAsset* metadata = malloc(sizeof(InputAsset));
+    if (!metadata) {
+        printf("Failed to allocate memory for InputAsset.\n");
+        return NULL;
+    }
+
+    metadata->id = id;
+
+    switch (type) {
+    case TYPE_SOUND: {
+        metadata->data = malloc(sizeof(Sound));
+        if (!metadata->data) {
+            printf("Failed to allocate memory for Sound.\n");
+            free(metadata);
+            return NULL;
+        }
+        *(Sound*)metadata->data = LoadSound(path);
+        break;
+    }
+    case TYPE_FONT: {
+        metadata->data = malloc(sizeof(Font));
+        if (!metadata->data) {
+            printf("Failed to allocate memory for Font.\n");
+            free(metadata);
+            return NULL;
+        }
+        *(Font*)metadata->data = LoadFont(path);
+        break;
+    }
+    case TYPE_TEXTURE: {
+        metadata->data = malloc(sizeof(Texture2D));
+        if (!metadata->data) {
+            printf("Failed to allocate memory for Texture2D.\n");
+            free(metadata);
+            return NULL;
+        }
+        *(Texture2D*)metadata->data = LoadTexture(path);
+        break;
+    }
+    default: {
+        printf("Unknown asset type.\n");
+        free(metadata);
+        return NULL;
+    }
+    }
+
+    return metadata;
+}
+
 Assets* createAssets(void) {
     Assets* assets = new(Assets);
     if (!assets) return NULL;
 
     // Load sounds
-    assets->sounds[SOUND_MOVE] = LoadSound("assets/sounds/click.wav");
-    assets->sounds[SOUND_SELECT] = LoadSound("assets/sounds/select.wav");
-    assets->sounds[SOUND_SHOOT] = LoadSound("assets/sounds/gunshot.mp3");
-    assets->sounds[SOUND_DEATH] = LoadSound("assets/sounds/death.mp3");
-    assets->sounds[SOUND_SPECIAL_BULLET] = LoadSound("assets/sounds/special_bullet.mp3");
-    assets->sounds[SOUND_HEAL] = LoadSound("assets/sounds/heal.mp3");
-    assets->sounds[SOUND_POISON] = LoadSound("assets/sounds/poison.mp3");
-    assets->sounds[SOUND_SLOWDOWN] = LoadSound("assets/sounds/slowdown.mp3");
-    assets->sounds[SOUND_SPEEDUP] = LoadSound("assets/sounds/speedup.mp3");
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_MOVE, "assets/sounds/click.wav"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SELECT, "assets/sounds/select.wav"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SHOOT, "assets/sounds/gunshot.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_DEATH, "assets/sounds/death.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPECIAL_BULLET, "assets/sounds/special_bullet.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_HEAL, "assets/sounds/heal.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_POISON, "assets/sounds/poison.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SLOWDOWN, "assets/sounds/slowdown.mp3"));
+    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPEEDUP, "assets/sounds/speedup.mp3"));
 
     // Load fonts
-    assets->fonts[FONT_BODY] = LoadFont("assets/fonts/Ubuntu-Bold.ttf");
-    assets->fonts[FONT_HEADER] = LoadFont("assets/fonts/Ubuntu-Medium.ttf");
-    assets->fonts[FONT_INGAME] = LoadFont("assets/fonts/assets/fonts/Orbitron-Medium.ttf");
+    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_BODY, "assets/fonts/Ubuntu-Bold.ttf"));
+    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_HEADER, "assets/fonts/Ubuntu-Medium.ttf"));
+    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_INGAME, "assets/fonts/assets/fonts/Orbitron-Medium.ttf"));
 
     // Load textures
-    assets->textures[TEXTURE_BLOCK] = LoadTexture("assets/sprites/block.png");
-    assets->textures[TEXTURE_BULLET] = LoadTexture("assets/sprites/bullet_brick.png");
-    assets->textures[TEXTURE_SHOOTER_L] = LoadTexture("assets/sprites/shooter1.png");
-    assets->textures[TEXTURE_SHOOTER_R] = LoadTexture("assets/sprites/shooter2.png");
-    assets->textures[TEXTURE_SHOOTER_M] = LoadTexture("assets/sprites/shooter3.png");
-    assets->textures[TEXTURE_SHOOTER_T] = LoadTexture("assets/sprites/shooter4.png");
-    assets->textures[TEXTURE_HEART] = LoadTexture("assets/sprites/heart.png");
-    assets->textures[TEXTURE_LASER_BUTTON] = LoadTexture("assets/sprites/laser_button.png");
-    assets->textures[TEXTURE_RANDOM] = LoadTexture("assets/sprites/random.png");
-    assets->textures[TEXTURE_SPEEDUP] = LoadTexture("assets/sprites/speed_up.png");
-    assets->textures[TEXTURE_SLOWDOWN] = LoadTexture("assets/sprites/slow_down.png");
-    assets->textures[TEXTURE_MIN1_HP] = LoadTexture("assets/sprites/minushp.png");
-    assets->textures[TEXTURE_PLS1_HP] = LoadTexture("assets/sprites/heal.png");
-    assets->textures[TEXTURE_SPECIAL_BULLET] = LoadTexture("assets/sprites/bomb.png");
-    assets->textures[TEXTURE_WHITE_ICON] = LoadTexture("assets/icon/icon.png");
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BULLET, "assets/sprites/bullet_brick.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_HEART, "assets/sprites/heart.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_LASER_BUTTON, "assets/sprites/laser_button.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_RANDOM, "assets/sprites/random.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPEEDUP, "assets/sprites/speed_up.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SLOWDOWN, "assets/sprites/slow_down.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_MIN1_HP, "assets/sprites/minushp.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_PLS1_HP, "assets/sprites/heal.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
+    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
 
-    assets->bg[BG_PLAY] = LoadTexture("assets/background/play.png");
-    assets->bg[BG_MAIN_MENU] = LoadTexture("assets/background/main_menu.png");
+    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/background/play.png"));
+    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/background/main_menu.png"));
 
-    assets->bgMode[BGMODE_SUPER_EZ] = LoadTexture("assets/background/SuperEZ.png");
-    assets->bgMode[BGMODE_EZ] = LoadTexture("assets/background/EZ.png");
-    assets->bgMode[BGMODE_BEGINNER] = LoadTexture("assets/background/Beginner.png");
-    assets->bgMode[BGMODE_MEDIUM] = LoadTexture("assets/background/Medium.png");
-    assets->bgMode[BGMODE_HARD] = LoadTexture("assets/background/Hard.png");
-    assets->bgMode[BGMODE_SUPER_HARD] = LoadTexture("assets/background/SuperHard.png");
-    assets->bgMode[BGMODE_EXPERT] = LoadTexture("assets/background/Expert.png");
-    assets->bgMode[BGMODE_MASTER] = LoadTexture("assets/background/Master.png");
-    assets->bgMode[BGMODE_LEGEND] = LoadTexture("assets/background/Legend.png");
-    assets->bgMode[BGMODE_GOD] = LoadTexture("assets/background/God.png");
-    assets->bgMode[BGMODE_PROGRESSIVE] = LoadTexture("assets/background/Progressive.png");
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/background/SuperEZ.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/background/EZ.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/background/Beginner.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/background/Medium.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/background/Hard.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/background/SuperHard.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/background/Expert.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/background/Master.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/background/Legend.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/background/God.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/background/Progressive.png"));
+
     return assets;
+}
+
+void* getAsset(SLLNode* head, uint id) {
+    SLLNode* cur = head;
+    while (cur != NULL) {
+        InputAsset* asset = (InputAsset*)cur->data;
+        if (asset != NULL && asset->id == id) {
+            return asset->data;
+        }
+        cur = cur->next;
+    }
+    return NULL;
+}
+
+void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*)) {
+    SLLNode* temp = head;
+    while (temp) {
+        InputAsset* asset = (InputAsset*)temp->data;
+        if (asset && asset->data) {
+            unloadFunc(asset->data);
+        }
+        temp = temp->next;
+    }
 }
 
 void destroyAssets(Assets* assets) {
     if (!assets) return;
 
+
     // Unload sounds
-    for (int i = 0; i < SOUND_COUNT; i++) {
-        UnloadSound(assets->sounds[i]);
-    }
+    unloadAndFree(assets->sounds.head, (void (*)(void*))UnloadSound);
 
     // Unload fonts
-    for (int i = 0; i < FONT_COUNT; i++) {
-        UnloadFont(assets->fonts[i]);
-    }
+    unloadAndFree(assets->fonts.head, (void (*)(void*))UnloadFont);
 
     // Unload textures
-    for (int i = 0; i < TEXTURE_COUNT; i++) {
-        UnloadTexture(assets->textures[i]);
-    }
+    unloadAndFree(assets->textures.head, (void (*)(void*))UnloadTexture);
 
-    // Unload bg
-    for (int i = 0; i < BG_COUNT; i++) {
-        UnloadTexture(assets->bg[i]);
-    }
+    // Unload backgrounds
+    unloadAndFree(assets->bg.head, (void (*)(void*))UnloadTexture);
 
-    // Unload bg
-    for (int i = 0; i < BGMODE_COUNT; i++) {
-        UnloadTexture(assets->bgMode[i]);
-    }
+    // Unload background modes
+    unloadAndFree(assets->bgMode.head, (void (*)(void*))UnloadTexture);
 
-    free(assets);
+    delete(assets);
 }
 
 /*    Core of Display
@@ -460,7 +524,7 @@ void mainMenu(GameResources* resources) {
 
         // Draw background scaled to screen height
         {
-            float imgScale = (float)GetScreenHeight() / resources->assets->bg[BG_MAIN_MENU].height;
+            float imgScale = (float)GetScreenHeight() / BG(resources, BG_MAIN_MENU).height;
             float scaledWidth = BG(resources, BG_MAIN_MENU).width * imgScale;
             float xPos = (GetScreenWidth() - scaledWidth) / 2;
 
@@ -1644,15 +1708,14 @@ void displayGame(GameResources* resources) {
 bool isGameOverCheck(Game* game) {
     if (!game || !game->grid) return false;
 
-    // Get the last row (tail) of the grid
+    // ambil tail
     DLLNode* lastRowNode = game->grid->tail;
     if (!lastRowNode) return false;
 
-    // Get the linked list representing the last row
+    // ambil DLL dari last row
     DoublyLinkedList* lastRow = (DoublyLinkedList*)lastRowNode->data;
     if (!lastRow) return false;
 
-    // Check each block in the last row
     DLLNode* blockNode = lastRow->head;
     while (blockNode) {
         Block* block = (Block*)blockNode->data;
@@ -1668,7 +1731,7 @@ bool isGameOverCheck(Game* game) {
 bool isRowFull(Game* game, int row) {
     if (!game || !game->grid) return false;
 
-    // Find the desired row node
+    // cari node
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < row && rowNode; i++) {
         rowNode = rowNode->next;
@@ -1676,11 +1739,9 @@ bool isRowFull(Game* game, int row) {
 
     if (!rowNode) return false;
 
-    // Get the linked list representing this row
     DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
     if (!currentRow) return false;
 
-    // Check each block in this row
     DLLNode* blockNode = currentRow->head;
     while (blockNode) {
         Block* block = (Block*)blockNode->data;
@@ -1728,18 +1789,18 @@ bool hasActiveBlockBelow(Game* game, int row) {
 void shiftRowsUp(Game* game, int startRow) {
     if (!game || !game->grid) return;
 
-    // Find the starting row node
+    // Temukan node baris awal
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < startRow && rowNode; i++) {
         rowNode = rowNode->next;
     }
 
-    // Shift rows up from startRow to second-to-last row
+    // Geser baris ke atas dari startRow hingga baris kedua terakhir
     while (rowNode && rowNode->next) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Copy blocks from next row to current row
+        // Salin blok dari baris berikutnya ke baris saat ini
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1755,7 +1816,7 @@ void shiftRowsUp(Game* game, int startRow) {
         rowNode = rowNode->next;
     }
 
-    // Clear the last row
+    // Bersihkan baris terakhir
     if (rowNode) {
         DoublyLinkedList* lastRow = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = lastRow->head;
@@ -1798,7 +1859,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
     int emptyColLength[MAX_COLUMNS] = { 0 };
     int totalEmptyColumns = 0;
 
-    // Count empty columns from top
+    // Hitung kolom kosong dari atas
     DLLNode* rowNode = game->grid->head;
     for (int j = 0; j < MAX_COLUMNS; j++) {
         int emptyCount = 0;
@@ -1808,7 +1869,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
             DoublyLinkedList* row = (DoublyLinkedList*)currentRowNode->data;
             DLLNode* blockNode = row->head;
 
-            // Navigate to correct column
+            // Navigasi ke kolom yang sesuai
             for (int col = 0; col < j && blockNode; col++) {
                 blockNode = blockNode->next;
             }
@@ -1831,21 +1892,23 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
         }
     }
 
+    // Pindahkan blok ke bawah
     moveBlocksDown(game);
+    // Generate blok baru
     generateNewBlocks(game, minBlocks, maxBlocks, emptyColLength, totalEmptyColumns);
 }
 
 void moveBlocksDown(Game* game) {
     if (!game || !game->grid) return;
 
-    // Start from the second-to-last row (tail->prev) and move up
+    // traversal mulai dari baris kedua terakhir (tail->prev) dan bergerak ke atas
     DLLNode* rowNode = game->grid->tail->prev;
 
     while (rowNode) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Copy blocks from current row to next row
+        // Salin blok dari baris saat ini ke baris berikutnya
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1861,7 +1924,7 @@ void moveBlocksDown(Game* game) {
         rowNode = rowNode->prev;
     }
 
-    // Clear the first row (head)
+    // Bersihkan baris pertama (head)
     DoublyLinkedList* firstRow = (DoublyLinkedList*)game->grid->head->data;
     DLLNode* blockNode = firstRow->head;
     while (blockNode) {
@@ -1877,14 +1940,14 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     int remainingBlocks = numBlocks;
 
-    // Get the first row
+    // Ambil baris pertama
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
     DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
     if (!firstRow) return;
 
-    // Step 1: Fill critical gaps first (kolom dengan 4+ blok kosong berturut-turut)
+    // isi celah kritis terlebih dahulu (kolom dengan 4+ blok kosong berturut-turut)
     if (totalEmptyColumns > 0) {
         DLLNode* blockNode = firstRow->head;
         int col = 0;
@@ -1900,11 +1963,11 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
         }
     }
 
-    // Step 2: Distribusi blok dengan gap maksimal 2 kolom
+    // Distribusi blok dengan jarak maksimal 2 kolom
     if (remainingBlocks > 0) {
-        int lastPlacedCol = -3; // Start dengan offset negatif
+        int lastPlacedCol = -3; // Mulai dengan offset negatif
         int attempts = 0;
-        int maxAttempts = MAX_COLUMNS * 2; // Prevent infinite loop
+        int maxAttempts = MAX_COLUMNS * 2; // Maksimal percobaan untuk menghindari infinite loop
 
         while (remainingBlocks > 0 && attempts < maxAttempts) {
             int pos = rand() % MAX_COLUMNS;
@@ -1928,7 +1991,7 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
             attempts++;
         }
 
-        // Step 3: Jika masih ada blok tersisa, tempatkan di posisi random
+        // Jika masih ada blok tersisa, tempatkan di posisi acak
         while (remainingBlocks > 0) {
             int pos = rand() % MAX_COLUMNS;
             DLLNode* blockNode = firstRow->head;
@@ -1951,7 +2014,7 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
 int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     if (!game || !game->grid) return remainingBlocks;
 
-    // Get first row
+    // Ambil baris pertama
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return remainingBlocks;
 
@@ -1961,7 +2024,7 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     DLLNode* blockNode = firstRow->head;
     int col = 0;
 
-    // Check each column for critical gaps
+    // Periksa setiap kolom untuk celah kritis
     while (blockNode && remainingBlocks > 0) {
         if (emptyColLength[col] >= 4) {
             Block* block = (Block*)blockNode->data;
@@ -1978,7 +2041,7 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
 void fillRemainingBlocks(Game* game, int remainingBlocks) {
     int maxAttemptsPerBlock = 3;
 
-    // Get first row
+    // Ambil baris pertama
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
@@ -1989,7 +2052,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
         for (int attempt = 0; attempt < maxAttemptsPerBlock && remainingBlocks > 0; attempt++) {
             int pos = rand() % MAX_COLUMNS;
 
-            // Navigate to the desired column
+            // Navigasi ke kolom yang diinginkan
             DLLNode* blockNode = firstRow->head;
             for (int i = 0; i < pos && blockNode; i++) {
                 blockNode = blockNode->next;
@@ -2004,7 +2067,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
                 }
             }
         }
-        remainingBlocks--; // Prevent infinite loop if can't place all blocks
+        remainingBlocks--; // Mencegah loop tak berujung jika tidak dapat menempatkan semua blok
     }
 }
 
@@ -2056,14 +2119,14 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         }
     }
 
-    // Find the target row
+    // Temukan baris target
     DLLNode* rowNode = game->grid->head;
     for (int y = 0; y < gridY && rowNode; y++) {
         rowNode = rowNode->next;
     }
 
     if (hasSpecialBullet && rowNode) {
-        // Clear entire row for special bullet
+        // Hapus seluruh baris untuk peluru spesial
         DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = row->head;
         while (blockNode) {
@@ -2074,7 +2137,7 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         game->score += 40;
     }
     else if (gridY < MAX_ROWS - 1) {
-        // Set block below target to active
+        // Aktifkan blok di bawah target
         DLLNode* nextRowNode = rowNode->next;
         if (nextRowNode) {
             DoublyLinkedList* nextRow = (DoublyLinkedList*)nextRowNode->data;
@@ -2089,7 +2152,7 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         }
     }
 
-    // Check for full rows
+    // Periksa baris penuh
     for (int row = 0; row < MAX_ROWS; row++) {
         handleFullRow(game, row);
     }
@@ -2117,20 +2180,17 @@ void updateBlocks(Game* game, GameResources* resources) {
 }
 
 void initBlocks(Game* game, GameResources* resources) {
-    // Get first row node
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
-
-    // Get the linked list representing first row
     DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
     if (!firstRow) return;
 
-    // Clear all blocks first
+    // Bersihkan semua blok di grid
     DLLNode* rowNode = game->grid->head;
     while (rowNode) {
         DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = row->head;
-        while (blockNode) {
+        while (!blockNode) {
             Block* block = (Block*)blockNode->data;
             block->active = false;
             blockNode = blockNode->next;
@@ -2138,17 +2198,17 @@ void initBlocks(Game* game, GameResources* resources) {
         rowNode = rowNode->next;
     }
 
-    // Calculate number of initial blocks
+    // Tentukan jumlah blok berdasarkan mode permainan
     int minBlocks, maxBlocks;
     getBlockRangeForMode(resources->gameLevel, &minBlocks, &maxBlocks);
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
 
-    // Place random blocks in first row
+    // Tempatkan blok secara acak di baris pertama
     while (numBlocks > 0) {
         int pos = rand() % MAX_COLUMNS;
         DLLNode* blockNode = firstRow->head;
 
-        // Navigate to desired column
+        // Navigasi ke kolom yang diinginkan
         for (int i = 0; i < pos && blockNode; i++) {
             blockNode = blockNode->next;
         }
@@ -2162,6 +2222,7 @@ void initBlocks(Game* game, GameResources* resources) {
         }
     }
 
+    // Inisialisasi variabel permainan
     game->frameCounter = 0;
     game->score = 0;
     game->gameOver = false;
@@ -2171,7 +2232,7 @@ void drawBlocks(Game* game, GameResources* resources) {
 
     float blockSize = auto_x(32);
 
-    // Iterate through rows
+    // Iterasi melalui baris
     DLLNode* rowNode = game->grid->head;
     int rowIndex = 0;
 
@@ -2180,30 +2241,16 @@ void drawBlocks(Game* game, GameResources* resources) {
         DLLNode* blockNode = row->head;
         int colIndex = 0;
 
-        // Iterate through blocks in current row
+        // Iterasi melalui blok di baris saat ini
         while (blockNode && colIndex < MAX_COLUMNS) {
             Block* block = (Block*)blockNode->data;
             if (block && block->active) {
                 if (TEXTURE(resources, TEXTURE_BLOCK).id != 0) {
                     float texScale = (float)blockSize / (float)TEXTURE(resources, TEXTURE_BLOCK).width;
-                    DrawTextureEx(
-                        TEXTURE(resources, TEXTURE_BLOCK),
-                        (Vector2) {
-                        colIndex* blockSize, rowIndex* blockSize
-                    },
-                        0.0f,
-                        texScale,
-                        WHITE
-                    );
+                    DrawTextureEx(TEXTURE(resources, TEXTURE_BLOCK), (Vector2) { colIndex* blockSize, rowIndex* blockSize }, 0.0f, texScale, WHITE);
                 }
                 else {
-                    DrawRectangle(
-                        colIndex * blockSize,
-                        rowIndex * blockSize,
-                        blockSize,
-                        blockSize,
-                        BLUE
-                    );
+                    DrawRectangle(colIndex * blockSize, rowIndex * blockSize, blockSize, blockSize, BLUE);
                 }
             }
             blockNode = blockNode->next;
@@ -2371,11 +2418,7 @@ void drawGameUI(Game* game, GameResources* resources) {
                     int iconX = startIconX + (i * (ICON_SIZE + SPACING));
 
                     // Draw icon
-                    DrawTextureEx(iconTexture,
-                        (Vector2) {
-                        iconX, curY
-                    },
-                        0, scale, WHITE);
+                    DrawTextureEx(iconTexture, (Vector2) { iconX, curY }, 0, scale, WHITE);
 
                     // Draw timer below icon
                     char timerText[8];
@@ -2384,11 +2427,7 @@ void drawGameUI(Game* game, GameResources* resources) {
                     float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
                     float timerY = curY + ICON_SIZE + 5;
 
-                    DrawTextEx(GetFontDefault(), timerText,
-                        (Vector2) {
-                        timerX, timerY
-                    },
-                        15, 2, timerColor);
+                    DrawTextEx(GetFontDefault(), timerText, (Vector2) { timerX, timerY }, 15, 2, timerColor);
                 }
             }
 
@@ -2412,33 +2451,20 @@ void drawGameUI(Game* game, GameResources* resources) {
 
     float local_scale = (float)auto_x(80.0f) / 640.0f;
     Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-    Rectangle buttonRect = {
-        buttonPos.x,
-        buttonPos.y,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
-    };
+    Rectangle buttonRect = { buttonPos.x,buttonPos.y,TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale };
 
     if (game->laserCooldown > 0) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale,
-            (Color) {
-            255, 255, 255, 80
-        });
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, (Color) { 255, 255, 255, 80 });
 
         char cooldownText[5];
         sprintf(cooldownText, "%.1f", game->laserCooldown);
         Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
         float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
         float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-        DrawTextEx(GetFontDefault(), cooldownText,
-            (Vector2) {
-            textX, textY
-        }, 20, 2, WHITE);
+        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX, textY }, 20, 2, WHITE);
     }
     else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale, WHITE);
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, WHITE);
     }
     textSize = MeasureTextEx(GetFontDefault(), "E", 15, 2);
     float boxX = buttonRect.x + buttonRect.width - (textSize.x + auto_x(8)); // 8 untuk padding
@@ -2449,6 +2475,5 @@ void drawGameUI(Game* game, GameResources* resources) {
         (Vector2) {
         boxX + auto_x(4),  // +4 untuk padding
             boxY + auto_y(4)   // +4 untuk padding
-    },
-        15, 2, WHITE);
+    }, 15, 2, WHITE);
 }
