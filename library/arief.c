@@ -334,6 +334,7 @@ void destroyAssets(Assets* assets) {
 
     // Unload background modes
     unloadAndFree(assets->bgMode.head, (void (*)(void*))UnloadTexture);
+    unloadAndFree(assets->txMode.head, (void (*)(void*))UnloadTexture);
 
     delete(assets);
 }
