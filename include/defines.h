@@ -259,6 +259,7 @@ typedef struct Assets {
     SingleLinkedList textures;  // Array untuk menyimpan tekstur
     SingleLinkedList bg;        // Array untuk menyimpan background
     SingleLinkedList bgMode;    // Array untuk menyimpan background for mode
+    SingleLinkedList txMode;    // Array untuk menyimpan text for mode
 } Assets;
 
 // Resources Function
@@ -276,6 +277,7 @@ void destroyAssets(Assets* assets);
 #define TEXTURE(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->textures.head, (id))))
 #define BG(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->bg.head, (id))))
 #define BGMODE(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->bgMode.head, (id))))
+#define TXMODE(rsc, id) (*(Texture2D*)(getAsset((rsc)->assets->txMode.head, (id))))
 
 /* Struktur PowerUp:
 * Mengelola power-up yang dapat diambil pemain dalam permainan.

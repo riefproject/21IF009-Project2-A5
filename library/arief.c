@@ -130,7 +130,7 @@ Game* createGameContext(void) {
 
 void destroyGameContext(Game* game) {
     if (!game) return;
-    free(game);
+    delete(game);
 }
 
 // =======================================
@@ -190,7 +190,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
         metadata->data = malloc(sizeof(Sound));
         if (!metadata->data) {
             printf("Failed to allocate memory for Sound.\n");
-            free(metadata);
+            delete(metadata);
             return NULL;
         }
         *(Sound*)metadata->data = LoadSound(path);
@@ -200,7 +200,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
         metadata->data = malloc(sizeof(Font));
         if (!metadata->data) {
             printf("Failed to allocate memory for Font.\n");
-            free(metadata);
+            delete(metadata);
             return NULL;
         }
         *(Font*)metadata->data = LoadFont(path);
@@ -210,7 +210,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
         metadata->data = malloc(sizeof(Texture2D));
         if (!metadata->data) {
             printf("Failed to allocate memory for Texture2D.\n");
-            free(metadata);
+            delete(metadata);
             return NULL;
         }
         *(Texture2D*)metadata->data = LoadTexture(path);
@@ -218,7 +218,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
     }
     default: {
         printf("Unknown asset type.\n");
-        free(metadata);
+        delete(metadata);
         return NULL;
     }
     }
@@ -263,20 +263,32 @@ Assets* createAssets(void) {
     SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
     SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
 
-    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/background/play.png"));
-    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/background/main_menu.png"));
+    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/play.png"));
+    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
 
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/background/SuperEZ.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/background/EZ.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/background/Beginner.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/background/Medium.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/background/Hard.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/background/SuperHard.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/background/Expert.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/background/Master.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/background/Legend.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/background/God.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/background/Progressive.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/EZ.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/Beginner.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/Medium.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/Hard.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/SuperHard.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/Expert.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/Master.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/Legend.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/God.png"));
+    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/Progressive.png"));
+
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/tx/SuperEZ.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/tx/EZ.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/tx/Beginner.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/tx/Medium.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/tx/Hard.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/tx/SuperHard.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/tx/Expert.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/tx/Master.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/tx/Legend.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
+    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
 
     return assets;
 }
@@ -340,7 +352,7 @@ void mainWindow(void) {
     loadHiScores(resources->scores);
 
     if (!resources->assets) {
-        free(resources);
+        delete(resources);
         printf("Failed to create assets!\n");
         return;
     }
@@ -1187,93 +1199,88 @@ void countdownPause(GameResources* resources) {
 }
 
 void selectMode(GameResources* resources) {
-
     resources->prevState = STATE_SELECT_LEVEL;
-    const char* title = "SELECT MODE";
-    const char* modes[] = {
-        "Super EZ",
-        "Easy",
-        "Beginner",
-        "Medium",
-        "Hard",
-        "Super Hard",
-        "Expert",
-        "Master",
-        "Legend",
-        "God",
-        "Progressive"
-    };
-    int selection = resources->settings.mode;
-    int lineCount = len(modes);
+    int currentSelection = resources->settings.mode;
+    int targetSelection = currentSelection;
+    int lineCount = 11;
     bool selecting = true;
+    float transition = 0.0f;
+    float transitionSpeed = 4.0f; // Kecepatan transisi, bisa disesuaikan
+    int transitionDirection = 0;  // -1 untuk kiri, 1 untuk kanan
 
     while (selecting && !WindowShouldClose()) {
+        // Update transisi
+        float deltaTime = GetFrameTime();
+        if (transition < 1.0f && transitionDirection != 0) {
+            transition += deltaTime * transitionSpeed;
+            if (transition >= 1.0f) {
+                transition = 0.0f;
+                currentSelection = targetSelection;
+                transitionDirection = 0;
+            }
+        }
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        {
-            float imgScale = (float)GetScreenHeight() / BGMODE(resources, selection).height;
-            float scaledWidth = BGMODE(resources, selection).width * imgScale;
-            float xPos = (GetScreenWidth() - scaledWidth) / 2;
 
-            DrawTextureEx(BGMODE(resources, selection), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
-        }
-        {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), title, 30, 2);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), title, (Vector2) { startX, 100 }, 30, 2, DARKGRAY);
-        }
-        {
-            Vector2 arrowSize = MeasureTextEx(FONT(resources, FONT_HEADER), ">", 40, 2);
-            int startY = (GetScreenHeight() - arrowSize.y) / 2;
+        // Draw current image
+        float imgScale = (float)GetScreenHeight() / BGMODE(resources, currentSelection).height;
+        float scaledWidth = BGMODE(resources, currentSelection).width * imgScale;
+        float baseXPos = (GetScreenWidth() - scaledWidth) / 2;
 
-            int windowCenterX = GetScreenWidth() / 2;
-            int arrowOffset = auto_x(200);
+        // Calculate positions for transition
+        float currentXPos = baseXPos;
+        float nextXPos = baseXPos;
 
-            DrawTextEx(FONT(resources, FONT_HEADER), "<", (Vector2) { windowCenterX - arrowOffset, startY }, 40, 2, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_HEADER), ">", (Vector2) { windowCenterX + arrowOffset - arrowSize.x, startY }, 40, 2, DARKGRAY);
-        }
-        {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), modes[selection], 60, 2);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            int startY = (GetScreenHeight() - textSize.y) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), modes[selection], (Vector2) { startX, startY }, 60, 2, BLUE);
-        }
-        {
-            const char* controlsText = "[↑/↓]: Select    [Enter]: Play    [B]: Back";
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), controlsText, 15, 2);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), controlsText, (Vector2) { startX, 560 }, 15, 2, DARKGRAY);
+        if (transitionDirection != 0) {
+            currentXPos += (transitionDirection * GetScreenWidth() * -transition);
+            nextXPos += (transitionDirection * GetScreenWidth() * (1.0f - transition));
+
+            // Draw next image
+            DrawTextureEx(BGMODE(resources, targetSelection), (Vector2) { nextXPos, 0 }, 0.0f, imgScale, WHITE);
         }
 
+        DrawTextureEx(BGMODE(resources, currentSelection), (Vector2) { currentXPos, 0 }, 0.0f, imgScale, WHITE);
+
+        imgScale = (float)GetScreenHeight() / TXMODE(resources, currentSelection).height;
+        scaledWidth = TXMODE(resources, currentSelection).width * imgScale;
+        baseXPos = (GetScreenWidth() - scaledWidth) / 2;
+        DrawTextureEx(TXMODE(resources, currentSelection), (Vector2) { baseXPos, 0 }, 0.0f, imgScale, WHITE);
         EndDrawing();
 
-        if (MOVE_LEFT || MOVE_DOWN) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection--;
-            if (selection < 0) selection = lineCount - 1;
-        }
-        if (MOVE_RIGHT || MOVE_UP) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection++;
-            if (selection >= lineCount) selection = 0;
-        }
-        if (OK_KEY) {
-            PlaySound(SOUND(resources, SOUND_SELECT));
-            resources->currentState = STATE_PLAY;
-            selecting = false;
-            resources->settings.mode = selection;
-            saveSettings(resources->settings);
-            resources->gameLevel = selection;
-            countdownPause(resources);
-        }
-        if (BACK_KEY) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            resources->currentState = STATE_MAIN_MENU;
-            selecting = false;
+        // Handle input only when not transitioning
+        if (transitionDirection == 0) {
+            if (MOVE_LEFT || MOVE_DOWN) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                targetSelection = currentSelection - 1;
+                if (targetSelection < 0) targetSelection = lineCount - 1;
+                transitionDirection = -1;
+                transition = 0.0f;
+            }
+            if (MOVE_RIGHT || MOVE_UP) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                targetSelection = currentSelection + 1;
+                if (targetSelection >= lineCount) targetSelection = 0;
+                transitionDirection = 1;
+                transition = 0.0f;
+            }
+            if (OK_KEY) {
+                PlaySound(SOUND(resources, SOUND_SELECT));
+                resources->currentState = STATE_PLAY;
+                selecting = false;
+                resources->settings.mode = currentSelection;
+                saveSettings(resources->settings);
+                resources->gameLevel = currentSelection;
+                countdownPause(resources);
+            }
+            if (BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_MAIN_MENU;
+                selecting = false;
+            }
         }
     }
 }
-
 bool confirmReset(GameResources* resources) {
 
     const char* message = "Reset all high scores?";
@@ -1566,7 +1573,7 @@ void displayGame(GameResources* resources) {
             resources->currentState = STATE_GAME_OVER;
             updateHighScore(gameContext, resources);
             gameOver(resources, gameContext->score);
-            free(gameContext);
+            delete(gameContext);
             gameContext = NULL;
             return;
         }
@@ -1656,7 +1663,7 @@ void displayGame(GameResources* resources) {
         resources->currentState = STATE_GAME_OVER;
         updateHighScore(gameContext, resources);
         gameOver(resources, gameContext->score);
-        free(gameContext);
+        delete(gameContext);
         gameContext = NULL;
         return;
     }
@@ -1708,14 +1715,15 @@ void displayGame(GameResources* resources) {
 bool isGameOverCheck(Game* game) {
     if (!game || !game->grid) return false;
 
-    // ambil tail
+    // Get the last row (tail) of the grid
     DLLNode* lastRowNode = game->grid->tail;
     if (!lastRowNode) return false;
 
-    // ambil DLL dari last row
+    // Get the linked list representing the last row
     DoublyLinkedList* lastRow = (DoublyLinkedList*)lastRowNode->data;
     if (!lastRow) return false;
 
+    // Check each block in the last row
     DLLNode* blockNode = lastRow->head;
     while (blockNode) {
         Block* block = (Block*)blockNode->data;
@@ -1731,7 +1739,7 @@ bool isGameOverCheck(Game* game) {
 bool isRowFull(Game* game, int row) {
     if (!game || !game->grid) return false;
 
-    // cari node
+    // Find the desired row node
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < row && rowNode; i++) {
         rowNode = rowNode->next;
@@ -1739,9 +1747,11 @@ bool isRowFull(Game* game, int row) {
 
     if (!rowNode) return false;
 
+    // Get the linked list representing this row
     DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
     if (!currentRow) return false;
 
+    // Check each block in this row
     DLLNode* blockNode = currentRow->head;
     while (blockNode) {
         Block* block = (Block*)blockNode->data;
@@ -1789,18 +1799,18 @@ bool hasActiveBlockBelow(Game* game, int row) {
 void shiftRowsUp(Game* game, int startRow) {
     if (!game || !game->grid) return;
 
-    // Temukan node baris awal
+    // Find the starting row node
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < startRow && rowNode; i++) {
         rowNode = rowNode->next;
     }
 
-    // Geser baris ke atas dari startRow hingga baris kedua terakhir
+    // Shift rows up from startRow to second-to-last row
     while (rowNode && rowNode->next) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Salin blok dari baris berikutnya ke baris saat ini
+        // Copy blocks from next row to current row
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1816,7 +1826,7 @@ void shiftRowsUp(Game* game, int startRow) {
         rowNode = rowNode->next;
     }
 
-    // Bersihkan baris terakhir
+    // Clear the last row
     if (rowNode) {
         DoublyLinkedList* lastRow = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = lastRow->head;
@@ -1859,7 +1869,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
     int emptyColLength[MAX_COLUMNS] = { 0 };
     int totalEmptyColumns = 0;
 
-    // Hitung kolom kosong dari atas
+    // Count empty columns from top
     DLLNode* rowNode = game->grid->head;
     for (int j = 0; j < MAX_COLUMNS; j++) {
         int emptyCount = 0;
@@ -1869,7 +1879,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
             DoublyLinkedList* row = (DoublyLinkedList*)currentRowNode->data;
             DLLNode* blockNode = row->head;
 
-            // Navigasi ke kolom yang sesuai
+            // Navigate to correct column
             for (int col = 0; col < j && blockNode; col++) {
                 blockNode = blockNode->next;
             }
@@ -1892,23 +1902,21 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
         }
     }
 
-    // Pindahkan blok ke bawah
     moveBlocksDown(game);
-    // Generate blok baru
     generateNewBlocks(game, minBlocks, maxBlocks, emptyColLength, totalEmptyColumns);
 }
 
 void moveBlocksDown(Game* game) {
     if (!game || !game->grid) return;
 
-    // traversal mulai dari baris kedua terakhir (tail->prev) dan bergerak ke atas
+    // Start from the second-to-last row (tail->prev) and move up
     DLLNode* rowNode = game->grid->tail->prev;
 
     while (rowNode) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Salin blok dari baris saat ini ke baris berikutnya
+        // Copy blocks from current row to next row
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1924,7 +1932,7 @@ void moveBlocksDown(Game* game) {
         rowNode = rowNode->prev;
     }
 
-    // Bersihkan baris pertama (head)
+    // Clear the first row (head)
     DoublyLinkedList* firstRow = (DoublyLinkedList*)game->grid->head->data;
     DLLNode* blockNode = firstRow->head;
     while (blockNode) {
@@ -1940,14 +1948,14 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     int remainingBlocks = numBlocks;
 
-    // Ambil baris pertama
+    // Get the first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
     DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
     if (!firstRow) return;
 
-    // isi celah kritis terlebih dahulu (kolom dengan 4+ blok kosong berturut-turut)
+    // Step 1: Fill critical gaps first (kolom dengan 4+ blok kosong berturut-turut)
     if (totalEmptyColumns > 0) {
         DLLNode* blockNode = firstRow->head;
         int col = 0;
@@ -1963,11 +1971,11 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
         }
     }
 
-    // Distribusi blok dengan jarak maksimal 2 kolom
+    // Step 2: Distribusi blok dengan gap maksimal 2 kolom
     if (remainingBlocks > 0) {
-        int lastPlacedCol = -3; // Mulai dengan offset negatif
+        int lastPlacedCol = -3; // Start dengan offset negatif
         int attempts = 0;
-        int maxAttempts = MAX_COLUMNS * 2; // Maksimal percobaan untuk menghindari infinite loop
+        int maxAttempts = MAX_COLUMNS * 2; // Prevent infinite loop
 
         while (remainingBlocks > 0 && attempts < maxAttempts) {
             int pos = rand() % MAX_COLUMNS;
@@ -1991,7 +1999,7 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
             attempts++;
         }
 
-        // Jika masih ada blok tersisa, tempatkan di posisi acak
+        // Step 3: Jika masih ada blok tersisa, tempatkan di posisi random
         while (remainingBlocks > 0) {
             int pos = rand() % MAX_COLUMNS;
             DLLNode* blockNode = firstRow->head;
@@ -2014,7 +2022,7 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
 int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     if (!game || !game->grid) return remainingBlocks;
 
-    // Ambil baris pertama
+    // Get first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return remainingBlocks;
 
@@ -2024,7 +2032,7 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     DLLNode* blockNode = firstRow->head;
     int col = 0;
 
-    // Periksa setiap kolom untuk celah kritis
+    // Check each column for critical gaps
     while (blockNode && remainingBlocks > 0) {
         if (emptyColLength[col] >= 4) {
             Block* block = (Block*)blockNode->data;
@@ -2041,7 +2049,7 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
 void fillRemainingBlocks(Game* game, int remainingBlocks) {
     int maxAttemptsPerBlock = 3;
 
-    // Ambil baris pertama
+    // Get first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
@@ -2052,7 +2060,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
         for (int attempt = 0; attempt < maxAttemptsPerBlock && remainingBlocks > 0; attempt++) {
             int pos = rand() % MAX_COLUMNS;
 
-            // Navigasi ke kolom yang diinginkan
+            // Navigate to the desired column
             DLLNode* blockNode = firstRow->head;
             for (int i = 0; i < pos && blockNode; i++) {
                 blockNode = blockNode->next;
@@ -2067,7 +2075,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
                 }
             }
         }
-        remainingBlocks--; // Mencegah loop tak berujung jika tidak dapat menempatkan semua blok
+        remainingBlocks--; // Prevent infinite loop if can't place all blocks
     }
 }
 
@@ -2119,14 +2127,14 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         }
     }
 
-    // Temukan baris target
+    // Find the target row
     DLLNode* rowNode = game->grid->head;
     for (int y = 0; y < gridY && rowNode; y++) {
         rowNode = rowNode->next;
     }
 
     if (hasSpecialBullet && rowNode) {
-        // Hapus seluruh baris untuk peluru spesial
+        // Clear entire row for special bullet
         DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = row->head;
         while (blockNode) {
@@ -2137,7 +2145,7 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         game->score += 40;
     }
     else if (gridY < MAX_ROWS - 1) {
-        // Aktifkan blok di bawah target
+        // Set block below target to active
         DLLNode* nextRowNode = rowNode->next;
         if (nextRowNode) {
             DoublyLinkedList* nextRow = (DoublyLinkedList*)nextRowNode->data;
@@ -2152,7 +2160,7 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         }
     }
 
-    // Periksa baris penuh
+    // Check for full rows
     for (int row = 0; row < MAX_ROWS; row++) {
         handleFullRow(game, row);
     }
@@ -2185,7 +2193,7 @@ void initBlocks(Game* game, GameResources* resources) {
     DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
     if (!firstRow) return;
 
-    // Bersihkan semua blok di grid
+
     DLLNode* rowNode = game->grid->head;
     while (rowNode) {
         DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
@@ -2198,17 +2206,15 @@ void initBlocks(Game* game, GameResources* resources) {
         rowNode = rowNode->next;
     }
 
-    // Tentukan jumlah blok berdasarkan mode permainan
     int minBlocks, maxBlocks;
     getBlockRangeForMode(resources->gameLevel, &minBlocks, &maxBlocks);
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
 
-    // Tempatkan blok secara acak di baris pertama
     while (numBlocks > 0) {
         int pos = rand() % MAX_COLUMNS;
         DLLNode* blockNode = firstRow->head;
 
-        // Navigasi ke kolom yang diinginkan
+        // Navigate to desired column
         for (int i = 0; i < pos && blockNode; i++) {
             blockNode = blockNode->next;
         }
@@ -2222,7 +2228,6 @@ void initBlocks(Game* game, GameResources* resources) {
         }
     }
 
-    // Inisialisasi variabel permainan
     game->frameCounter = 0;
     game->score = 0;
     game->gameOver = false;
@@ -2232,7 +2237,7 @@ void drawBlocks(Game* game, GameResources* resources) {
 
     float blockSize = auto_x(32);
 
-    // Iterasi melalui baris
+    // Iterate through rows
     DLLNode* rowNode = game->grid->head;
     int rowIndex = 0;
 
@@ -2241,16 +2246,30 @@ void drawBlocks(Game* game, GameResources* resources) {
         DLLNode* blockNode = row->head;
         int colIndex = 0;
 
-        // Iterasi melalui blok di baris saat ini
+        // Iterate through blocks in current row
         while (blockNode && colIndex < MAX_COLUMNS) {
             Block* block = (Block*)blockNode->data;
             if (block && block->active) {
                 if (TEXTURE(resources, TEXTURE_BLOCK).id != 0) {
                     float texScale = (float)blockSize / (float)TEXTURE(resources, TEXTURE_BLOCK).width;
-                    DrawTextureEx(TEXTURE(resources, TEXTURE_BLOCK), (Vector2) { colIndex* blockSize, rowIndex* blockSize }, 0.0f, texScale, WHITE);
+                    DrawTextureEx(
+                        TEXTURE(resources, TEXTURE_BLOCK),
+                        (Vector2) {
+                        colIndex* blockSize, rowIndex* blockSize
+                    },
+                        0.0f,
+                        texScale,
+                        WHITE
+                    );
                 }
                 else {
-                    DrawRectangle(colIndex * blockSize, rowIndex * blockSize, blockSize, blockSize, BLUE);
+                    DrawRectangle(
+                        colIndex * blockSize,
+                        rowIndex * blockSize,
+                        blockSize,
+                        blockSize,
+                        BLUE
+                    );
                 }
             }
             blockNode = blockNode->next;
@@ -2418,7 +2437,11 @@ void drawGameUI(Game* game, GameResources* resources) {
                     int iconX = startIconX + (i * (ICON_SIZE + SPACING));
 
                     // Draw icon
-                    DrawTextureEx(iconTexture, (Vector2) { iconX, curY }, 0, scale, WHITE);
+                    DrawTextureEx(iconTexture,
+                        (Vector2) {
+                        iconX, curY
+                    },
+                        0, scale, WHITE);
 
                     // Draw timer below icon
                     char timerText[8];
@@ -2427,7 +2450,11 @@ void drawGameUI(Game* game, GameResources* resources) {
                     float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
                     float timerY = curY + ICON_SIZE + 5;
 
-                    DrawTextEx(GetFontDefault(), timerText, (Vector2) { timerX, timerY }, 15, 2, timerColor);
+                    DrawTextEx(GetFontDefault(), timerText,
+                        (Vector2) {
+                        timerX, timerY
+                    },
+                        15, 2, timerColor);
                 }
             }
 
@@ -2451,20 +2478,33 @@ void drawGameUI(Game* game, GameResources* resources) {
 
     float local_scale = (float)auto_x(80.0f) / 640.0f;
     Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-    Rectangle buttonRect = { buttonPos.x,buttonPos.y,TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale };
+    Rectangle buttonRect = {
+        buttonPos.x,
+        buttonPos.y,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
+        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
+    };
 
     if (game->laserCooldown > 0) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, (Color) { 255, 255, 255, 80 });
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale,
+            (Color) {
+            255, 255, 255, 80
+        });
 
         char cooldownText[5];
         sprintf(cooldownText, "%.1f", game->laserCooldown);
         Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
         float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
         float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX, textY }, 20, 2, WHITE);
+        DrawTextEx(GetFontDefault(), cooldownText,
+            (Vector2) {
+            textX, textY
+        }, 20, 2, WHITE);
     }
     else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, WHITE);
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
+            buttonPos, 0, local_scale, WHITE);
     }
     textSize = MeasureTextEx(GetFontDefault(), "E", 15, 2);
     float boxX = buttonRect.x + buttonRect.width - (textSize.x + auto_x(8)); // 8 untuk padding
@@ -2475,5 +2515,6 @@ void drawGameUI(Game* game, GameResources* resources) {
         (Vector2) {
         boxX + auto_x(4),  // +4 untuk padding
             boxY + auto_y(4)   // +4 untuk padding
-    }, 15, 2, WHITE);
+    },
+        15, 2, WHITE);
 }
