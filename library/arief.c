@@ -231,64 +231,64 @@ Assets* createAssets(void) {
     if (!assets) return NULL;
 
     // Load sounds
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_MOVE, "assets/sounds/click.wav"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SELECT, "assets/sounds/select.wav"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SHOOT, "assets/sounds/gunshot.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_DEATH, "assets/sounds/death.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPECIAL_BULLET, "assets/sounds/special_bullet.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_HEAL, "assets/sounds/heal.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_POISON, "assets/sounds/poison.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SLOWDOWN, "assets/sounds/slowdown.mp3"));
-    SLL_insertBack(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPEEDUP, "assets/sounds/speedup.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_MOVE, "assets/sounds/click.wav"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SELECT, "assets/sounds/select.wav"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SHOOT, "assets/sounds/gunshot.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_DEATH, "assets/sounds/death.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPECIAL_BULLET, "assets/sounds/special_bullet.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_HEAL, "assets/sounds/heal.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_POISON, "assets/sounds/poison.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SLOWDOWN, "assets/sounds/slowdown.mp3"));
+    SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPEEDUP, "assets/sounds/speedup.mp3"));
 
     // Load fonts
-    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_BODY, "assets/fonts/Ubuntu-Bold.ttf"));
-    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_HEADER, "assets/fonts/Ubuntu-Medium.ttf"));
-    SLL_insertBack(&assets->fonts, inputAssets(TYPE_FONT, FONT_INGAME, "assets/fonts/assets/fonts/Orbitron-Medium.ttf"));
+    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_BODY, "assets/fonts/Ubuntu-Bold.ttf"));
+    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_HEADER, "assets/fonts/Ubuntu-Medium.ttf"));
+    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_INGAME, "assets/fonts/assets/fonts/Orbitron-Medium.ttf"));
 
     // Load textures
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BULLET, "assets/sprites/bullet_brick.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_HEART, "assets/sprites/heart.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_LASER_BUTTON, "assets/sprites/laser_button.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_RANDOM, "assets/sprites/random.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPEEDUP, "assets/sprites/speed_up.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SLOWDOWN, "assets/sprites/slow_down.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_MIN1_HP, "assets/sprites/minushp.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_PLS1_HP, "assets/sprites/heal.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
-    SLL_insertBack(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BULLET, "assets/sprites/bullet_brick.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_HEART, "assets/sprites/heart.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_LASER_BUTTON, "assets/sprites/laser_button.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_RANDOM, "assets/sprites/random.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPEEDUP, "assets/sprites/speed_up.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SLOWDOWN, "assets/sprites/slow_down.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_MIN1_HP, "assets/sprites/minushp.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_PLS1_HP, "assets/sprites/heal.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
 
-    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/play.png"));
-    SLL_insertBack(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/play.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
 
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/EZ.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/Beginner.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/Medium.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/Hard.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/SuperHard.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/Expert.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/Master.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/Legend.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/God.png"));
-    SLL_insertBack(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/Progressive.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/EZ.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/Beginner.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/Medium.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/Hard.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/SuperHard.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/Expert.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/Master.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/Legend.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/God.png"));
+    SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/Progressive.png"));
 
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/tx/SuperEZ.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/tx/EZ.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/tx/Beginner.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/tx/Medium.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/tx/Hard.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/tx/SuperHard.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/tx/Expert.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/tx/Master.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/tx/Legend.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
-    SLL_insertBack(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/tx/SuperEZ.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/tx/EZ.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/tx/Beginner.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MEDIUM, "assets/bg/mode/tx/Medium.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_HARD, "assets/bg/mode/tx/Hard.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_HARD, "assets/bg/mode/tx/SuperHard.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_EXPERT, "assets/bg/mode/tx/Expert.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_MASTER, "assets/bg/mode/tx/Master.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/tx/Legend.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
+    SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
 
     return assets;
 }
