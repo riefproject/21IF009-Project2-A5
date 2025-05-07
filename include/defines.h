@@ -172,6 +172,13 @@ typedef enum TextureAsset {
 typedef enum BgTextures {
     BG_PLAY,
     BG_MAIN_MENU,
+    BG_SETTINGS,
+    BG_HIGHSCORES,
+    BG_PAUSED,
+    BG_CONTROLS,
+    BG_CONFIRM,
+    BG_PLAIN,
+    CREDIT_SCENE,
     BG_COUNT
 }BgTextures;
 
@@ -200,7 +207,8 @@ typedef enum GameState {
     STATE_QUIT,
     STATE_PAUSE,
     STATE_SELECT_LEVEL,
-    STATE_GAME_OVER
+    STATE_GAME_OVER,
+    STATE_SCENE
 } GameState;
 
 typedef enum PowerUpType {

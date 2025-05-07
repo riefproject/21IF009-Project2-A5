@@ -242,9 +242,8 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_SPEEDUP, "assets/sounds/speedup.mp3"));
 
     // Load fonts
-    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_BODY, "assets/fonts/Ubuntu-Bold.ttf"));
-    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_HEADER, "assets/fonts/Ubuntu-Medium.ttf"));
-    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_INGAME, "assets/fonts/assets/fonts/Orbitron-Medium.ttf"));
+    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_BODY, "assets/fonts/Square.ttf"));
+    SLL_insertFront(&assets->fonts, inputAssets(TYPE_FONT, FONT_HEADER, "assets/fonts/Square.ttf"));
 
     // Load textures
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
@@ -265,6 +264,13 @@ Assets* createAssets(void) {
 
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/play.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_SETTINGS, "assets/bg/BG_Settings.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_HIGHSCORES, "assets/bg/BG_HighScores.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PAUSED, "assets/bg/BG_Paused.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_CONTROLS, "assets/bg/BG_Controls.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_CONFIRM, "assets/bg/BG_Confirm.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAIN, "assets/bg/BG_Plain.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, CREDIT_SCENE, "assets/bg/CreditScene.png"));
 
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/EZ.png"));
@@ -444,11 +450,22 @@ void mainWindow(void) {
         case STATE_SELECT_LEVEL:
             selectMode(resources);
             break;
+        case STATE_SCENE:
+            showCredits(resources);
+            break;
         }
     }
 
     destroyAssets(resources->assets);
     CloseWindow();
+}
+
+void drawBG(GameResources* resources, uint id) {
+    float imgScale = (float)GetScreenHeight() / BG(resources, id).height;
+    float scaledWidth = BG(resources, id).width * imgScale;
+    float xPos = (GetScreenWidth() - scaledWidth) / 2;
+
+    DrawTextureEx(BG(resources, id), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
 }
 
 int loadingScreen(float* loadingTime) {
@@ -508,6 +525,31 @@ int loadingScreen(float* loadingTime) {
     return 0;
 }
 
+void showCredits(GameResources* resources) {
+    float creditScale = (float)GetScreenWidth() / BG(resources, CREDIT_SCENE).width;
+    float creditWidth = BG(resources, CREDIT_SCENE).width * creditScale;
+    float xPos = (GetScreenWidth() - creditWidth) / 2;
+
+    float scrollY = GetScreenHeight();
+    float scrollSpeed = 30.0f;
+
+    while (resources->currentState == STATE_SCENE && !WindowShouldClose()) {
+        scrollY -= scrollSpeed * GetFrameTime();
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        drawBG(resources, BG_PLAIN);
+
+        DrawTextureEx(BG(resources, CREDIT_SCENE), (Vector2) { xPos, scrollY }, 0.0f, creditScale, WHITE);
+        EndDrawing();
+
+        if (scrollY <= -(BG(resources, CREDIT_SCENE).height * creditScale) ||
+            IsKeyPressed(KEY_ENTER)) {
+            resources->currentState = STATE_SETTINGS;
+        }
+    }
+}
+
 void mainMenu(GameResources* resources) {
     resources->prevState = STATE_MAIN_MENU;
     Font defaultFont = GetFontDefault();
@@ -535,14 +577,7 @@ void mainMenu(GameResources* resources) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        // Draw background scaled to screen height
-        {
-            float imgScale = (float)GetScreenHeight() / BG(resources, BG_MAIN_MENU).height;
-            float scaledWidth = BG(resources, BG_MAIN_MENU).width * imgScale;
-            float xPos = (GetScreenWidth() - scaledWidth) / 2;
-
-            DrawTextureEx(BG(resources, BG_MAIN_MENU), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
-        }
+        drawBG(resources, BG_MAIN_MENU);
 
         float totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
@@ -593,7 +628,7 @@ void mainMenu(GameResources* resources) {
 
 void showControls(GameResources* resources) {
 
-    int fontSize = auto_y(20);
+    int fontSize = auto_y(16);
     int spacing = auto_x(4);
 
     const char* lines[] = {
@@ -612,18 +647,13 @@ void showControls(GameResources* resources) {
     while (resources->currentState == STATE_CONTROLS && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        drawBG(resources, BG_SETTINGS);
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
             totalHeight += fontSize + spacing;
         }
 
         int startY = (GetScreenHeight() - totalHeight) / 2;
-        {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), "CONTROLS", auto_y(30), 0);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), "CONTROLS", (Vector2) { startX, startY - auto_y(60) }, 30, 0, DARKGRAY);
-        }
 
         int maxLabelWidth = 0;
         int maxValueWidth = 0;
@@ -647,9 +677,9 @@ void showControls(GameResources* resources) {
             sscanf(lines[i], "%[^:]:%[^\n]", label, value);
             int colonX = startX + maxLabelWidth + 10;
             int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
-            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, RAYWHITE);
             y += fontSize + spacing;
         }
         {
@@ -663,7 +693,7 @@ void showControls(GameResources* resources) {
             }
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, RAYWHITE);
         }
         EndDrawing();
 
@@ -709,13 +739,14 @@ void showSettings(GameResources* resources) {
     int spacing = auto_x(4);
     int menuSpacing = auto_y(25);
 
-    char lines[4][100];
+    char lines[5][100];
     snprintf(lines[0], sizeof(lines[0]), "Music : %s", resources->settings.music ? "On" : "Off");
     snprintf(lines[1], sizeof(lines[1]), "Sfx   : %s", resources->settings.sfx ? "On" : "Off");
     SetSoundVolume(SOUND(resources, SOUND_MOVE), resources->settings.sfx ? 1.0f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_SELECT), resources->settings.sfx ? 1.0f : 0.0f);
     snprintf(lines[2], sizeof(lines[2]), "Controls");
-    snprintf(lines[3], sizeof(lines[3]), "Reset");
+    snprintf(lines[3], sizeof(lines[3]), "Reset High Scores");
+    snprintf(lines[4], sizeof(lines[3]), "Credits");
 
     int lineCount = len(lines);
     int selection = 0;
@@ -724,15 +755,17 @@ void showSettings(GameResources* resources) {
     while (resources->currentState == STATE_SETTINGS && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        {
+            float imgScale = (float)GetScreenHeight() / BG(resources, BG_SETTINGS).height;
+            float scaledWidth = BG(resources, BG_SETTINGS).width * imgScale;
+            float xPos = (GetScreenWidth() - scaledWidth) / 2;
+
+            DrawTextureEx(BG(resources, BG_SETTINGS), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
+        }
         int totalHeight = (2 * (fontSize + spacing)) +
             (2 * (fontSize + menuSpacing));
 
         int startY = (GetScreenHeight() - totalHeight) / 2;
-        {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), "SETTINGS", auto_y(30), 0);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), "SETTINGS", (Vector2) { startX, auto_y(60) }, 30, 0, DARKGRAY);
-        }
 
         int maxLabelWidth = 0;
         int maxValueWidth = 0;
@@ -756,17 +789,17 @@ void showSettings(GameResources* resources) {
             sscanf(lines[i], "%[^:]:%[^\n]", label, value);
             int colonX = startX + maxLabelWidth + 10;
             int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
-            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, selection == i ? editing ? DARKBLUE : BLUE : DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, selection == i ? editing ? DARKBLUE : ORANGE : RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, RAYWHITE);
             y += fontSize + spacing;
         }
         y += 50;
-        for (int i = 2; i < 4; ++i) {
+        for (int i = 2; i < 5; ++i) {
             const char* optionText = lines[i];
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), optionText, 20, 2.0f);
             int startXOption = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), optionText, (Vector2) { startXOption, y }, 20, 2.0f, selection == i ? BLUE : DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), optionText, (Vector2) { startXOption, y }, 20, 2.0f, selection == i ? ORANGE : RAYWHITE);
             y += 50;
         }
         {
@@ -779,7 +812,7 @@ void showSettings(GameResources* resources) {
             }
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, RAYWHITE);
         }
         EndDrawing();
 
@@ -806,6 +839,9 @@ void showSettings(GameResources* resources) {
                         break;
                     case 3:
                         resetHiScores(resources);
+                        break;
+                    case 4:
+                        resources->currentState = STATE_SCENE;
                         break;
                     }
                 }
@@ -897,16 +933,12 @@ void showHiScore(GameResources* resources) {
     while (resources->currentState == STATE_HIGH_SCORES && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        drawBG(resources, BG_HIGHSCORES);
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
             totalHeight += fontSize + spacing;
         }
         int startY = (GetScreenHeight() - totalHeight) / 2;
-        {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), "HIGH SCORE", auto_y(30), 0);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), "HIGH SCORE", (Vector2) { startX, auto_y(60) }, 30, 0, DARKGRAY);
-        }
 
         int maxLabelWidth = 0;
         int maxValueWidth = 0;
@@ -940,9 +972,9 @@ void showHiScore(GameResources* resources) {
             int colonX = startX + maxLabelWidth + 10;
             int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
 
-            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, DARKGRAY);
-            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, RAYWHITE);
 
             y += fontSize + spacing;
         }
@@ -973,17 +1005,17 @@ bool confirmExit(GameResources* resources) {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (640 - textSize.y) / 2 - 50;
-        DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, fontSize, 2, DARKGRAY);
+        DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, fontSize, 2, RAYWHITE);
 
         startY += textSize.y + auto_y(50);
         for (int i = 0; i < lineCount; i++) {
             textSize = MeasureTextEx(FONT(resources, FONT_HEADER), options[i], fontSize, 2);
             startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? ORANGE : RAYWHITE);
             startY += textSize.y + (auto_y(20));
         }
         EndDrawing();
@@ -1046,7 +1078,7 @@ bool confirmBack(GameResources* resources) {
     while (deciding && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message1, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
@@ -1107,13 +1139,7 @@ void pauseMenu(GameResources* resources) {
     while (paused && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(Fade(RAYWHITE, 0.9f));
-        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(RAYWHITE, 0.8f));
-        {
-            const char* pausedText = "PAUSED";
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), pausedText, 40, 2);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_HEADER), pausedText, (Vector2) { startX, 140 }, 40, 2, DARKGRAY);
-        }
+        drawBG(resources, BG_PAUSED);
 
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
@@ -1127,7 +1153,7 @@ void pauseMenu(GameResources* resources) {
             if (selection == i) {
                 DrawRectangle(startX - 10, startY - 5, textSize.x + 20, textSize.y + 10, Fade(LIGHTGRAY, 0.3f));
             }
-            DrawTextEx(FONT(resources, FONT_BODY), lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? BLUE : DARKGRAY);
+            DrawTextEx(FONT(resources, FONT_BODY), lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? ORANGE : RAYWHITE);
             startY += textSize.y + auto_y(25);
         }
         EndDrawing();
@@ -1282,6 +1308,7 @@ void selectMode(GameResources* resources) {
         }
     }
 }
+
 bool confirmReset(GameResources* resources) {
 
     const char* message = "Reset all high scores?";
@@ -1293,6 +1320,7 @@ bool confirmReset(GameResources* resources) {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
@@ -1350,7 +1378,7 @@ void rejectReset(GameResources* resources) {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, 20, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (GetScreenHeight() - textSize.y) / 2 - 20;
@@ -1395,11 +1423,11 @@ void gameOver(GameResources* resources, ll currentScore) {
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        drawBG(resources, BG_PLAIN);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, 30, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
         int startY = (GetScreenHeight() - textSize.y) / 2 - 200;
-        DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, 30, 2, DARKGRAY);
+        DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, 30, 2, RAYWHITE);
         startY += 100;
 
         char highScoreText[50];
@@ -1430,7 +1458,7 @@ void gameOver(GameResources* resources, ll currentScore) {
             (GetScreenWidth() - highScoreSize.x) / 2,
                 startY
         },
-            fontSize, 2, DARKGRAY);
+            fontSize, 2, RAYWHITE);
 
         // 3. Draw Current Score
         startY += 30;
@@ -1442,7 +1470,7 @@ void gameOver(GameResources* resources, ll currentScore) {
             (GetScreenWidth() - scoreSize.x) / 2,
                 startY
         },
-            fontSize, 2, BLUE);
+            fontSize, 2, ORANGE);
 
         startY += 60;
         if (!canSelect) {
@@ -1466,7 +1494,7 @@ void gameOver(GameResources* resources, ll currentScore) {
                     startX, startY
                 },
                     fontSize, 2,
-                    selection == i ? BLUE : DARKGRAY);
+                    selection == i ? ORANGE : RAYWHITE);
                 startY += textSize.y + auto_y(20);
             }
 
