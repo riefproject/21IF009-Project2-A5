@@ -119,7 +119,10 @@ Game* createGameContext(void) {
         game->activePowerups[i].duration = 0;
         game->activePowerups[i].active = false;
     }
-    game->bullets = new(SingleLinkedList);
+    game->bullets = (SingleLinkedList*)malloc(sizeof(SingleLinkedList));
+    game->bullets->head = NULL;
+    game->bullets->tail = NULL;
+    game->bullets->size = 0;
 
     game->grid = initGameGrid();
 
@@ -2107,10 +2110,9 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
 }
 
 void handleBulletCollisions(Game* game) {
-    int i = 0;
     SLLNode* current = game->bullets->head;
-    while (game->bullets != NULL) {
-        Bullets* bullets = (Bullets*)game->bullets->head;
+    while (current != NULL) {
+        Bullets* bullets = (Bullets*)current->data;
         if (bullets->active) {
             float blockSize = auto_x(32);
 
@@ -2134,14 +2136,13 @@ void handleBulletCollisions(Game* game) {
                     if (blockNode) {
                         Block* block = (Block*)blockNode->data;
                         if (block->active) {
-                            processBulletHit(game, gridX, gridY, i);
+                            processBulletHit(game, gridX, gridY, bullets);
                         }
                     }
                 }
             }
         }
         current = current->next;
-        i++;
     }
 }
 
@@ -2149,7 +2150,7 @@ bool isValidGridPosition(int x, int y) {
     return x >= 0 && x < MAX_COLUMNS && y >= 0 && y < MAX_ROWS;
 }
 
-void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
+void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
     bool hasSpecialBullet = false;
     for (int i = 0; i < game->activeEffectsCount; i++) {
         if (game->activePowerups[i].active &&
@@ -2197,9 +2198,8 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         handleFullRow(game, row);
     }
 
-    Bullets* bullet = (Bullets*)SLL_getNode(game->bullets, bulletIndex);
-    if (bullet != NULL) {
-        bullet->active = false;
+    if (bullets != NULL) {
+        bullets->active = false;
     }
     game->score += 10;
 }

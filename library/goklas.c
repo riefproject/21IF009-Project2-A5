@@ -2,6 +2,7 @@
 #include "defines.h"
 
 void ShootBullets(SingleLinkedList* P, Vector2 playerpos, int* BulletCount, bool* CanShoot, GameResources* resources) {
+    if (P == NULL) return;
     float blockSize = auto_x(32);
     playerpos.x = roundf(playerpos.x / blockSize) * blockSize;
     playerpos.y = roundf(playerpos.y / blockSize) * blockSize;
@@ -34,6 +35,7 @@ void ShootBullets(SingleLinkedList* P, Vector2 playerpos, int* BulletCount, bool
 }
 
 void MoveBullets(SingleLinkedList* P) {
+    if (P == NULL) return;
     float blockSize = auto_x(32);
     SLLNode* current = P->head;
     SLLNode* prev = NULL;
@@ -47,7 +49,7 @@ void MoveBullets(SingleLinkedList* P) {
 
             if (bullet->position.y < 0) {
                 bullet->active = false;
-                SLLNode* next = current->next;
+                next = current->next;
                 SLL_removeNode(P, current, -1);
                 current = next;
                 continue; 
@@ -79,6 +81,7 @@ void MoveBullets(SingleLinkedList* P) {
 
 
 void DrawBullets(SingleLinkedList* P, GameResources* resource) {
+    if (P == NULL) return;
     float blockSize = auto_x(32);
     if (P != NULL) {
         SLLNode* head = P->head;
@@ -88,6 +91,7 @@ void DrawBullets(SingleLinkedList* P, GameResources* resource) {
                 float scale = blockSize / (float)TEXTURE(resource, TEXTURE_BULLET).width;
                 DrawTextureEx(TEXTURE(resource, TEXTURE_BULLET), bullets->position, 0.0f, scale, WHITE);
             } 
+            head = head->next;
         } 
     }
 

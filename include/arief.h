@@ -70,6 +70,6 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength);     
 void fillRemainingBlocks(Game* game, int remainingBlocks);             // Mengisi sisa blok
 void handleBulletCollisions(Game* game);                               // Menangani collision peluru
 bool isValidGridPosition(int x, int y);                                // Validasi posisi grid
-void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex);                                         // Memproses tembakan peluru
+void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets);                                         // Memproses tembakan peluru
 void drawGameUI(Game* game, GameResources* resources);         // Menggambar UI game
 #endif
