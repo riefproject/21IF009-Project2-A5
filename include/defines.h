@@ -254,7 +254,6 @@ typedef struct Shooter {
  * Menyimpan informasi tentang peluru yang ditembakkan dalam game. */
 typedef struct {
     Vector2 position;  // Posisi peluru di dalam game
-    int direction;     // Arah pergerakan peluru (1 ke kanan, -1 ke kiri)
     bool active;       // Status apakah peluru sedang aktif atau tidak
 } Bullets;
 
@@ -313,7 +312,7 @@ typedef struct GameResources {
 * Struktur utama yang menyimpan seluruh status permainan.
 * Mengelola peluru, grid permainan, skor, power-up, dan berbagai status game. */
 typedef struct Game {
-    Bullets bullets[MAX_BULLETS];      // Array peluru yang aktif
+    SingleLinkedList* bullets;      // Array peluru yang aktif
     int bulletCount;                   // Jumlah peluru saat ini
     bool canShoot;                     // Status bisa menembak
     float reloadTimer;                 // Timer untuk reload

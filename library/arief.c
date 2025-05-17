@@ -119,10 +119,8 @@ Game* createGameContext(void) {
         game->activePowerups[i].duration = 0;
         game->activePowerups[i].active = false;
     }
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        game->bullets[i].active = false;
-        game->bullets[i].position = (Vector2){ 0, 0 };
-    }
+    game->bullets = new(SingleLinkedList);
+
     game->grid = initGameGrid();
 
     return game;
@@ -1714,7 +1712,7 @@ void displayGame(GameResources* resources) {
     // Handle input
     if (SHOOT_KEY) {
         ShootBullets(gameContext->bullets, (Vector2) { P.x, P.y }, & gameContext->bulletCount,
-            & gameContext->canShoot, 0, resources);
+            & gameContext->canShoot, resources);
     }
     if (SHOOT_RELEASE) {
         gameContext->canShoot = true;
@@ -2109,12 +2107,15 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
 }
 
 void handleBulletCollisions(Game* game) {
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        if (game->bullets[i].active) {
+    int i = 0;
+    SLLNode* current = game->bullets->head;
+    while (game->bullets != NULL) {
+        Bullets* bullets = (Bullets*)game->bullets->head;
+        if (bullets->active) {
             float blockSize = auto_x(32);
 
-            int gridX = (int)(game->bullets[i].position.x / blockSize);
-            int gridY = (int)(game->bullets[i].position.y / blockSize);
+            int gridX = (int)(bullets->position.x / blockSize);
+            int gridY = (int)(bullets->position.y / blockSize);
 
             if (isValidGridPosition(gridX, gridY)) {
                 DLLNode* rowNode = game->grid->head;
@@ -2139,6 +2140,8 @@ void handleBulletCollisions(Game* game) {
                 }
             }
         }
+        current = current->next;
+        i++;
     }
 }
 
@@ -2194,7 +2197,10 @@ void processBulletHit(Game* game, int gridX, int gridY, int bulletIndex) {
         handleFullRow(game, row);
     }
 
-    game->bullets[bulletIndex].active = false;
+    Bullets* bullet = (Bullets*)SLL_getNode(game->bullets, bulletIndex);
+    if (bullet != NULL) {
+        bullet->active = false;
+    }
     game->score += 10;
 }
 
