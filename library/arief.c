@@ -263,7 +263,7 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
 
-    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/play.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/BG_Play.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_SETTINGS, "assets/bg/BG_Settings.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_HIGHSCORES, "assets/bg/BG_HighScores.png"));
@@ -1211,16 +1211,29 @@ void pauseMenu(GameResources* resources) {
 
 void countdownPause(GameResources* resources) {
     if (resources->currentState == STATE_PLAY) {
-
         float counter = 3.0f;
+
         while (counter > 0.0f && !WindowShouldClose()) {
             counter -= GetFrameTime();
+            int currentNumber = (int)ceilf(counter);
+
+            float timeInSecond = counter - floorf(counter);
+            float scale = 2.5f - (2.5f - 1.0f) * (1.0f - timeInSecond);
+
             BeginDrawing();
             ClearBackground(RAYWHITE);
+            drawBG(resources, BG_PLAIN);
             char text[8];
-            sprintf(text, "%d", (int)ceilf(counter));
-            Vector2 position = { auto_y(230), auto_x(300) };
-            DrawTextEx(GetFontDefault(), text, position, auto_y(50), auto_x(2), RED);
+            sprintf(text, "%d", currentNumber);
+
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), text, auto_y(50), auto_x(2));
+            float baseSize = auto_y(50);
+            float scaledSize = baseSize * scale;
+
+            Vector2 position = { (GetScreenWidth() - textSize.x * scale) / 2,(GetScreenHeight() - textSize.y * scale) / 2 };
+
+            DrawTextEx(FONT(resources, FONT_BODY), text, position, scaledSize, auto_x(2) * scale, Fade(ORANGE, scale > 1.8f ? 2.0f - (scale / 2.0f) : 1.0f));
+
             EndDrawing();
         }
     }
@@ -1621,7 +1634,7 @@ void displayGame(GameResources* resources) {
     float gameAreaY = 0;
 
     // main game area
-    DrawRectangle(gameAreaX, gameAreaY, gameWidth, GetScreenHeight(), (Color) { 236, 244, 255, 255 });
+    // DrawRectangle(gameAreaX, gameAreaY, gameWidth, GetScreenHeight(), (Color) { 236, 244, 255, 255 });
 
     float sidebarX = gameWidth;
     float sidebarWidth = GetScreenWidth() - gameWidth;
@@ -1633,11 +1646,11 @@ void displayGame(GameResources* resources) {
     DrawRectangle(sidebarX + auto_x(3), 0, auto_x(7), GetScreenHeight(), (Color) { 65, 71, 71, 255 });
 
     // UI area
-    DrawRectangle(sidebarX + auto_x(10), 0, sidebarWidth - auto_x(10), GetScreenHeight(), (Color) { 25, 38, 47, 255 });
+    // DrawRectangle(sidebarX + auto_x(10), 0, sidebarWidth - auto_x(10), GetScreenHeight(), (Color) { 25, 38, 47, 255 });
 
     // Bottom boundary 
-    DrawRectangle(gameAreaX, gameHeight, gameWidth, auto_y(1), BLACK);
-
+    // DrawRectangle(gameAreaX, gameHeight, gameWidth, auto_y(1), BLACK);
+    drawBG(resources, BG_PLAY);
 
     // (Color) { 25, 38, 47, 255 }
     drawBlocks(gameContext, resources);
@@ -1687,7 +1700,7 @@ void displayGame(GameResources* resources) {
             }
         }
     }
-    drawGameUI(gameContext, resources);
+    // drawGameUI(gameContext, resources);
     if (gameContext->lives <= 0) {
         gameContext->gameOver = true;
         resources->currentState = STATE_GAME_OVER;
