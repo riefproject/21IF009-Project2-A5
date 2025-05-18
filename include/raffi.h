@@ -1,27 +1,14 @@
 #ifndef RAFFI_H
 #define RAFFI_H
-#include "defines.h"
 
 //Inisialisasi Db
-void initializeDb(HiScore scores[]);
+SingleLinkedList *initializeDb();
 
-<<<<<<< HEAD
-//Inisialisasi nilai database
-void initializeDb(HiScore scores[]);
-
-//Mencari nilai terbesar antara skor player dan HiScores
-int getMax(HiScore scores[], Game* game, GameResources* resources);
-
-=======
-//Mencari nilai terbesar antara skor player dan HiScores
-long long int getMax(HiScore scores[], Game* game, GameResources* resources);
-
->>>>>>> cbf3f8c5a6734aae2f3fe2c040e10d9982a3f4de
 //Mengambil data dari db
-void loadHiScores(HiScore scores[]);
+SingleLinkedList *loadHiScores();
 
 //Menyimpan data ke db
-void saveHiScores(HiScore scores[]);
+void saveHiScores(SingleLinkedList *list);
 
 //Menyimpan perubahan
 void updateHighScore(Game* game, GameResources* resources);
@@ -31,10 +18,7 @@ void addScore(Game* game, int row);
 
 //Getter score player
 long long int playerScore(Game* game);
-<<<<<<< HEAD
-=======
 
 //Getter mode
 char* gameMode(GameResources* resources);
->>>>>>> cbf3f8c5a6734aae2f3fe2c040e10d9982a3f4de
 #endif
