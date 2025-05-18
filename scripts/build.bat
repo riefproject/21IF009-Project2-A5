@@ -1,68 +1,59 @@
-REM 
 @echo off
-echo Compiling Brick Shooter Game...
+setlocal enabledelayedexpansion
 
-:: Ensure necessary directories exist
-if not exist bin mkdir bin
-if not exist build\output mkdir build\output
-if not exist build\output\src mkdir build\output\src
-if not exist build\output\library mkdir build\output\library
+REM Compiler
+set CC=gcc
 
-:: Compile src/main.c into build\output\src\main.o
-echo Compiling src\main.c...
-gcc -Wall -Wextra -Iinclude -c src\main.c -o build\output\src\main.o
+REM Flags
+set CFLAGS=-Wall -Wextra -Iinclude -Ivendor/raylib-v5.5/include -Ivendor/reestruct-v0.1.0/include
+set LDFLAGS=vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm
+set RSTFLAGS=vendor/reestruct-v0.1.0/lib/libreestruct.a
+set GRFLAGS=-static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
+
+REM Paths
+set SRC_PATH=src library
+set OBJ_PATH=build\output
+set BIN_PATH=bin
+set TMP_PATH=temp
+
+REM Create necessary directories
+if not exist %OBJ_PATH%\src mkdir %OBJ_PATH%\src
+if not exist %OBJ_PATH%\library mkdir %OBJ_PATH%\library
+if not exist %BIN_PATH% mkdir %BIN_PATH%
+
+echo  Compiling source files...
+
+REM Compile main.c
+%CC% %CFLAGS% -c src\main.c -o %OBJ_PATH%\src\main.o
 if %errorlevel% neq 0 (
     echo Compilation of src\main.c failed!
     exit /b %errorlevel%
 )
 
-:: Compile library\arief.c into build\output\library\arief.o
-echo Compiling library\arief.c...
-gcc -Wall -Wextra -Iinclude -c library\arief.c -o build\output\library\arief.o
-if %errorlevel% neq 0 (
-    echo Compilation of library\arief.c failed!
-    exit /b %errorlevel%
+REM Compile library files
+for %%f in (arief naira raffi faliq goklas) do (
+    echo  Compiling library\%%f.c...
+    %CC% %CFLAGS% -c library\%%f.c -o %OBJ_PATH%\library\%%f.o
+    if %errorlevel% neq 0 (
+        echo Compilation of library\%%f.c failed!
+        exit /b %errorlevel%
+    )
 )
 
-:: Compile library\naira.c into build\output\library\naira.o
-echo Compiling library\naira.c...
-gcc -Wall -Wextra -Iinclude -c library\naira.c -o build\output\library\naira.o
-if %errorlevel% neq 0 (
-    echo Compilation of library\naira.c failed!
-    exit /b %errorlevel%
-)
-
-:: Compile library\raffi.c into build\output\library\raffi.o
-echo Compiling library\raffi.c...
-gcc -Wall -Wextra -Iinclude -c library\raffi.c -o build\output\library\raffi.o
-if %errorlevel% neq 0 (
-    echo Compilation of library\raffi.c failed!
-    exit /b %errorlevel%
-)
-
-:: Compile library\faliq.c into build\output\library\faliq.o
-echo Compiling library\faliq.c...
-gcc -Wall -Wextra -Iinclude -c library\faliq.c -o build\output\library\faliq.o
-if %errorlevel% neq 0 (
-    echo Compilation of library\faliq.c failed!
-    exit /b %errorlevel%
-)
-
-:: Compile library\goklas.c into build\output\library\goklas.o
-echo Compiling library\goklas.c...
-gcc -Wall -Wextra -Iinclude -c library\goklas.c -o build\output\library\goklas.o
-if %errorlevel% neq 0 (
-    echo Compilation of library\goklas.c failed!
-    exit /b %errorlevel%
-)
-
-:: Link all object files into the final executable in bin
-echo Linking object files...
-gcc build\output\src\main.o build\output\library\arief.o build\output\library\naira.o build\output\library\raffi.o build\output\library\faliq.o build\output\library\goklas.o -o bin/game.exe -lm -lraylib -lopengl32 -lgdi32 -lwinmm -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32
+echo  Linking...
+%CC% %OBJ_PATH%\src\main.o %OBJ_PATH%\library\arief.o %OBJ_PATH%\library\naira.o %OBJ_PATH%\library\raffi.o %OBJ_PATH%\library\faliq.o %OBJ_PATH%\library\goklas.o -o %BIN_PATH%\game.exe %LDFLAGS% %RSTFLAGS%
 if %errorlevel% neq 0 (
     echo Linking failed!
     exit /b %errorlevel%
 )
 
-echo Compilation successful! Executable is in bin\game.exe
-pause
+cls
+echo  Build successful! Run '%BIN_PATH%\game.exe'
+
+REM Run the game
+echo  Running game...
+%BIN_PATH%\game.exe
+if %errorlevel% neq 0 (
+    echo Game crashed!
+    exit /b %errorlevel%
+)

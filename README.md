@@ -1,50 +1,155 @@
 # 21IF009-Project2-A5
 
-This is a **Brick Shooter** game project for the **Project 2: Library-Based Application Development** course.
+A fast-paced **Block Shooter** game project developed for the **Project 2: Library-Based Application Development** course using the Raylib game framework.
 
 ## 📌 Features
 
--   Players shoot bricks to clear rows while avoiding falling bricks.
--   Increasing difficulty as the game progresses.
--   Developed **entirely in C**.
+-   Dynamic block-shooting gameplay with physics-based interactions
+-   11 difficulty levels with progressive challenges:
+    -   Super Easy to God mode
+    -   Special Progressive mode with increasing difficulty
+-   Power-up system with various effects:
+    -   Speed modifications
+    -   Extra lives
+    -   Special abilities
+-   High score system with persistent storage
+-   Customizable settings with music and SFX controls
+-   Responsive controls with keyboard/mouse support
+-   Clean, modern UI with smooth animations
 
 ## 📂 Project Structure
 
 -   **src/** → Contains the source code files (.c), including the main game logic and entry point (`main.c`).
--   **include/** → Stores the header files (.h), which contain declarations for functions and structures.
--   **library/** → - **library/** → Contains C source files (.c) for the game's logic modules, such as player actions, brick mechanics, etc. Each `.c` file corresponds to a specific part of the game’s functionality (e.g., `arief.c`, `naira.c`).
--   **assets/** → Stores game assets such as sprites and sounds used within the game.
--   **build/** → Directory for compiled files. Contains subdirectories to store object files and output (`build/output/`).
--   **bin/** → Output directory for the final executable file (`game.exe`).
--   **scripts/** → Contains build and clean scripts for automation (`build.bat` and `clean.bat`).
+-   **library/** → Contains core game logic modules:
+    -   `arief.c` - Core game loop and UI management
+    -   `naira.c` - Power-up system implementation
+    -   `raffi.c` - Score handling and persistence
+    -   `faliq.c` - Player movement and shooting mechanics
+    -   `goklas.c` - Projectile and collision systems
+-   **assets/** → Stores game assets:
+    -   Sprites: Player, blocks, projectiles
+    -   Sounds: Effects and background music
+    -   Fonts: UI and display text
+-   **db/** → Stores game data (saved settings & scores):
+    -   `settings.dat` - Stores user preferences (SFX, music, last played level)
+    -   `hiscores.dat` - Stores high scores for all difficulty modes
+-   **build/** → Directory for compiled files (`build/output/`)
+-   **bin/** → Output directory for the final executable (`game.exe`)
+-   **scripts/** → Build automation scripts (`build.bat`, `clean.bat`)
 
-## ⚙️ How to Build and Run
+## ⚙️ Build Requirements
 
-1. Clone the repository:  
-   `git clone https://github.com/riefproject/21IF009-Project2-A5.git`
-2. Navigate to the project directory:  
-   `cd 21IF009-Project2-A5`
-3. Build the project using `make`:
+-   GCC Compiler (MinGW/MSYS2 for Windows)
+-   Raylib Graphics Library (Tested on Raylib 5.5+)
+-   Make (optional, for Makefile support)
+
+## 🛠️ How to Build and Run
+
+1. Clone the repository:
     ```bash
-    make
+    git clone https://github.com/riefproject/21IF009-Project2-A5.git
     ```
-    or using `.bat` script:
+2. Navigate to the project directory:
+
     ```bash
-    scripts/build
+    cd 21IF009-Project2-A5
     ```
-4. Run the game:
-    ```bash
-    make run
-    ```
-    or manually:
-    ```bash
-    bin/game
-    ```
+
+3. Clean previous build (optional but recommended):
+
+    - Using **Makefile** (recommended for Linux/macOS/Windows with MinGW):
+        ```bash
+        make clean
+        ```
+    - Or manually using script:
+        - **Windows:**
+            ```sh
+            scripts/clean.bat
+            ```
+        - **Linux/macOS:**
+            ```sh
+            scripts/clean.sh
+            ```
+
+4. Build and run the project:
+    - Using **Makefile** (recommended):
+        ```bash
+        make run
+        ```
+    - Or manually using script:
+        - **Windows:**
+            ```sh
+            scripts/build.bat
+            ```
+        - **Linux/macOS:**
+            ```sh
+            chmod +x scripts/build.sh  # Only needed the first time
+            scripts/build.sh
+            ```
 
 ## 🎮 Gameplay Instructions
 
--   Aim and shoot bricks to clear rows.
--   Avoid falling bricks to progress.
--   Try to reach the highest score before the game ends!
+### Controls
+
+| Action     | Keybinding                        |
+| ---------- | --------------------------------- |
+| Move Left  | ← / A                             |
+| Move Right | → / D                             |
+| Shoot      | Space / Enter / Left Mouse Button |
+| Laser      | E                                 |
+| Pause      | P                                 |
+| Help       | H                                 |
+
+### Objectives
+
+-   Shoot strategically to clear block rows
+-   Collect power-ups for advantages
+-   Avoid letting blocks reach the bottom
+-   Achieve high scores in each difficulty mode
+
+### Tips
+
+-   **Clear full rows to earn bonus points** – Rows will disappear when completely filled.
+-   **Use power-ups wisely** – Some power-ups can turn the tide of battle.
+-   **Master the laser ability** – It has a cooldown, so use it at the right moment.
+-   **Watch falling block patterns** – Predict the next move and adjust your shots.
+-   **Optimize shot timing** – Spamming bullets might not always be the best strategy.
+
+### Menu Controls
+
+| Action      | Keybinding               | Description                     |
+| ----------- | ------------------------ | ------------------------------- |
+| Navigate    | ↑ / ↓ or W / S           | Move through menu options       |
+| Select      | Enter / Space / Y / Left | Confirm selection               |
+| Back        | A / B / Backspace        | Return to previous menu         |
+| Forward     | F                        | Go to next menu (e.g. settings) |
+| Resume Game | R                        | Resume after pause              |
+| Pause       | P                        | Open pause menu                 |
+| Help        | H                        | Open help screen                |
+| Force Quit  | Esc                      | Force exit the game             |
+
+## 📝 Team Members
+
+| Name   | Role           | Contributions                                |
+| ------ | -------------- | -------------------------------------------- |
+| Arief  | Lead Developer | Core logic, UI, Game Loop, Integration       |
+| Naira  | Developer      | Power-ups, Block Animations, Assets          |
+| Raffi  | Developer      | Score System, High Score Persistence, Assets |
+| Faliq  | Developer      | Player Controls, Shooting Mechanics, Assets  |
+| Goklas | Developer      | Projectile Physics, Collision System, Assets |
+
+## 🤝 Contributing
+
+Feel free to submit issues and enhancement requests via GitHub issues.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+-   Raylib development team for the graphics framework
+-   Project team members for their contributions
+-   Course instructors for guidance and support
 
 🚀 **Stay tuned for updates!**

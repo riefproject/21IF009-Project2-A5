@@ -7,7 +7,7 @@
 **/*.o
 
 # Ignore IDE specific files
-.vscode/
+.vscode/**/*
 .idea/
 
 # Ignore temporary files from editors
@@ -15,6 +15,10 @@
 
 # Ignore logs
 *.log
+*.stackdump
+
+# Ignore all .dat files anywhere in the project
+**/*.dat
 
 # Ignore OS-specific files
 .DS_Store
@@ -23,5 +27,11 @@ Thumbs.db
 # Ignore Windows PowerShell profile
 init.ps1
 
-# keep
+#ignore Temp Folder
+/temp/*
+
+# keep folders
 !*/
+!/db/
+/db/*
+!/db/.gitkeep
