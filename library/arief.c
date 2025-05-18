@@ -1745,11 +1745,10 @@ void displayGame(GameResources* resources) {
 bool isGameOverCheck(Game* game) {
     if (!game || !game->grid) return false;
 
-    // Get the last row (tail) of the grid
     DLLNode* lastRowNode = game->grid->tail;
     if (!lastRowNode) return false;
 
-    // Get the linked list representing the last row
+    // ambil linked list yang merepresentasikan baris terakir
     DoublyLinkedList* lastRow = (DoublyLinkedList*)lastRowNode->data;
     if (!lastRow) return false;
 
@@ -1769,7 +1768,7 @@ bool isGameOverCheck(Game* game) {
 bool isRowFull(Game* game, int row) {
     if (!game || !game->grid) return false;
 
-    // Find the desired row node
+    // cari node target
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < row && rowNode; i++) {
         rowNode = rowNode->next;
@@ -1777,11 +1776,11 @@ bool isRowFull(Game* game, int row) {
 
     if (!rowNode) return false;
 
-    // Get the linked list representing this row
+    // ambil linked list yang merepresentasikan row
     DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
     if (!currentRow) return false;
 
-    // Check each block in this row
+    // cek setiap blok pada baris
     DLLNode* blockNode = currentRow->head;
     while (blockNode) {
         Block* block = (Block*)blockNode->data;
@@ -1797,7 +1796,6 @@ bool isRowFull(Game* game, int row) {
 bool hasActiveBlockBelow(Game* game, int row) {
     if (!game || !game->grid) return false;
 
-    // Find the row node
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < row && rowNode; i++) {
         rowNode = rowNode->next;
@@ -1805,13 +1803,13 @@ bool hasActiveBlockBelow(Game* game, int row) {
 
     if (!rowNode) return false;
 
-    // Check all rows below current row
+    // cek setiap row
     rowNode = rowNode->next;
     while (rowNode) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         if (!currentRow) continue;
 
-        // Check each block in this row
+        //cek setiap node blok
         DLLNode* blockNode = currentRow->head;
         while (blockNode) {
             Block* block = (Block*)blockNode->data;
@@ -1829,18 +1827,17 @@ bool hasActiveBlockBelow(Game* game, int row) {
 void shiftRowsUp(Game* game, int startRow) {
     if (!game || !game->grid) return;
 
-    // Find the starting row node
     DLLNode* rowNode = game->grid->head;
     for (int i = 0; i < startRow && rowNode; i++) {
         rowNode = rowNode->next;
     }
 
-    // Shift rows up from startRow to second-to-last row
+    // Shift rows up dari startRow ke second-to-last row
     while (rowNode && rowNode->next) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Copy blocks from next row to current row
+        // Copy blok dari next row ke cur row
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1856,7 +1853,7 @@ void shiftRowsUp(Game* game, int startRow) {
         rowNode = rowNode->next;
     }
 
-    // Clear the last row
+    // clear semua baris
     if (rowNode) {
         DoublyLinkedList* lastRow = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = lastRow->head;
@@ -1875,7 +1872,7 @@ void handleFullRow(Game* game, int row) {
             addScore(game, row);
         }
         else {
-            // Clear blocks in the specified row
+            // bersihkan baris
             DLLNode* rowNode = game->grid->head;
             for (int i = 0; i < row && rowNode; i++) {
                 rowNode = rowNode->next;
@@ -1899,7 +1896,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
     int emptyColLength[MAX_COLUMNS] = { 0 };
     int totalEmptyColumns = 0;
 
-    // Count empty columns from top
+    // hitung empty kolom
     DLLNode* rowNode = game->grid->head;
     for (int j = 0; j < MAX_COLUMNS; j++) {
         int emptyCount = 0;
@@ -1909,7 +1906,7 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
             DoublyLinkedList* row = (DoublyLinkedList*)currentRowNode->data;
             DLLNode* blockNode = row->head;
 
-            // Navigate to correct column
+            // traversal ke kolom target
             for (int col = 0; col < j && blockNode; col++) {
                 blockNode = blockNode->next;
             }
@@ -1939,14 +1936,14 @@ void handleBlockMovement(Game* game, int minBlocks, int maxBlocks) {
 void moveBlocksDown(Game* game) {
     if (!game || !game->grid) return;
 
-    // Start from the second-to-last row (tail->prev) and move up
+    // \mulai dari kedua terakhir (tail->prev) dan traversal naik
     DLLNode* rowNode = game->grid->tail->prev;
 
     while (rowNode) {
         DoublyLinkedList* currentRow = (DoublyLinkedList*)rowNode->data;
         DoublyLinkedList* nextRow = (DoublyLinkedList*)rowNode->next->data;
 
-        // Copy blocks from current row to next row
+        // Copy blocks dari baris skrg ke baris selanjutnya
         DLLNode* currentBlock = currentRow->head;
         DLLNode* nextBlock = nextRow->head;
 
@@ -1962,7 +1959,7 @@ void moveBlocksDown(Game* game) {
         rowNode = rowNode->prev;
     }
 
-    // Clear the first row (head)
+    // bersihkan head
     DoublyLinkedList* firstRow = (DoublyLinkedList*)game->grid->head->data;
     DLLNode* blockNode = firstRow->head;
     while (blockNode) {
@@ -1978,14 +1975,13 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     int remainingBlocks = numBlocks;
 
-    // Get the first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
     DoublyLinkedList* firstRow = (DoublyLinkedList*)firstRowNode->data;
     if (!firstRow) return;
 
-    // Step 1: Fill critical gaps first (kolom dengan 4+ blok kosong berturut-turut)
+    // isi critical gaps first (kolom dengan 4+ blok kosong berturut-turut)
     if (totalEmptyColumns > 0) {
         DLLNode* blockNode = firstRow->head;
         int col = 0;
@@ -2001,11 +1997,11 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
         }
     }
 
-    // Step 2: Distribusi blok dengan gap maksimal 2 kolom
+    // distribusi blok dengan gap maksimal 2 kolom
     if (remainingBlocks > 0) {
-        int lastPlacedCol = -3; // Start dengan offset negatif
+        int lastPlacedCol = -3;
         int attempts = 0;
-        int maxAttempts = MAX_COLUMNS * 2; // Prevent infinite loop
+        int maxAttempts = MAX_COLUMNS * 2;
 
         while (remainingBlocks > 0 && attempts < maxAttempts) {
             int pos = rand() % MAX_COLUMNS;
@@ -2029,7 +2025,7 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
             attempts++;
         }
 
-        // Step 3: Jika masih ada blok tersisa, tempatkan di posisi random
+        // jika masih ada blok tersisa, tempatkan di posisi random
         while (remainingBlocks > 0) {
             int pos = rand() % MAX_COLUMNS;
             DLLNode* blockNode = firstRow->head;
@@ -2052,7 +2048,6 @@ void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLe
 int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     if (!game || !game->grid) return remainingBlocks;
 
-    // Get first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return remainingBlocks;
 
@@ -2062,7 +2057,7 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
     DLLNode* blockNode = firstRow->head;
     int col = 0;
 
-    // Check each column for critical gaps
+    // cek setiap kolom yang kritis
     while (blockNode && remainingBlocks > 0) {
         if (emptyColLength[col] >= 4) {
             Block* block = (Block*)blockNode->data;
@@ -2079,7 +2074,6 @@ int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength) {
 void fillRemainingBlocks(Game* game, int remainingBlocks) {
     int maxAttemptsPerBlock = 3;
 
-    // Get first row
     DLLNode* firstRowNode = game->grid->head;
     if (!firstRowNode) return;
 
@@ -2090,7 +2084,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
         for (int attempt = 0; attempt < maxAttemptsPerBlock && remainingBlocks > 0; attempt++) {
             int pos = rand() % MAX_COLUMNS;
 
-            // Navigate to the desired column
+            // traversal (cari target)
             DLLNode* blockNode = firstRow->head;
             for (int i = 0; i < pos && blockNode; i++) {
                 blockNode = blockNode->next;
@@ -2105,7 +2099,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
                 }
             }
         }
-        remainingBlocks--; // Prevent infinite loop if can't place all blocks
+        remainingBlocks--; // Mencegah inf loop jika tak meletakkan semua blok
     }
 }
 
@@ -2160,14 +2154,14 @@ void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
         }
     }
 
-    // Find the target row
+    // cari target baris
     DLLNode* rowNode = game->grid->head;
     for (int y = 0; y < gridY && rowNode; y++) {
         rowNode = rowNode->next;
     }
 
     if (hasSpecialBullet && rowNode) {
-        // Clear entire row for special bullet
+        // Spesial bullet: hapus sebaris
         DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
         DLLNode* blockNode = row->head;
         while (blockNode) {
@@ -2178,7 +2172,6 @@ void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
         game->score += 40;
     }
     else if (gridY < MAX_ROWS - 1) {
-        // Set block below target to active
         DLLNode* nextRowNode = rowNode->next;
         if (nextRowNode) {
             DoublyLinkedList* nextRow = (DoublyLinkedList*)nextRowNode->data;
@@ -2193,7 +2186,7 @@ void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
         }
     }
 
-    // Check for full rows
+    // cek baris penuh
     for (int row = 0; row < MAX_ROWS; row++) {
         handleFullRow(game, row);
     }
@@ -2249,7 +2242,7 @@ void initBlocks(Game* game, GameResources* resources) {
         int pos = rand() % MAX_COLUMNS;
         DLLNode* blockNode = firstRow->head;
 
-        // Navigate to desired column
+        // traversal ke target
         for (int i = 0; i < pos && blockNode; i++) {
             blockNode = blockNode->next;
         }
@@ -2272,7 +2265,6 @@ void drawBlocks(Game* game, GameResources* resources) {
 
     float blockSize = auto_x(32);
 
-    // Iterate through rows
     DLLNode* rowNode = game->grid->head;
     int rowIndex = 0;
 
@@ -2281,30 +2273,16 @@ void drawBlocks(Game* game, GameResources* resources) {
         DLLNode* blockNode = row->head;
         int colIndex = 0;
 
-        // Iterate through blocks in current row
+        // iterasi blok per baris
         while (blockNode && colIndex < MAX_COLUMNS) {
             Block* block = (Block*)blockNode->data;
             if (block && block->active) {
                 if (TEXTURE(resources, TEXTURE_BLOCK).id != 0) {
                     float texScale = (float)blockSize / (float)TEXTURE(resources, TEXTURE_BLOCK).width;
-                    DrawTextureEx(
-                        TEXTURE(resources, TEXTURE_BLOCK),
-                        (Vector2) {
-                        colIndex* blockSize, rowIndex* blockSize
-                    },
-                        0.0f,
-                        texScale,
-                        WHITE
-                    );
+                    DrawTextureEx(TEXTURE(resources, TEXTURE_BLOCK), (Vector2) { colIndex* blockSize, rowIndex* blockSize }, 0.0f, texScale, WHITE);
                 }
                 else {
-                    DrawRectangle(
-                        colIndex * blockSize,
-                        rowIndex * blockSize,
-                        blockSize,
-                        blockSize,
-                        BLUE
-                    );
+                    DrawRectangle(colIndex * blockSize, rowIndex * blockSize, blockSize, blockSize, BLUE);
                 }
             }
             blockNode = blockNode->next;
@@ -2337,7 +2315,6 @@ void printGrid(Game* game) {
 }
 
 void drawGameUI(Game* game, GameResources* resources) {
-
 
     char obj[32];
     Vector2 textSize;
@@ -2478,18 +2455,14 @@ void drawGameUI(Game* game, GameResources* resources) {
                     },
                         0, scale, WHITE);
 
-                    // Draw timer below icon
+                    // timer
                     char timerText[8];
                     sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
                     Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
                     float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
                     float timerY = curY + ICON_SIZE + 5;
 
-                    DrawTextEx(GetFontDefault(), timerText,
-                        (Vector2) {
-                        timerX, timerY
-                    },
-                        15, 2, timerColor);
+                    DrawTextEx(GetFontDefault(), timerText, (Vector2) { timerX, timerY }, 15, 2, timerColor);
                 }
             }
 
@@ -2502,8 +2475,7 @@ void drawGameUI(Game* game, GameResources* resources) {
     curY += linespacing;
     for (int i = 0; i < game->lives; i++) {
         float local_scale = 30.0f / 640.0f;
-        DrawTextureEx(TEXTURE(resources, TEXTURE_HEART),
-            (Vector2) {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_HEART), (Vector2) {
             auto_x(345) + (i * auto_x(35)), auto_y(480)
         }, // posisi
             0,  // rotation
@@ -2513,33 +2485,21 @@ void drawGameUI(Game* game, GameResources* resources) {
 
     float local_scale = (float)auto_x(80.0f) / 640.0f;
     Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-    Rectangle buttonRect = {
-        buttonPos.x,
-        buttonPos.y,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale,
-        TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
+    Rectangle buttonRect = { buttonPos.x, buttonPos.y, TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale, TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
     };
 
     if (game->laserCooldown > 0) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale,
-            (Color) {
-            255, 255, 255, 80
-        });
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, (Color) { 255, 255, 255, 80 });
 
         char cooldownText[5];
         sprintf(cooldownText, "%.1f", game->laserCooldown);
         Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
         float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
         float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-        DrawTextEx(GetFontDefault(), cooldownText,
-            (Vector2) {
-            textX, textY
-        }, 20, 2, WHITE);
+        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX, textY }, 20, 2, WHITE);
     }
     else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON),
-            buttonPos, 0, local_scale, WHITE);
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, WHITE);
     }
     textSize = MeasureTextEx(GetFontDefault(), "E", 15, 2);
     float boxX = buttonRect.x + buttonRect.width - (textSize.x + auto_x(8)); // 8 untuk padding
