@@ -1,6 +1,8 @@
 #include "defines.h"
 #include "all.h"
 
+//Total lines converted into Queue: 80 - 100 lines
+
 typedef struct {
     PowerUpType type;
     float duration;
@@ -16,6 +18,7 @@ void spawnPowerUp(Game* game) {
     };
 }
 
+//==============================Conversion of Queue===================================
 
 // Helper function to check if a powerup type is already active in the queue
 bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
@@ -29,6 +32,7 @@ bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
     }
     return false;
 }
+
 
 void activatePowerUp(Game* game, GameResources* resources) {
     if (queue_count(&game->activePowerupsQ) >= 3) return; // Maximum 3 active effects
@@ -91,6 +95,8 @@ void activatePowerUp(Game* game, GameResources* resources) {
     game->powerupActive = false;
     game->powerupTimer = 7.0f + (rand() % 8);
 }
+//==============================Conversion of Queue===================================
+
 
 
 //==========================Array Old=======================================
