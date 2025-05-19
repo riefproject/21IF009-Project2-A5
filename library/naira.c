@@ -21,12 +21,12 @@ void spawnPowerUp(Game* game) {
 //==============================Conversion of Queue===================================
 
 // Helper function to check if a powerup type is already active in the queue
-bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
-    int queue_len = queue_count(q);
-    for (int i = 0; i < queue_len; i++) {
+bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index) {
+    int queueActive = queueCount(q);
+    for (int i = 0; i < queueActive; i++) {
         ActivePowerup* ap = (ActivePowerup*)queue_peek_at(q, i);
         if (ap && ap->type == type) {
-            if (index_out) *index_out = i;
+            if (index) *index = i;
             return true;
         }
     }
@@ -35,7 +35,7 @@ bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
 
 
 void activatePowerUp(Game* game, GameResources* resources) {
-    if (queue_count(&game->activePowerupsQ) >= 3) return; // Maximum 3 active effects
+    if (queueCount(&game->activePowerupsQ) >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
@@ -241,7 +241,7 @@ void updatePowerups(Game* game, GameResources* resources) {
     }
 
     // Handle active powerup effects (timers) using queue
-    int n = queue_count(&game->activePowerupsQ);
+    int n = queueCount(&game->activePowerupsQ);
     for (int i = 0; i < n; ) {
         ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerupsQ, i);
         if (ap && ap->active) {
