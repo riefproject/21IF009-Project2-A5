@@ -65,8 +65,8 @@ SingleLinkedList *loadHiScores() {
         score->score = score;
         SLL_insertBack(list, score);
     }
-
     fclose(file);
+    return list;
 }
 
 void saveHiScores(SingleLinkedList *list) {
