@@ -263,6 +263,11 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
 
+    // skin
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SKIN_1, "assets/sprites/skin_1.png"));
+    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SKIN_2, "assets/sprites/skin_2.png"));
+
+    // bg
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAY, "assets/bg/BG_Play.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_MAIN_MENU, "assets/bg/MainMenu.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_SETTINGS, "assets/bg/BG_Settings.png"));
@@ -531,7 +536,7 @@ void showCredits(GameResources* resources) {
     float creditWidth = BG(resources, CREDIT_SCENE).width * creditScale;
     float xPos = (GetScreenWidth() - creditWidth) / 2;
 
-    float scrollY = GetScreenHeight();
+    float scrollY = GetScreenHeight() - auto_y(50);
     float scrollSpeed = 30.0f;
 
     while (resources->currentState == STATE_SCENE && !WindowShouldClose()) {
@@ -1248,6 +1253,7 @@ void selectMode(GameResources* resources) {
     float transition = 0.0f;
     float transitionSpeed = 4.0f; // Kecepatan transisi, bisa disesuaikan
     int transitionDirection = 0;  // -1 untuk kiri, 1 untuk kanan
+    int skin = TEXTURE_SKIN_1; // 15
 
     while (selecting && !WindowShouldClose()) {
         // Update transisi
@@ -1286,19 +1292,34 @@ void selectMode(GameResources* resources) {
         imgScale = (float)GetScreenHeight() / TXMODE(resources, currentSelection).height;
         scaledWidth = TXMODE(resources, currentSelection).width * imgScale;
         baseXPos = (GetScreenWidth() - scaledWidth) / 2;
+
+        { //select skin
+            float skin_scaledWidth = (float)120 / TEXTURE(resources, skin).width;
+            float centerX = (GetScreenWidth() - TEXTURE(resources, skin).width * skin_scaledWidth) / 2;
+            float centerY = (GetScreenHeight() - TEXTURE(resources, skin).height * skin_scaledWidth) / 2;
+            DrawTextureEx(TEXTURE(resources, skin), (Vector2) { centerX, centerY + auto_y(120) }, 0.0f, skin_scaledWidth, WHITE);
+        }
         DrawTextureEx(TXMODE(resources, currentSelection), (Vector2) { baseXPos, 0 }, 0.0f, imgScale, WHITE);
         EndDrawing();
 
         // Handle input only when not transitioning
         if (transitionDirection == 0) {
-            if (MOVE_LEFT || MOVE_DOWN) {
+            if (MOVE_DOWN) {
+                skin--;
+                if (skin < TEXTURE_SKIN_1) skin = TEXTURE_SKIN_2;
+            }
+            if (MOVE_UP) {
+                skin++;
+                if (skin > TEXTURE_SKIN_2) skin = TEXTURE_SKIN_1;
+            }
+            if (MOVE_LEFT) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
                 targetSelection = currentSelection - 1;
                 if (targetSelection < 0) targetSelection = lineCount - 1;
                 transitionDirection = -1;
                 transition = 0.0f;
             }
-            if (MOVE_RIGHT || MOVE_UP) {
+            if (MOVE_RIGHT) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
                 targetSelection = currentSelection + 1;
                 if (targetSelection >= lineCount) targetSelection = 0;
