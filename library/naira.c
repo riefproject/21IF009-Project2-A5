@@ -3,7 +3,7 @@
 #include "all.h"
 
 //Total lines converted into Queue: 80 - 100 lines
-
+struct Queue;
 typedef struct {
     PowerUpType type;
     float duration;
@@ -103,7 +103,7 @@ void activatePowerUp(Game* game, GameResources* resources) {
         ap->type = type;
         ap->duration = duration;
         ap->active = true;
-        Enqueue(&game->activePowerupsQ, ap);
+    enqueue(&game->activePowerupsQ, ap);
     }
 
     game->powerupActive = false;
@@ -228,64 +228,79 @@ void drawPowerUp(Game* game, GameResources* resources) {
         WHITE);
 }
 
+//=================================OLD QUEUE====================================
+// void updatePowerups(Game* game, GameResources* resources) {
+//     // Handle floating powerup (not yet collected)
+//     if (game->powerupActive) {
+//         // Move powerup down with wavy motion
+//         game->powerupPosition.y += 2.0f;
+//         game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;
+
+//         // Keep within screen bounds
+//         if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
+//         if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
+//             game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
+
+//         // If powerup reaches the bottom, deactivate
+//         if (game->powerupPosition.y > GAME_SCREEN_HEIGHT - 40) {
+//             game->powerupActive = false;
+//         } else {
+//             // Check collision with shooter
+//             Rectangle powerupRect = { game->powerupPosition.x, game->powerupPosition.y, 40, 40 };
+//             Rectangle shooterRect = { P.x - 32, P.y - 32, 96, 64 };
+//             if (CheckCollisionRecs(powerupRect, shooterRect)) {
+//                 activatePowerUp(game, resources);
+//             }
+//         }
+//     }
+
+//     // Handle active powerup effects (timers) using queue
+//     int n = queue_count(&game->activePowerupsQ);
+//     for (int i = 0; i < n; ) {
+//         ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerupsQ, i);
+//         if (ap && ap->active) {
+//             ap->duration -= GetFrameTime();
+//             if (ap->duration <= 0) {
+//                 queue_remove_at(&game->activePowerupsQ, i);
+//                 n--;
+//                 continue;
+//             }
+//         }
+//         i++;
+//     }
+// }
+//=================================OLD QUEUE====================================
+
+
 
 //=====================Queue Structure==============================
-void updatePowerups(Game* game, GameResources* resources) {
-    // Handle floating powerup (not yet collected)
-    if (game->powerupActive) {
-        // Move powerup down with wavy motion
-        game->powerupPosition.y += 2.0f;
-        game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;
+void updatePowerUp(Game* game, GameResources* resources) {
+    if (!game->powerupActive) return;
 
-        // Keep within screen bounds
-        if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
-        if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
-            game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
+    // Move powerup down slower
+    game->powerupPosition.y += 2.0f;  // Reduced from 2.0f
 
-        // If powerup reaches the bottom, deactivate
-        if (game->powerupPosition.y > GAME_SCREEN_HEIGHT - 40) {
-            game->powerupActive = false;
-        } else {
-            // Check collision with shooter
-            Rectangle powerupRect = { game->powerupPosition.x, game->powerupPosition.y, 40, 40 };
-            Rectangle shooterRect = { P.x - 32, P.y - 32, 96, 64 };
-            if (CheckCollisionRecs(powerupRect, shooterRect)) {
-                activatePowerUp(game, resources);
-            }
-        }
+    // Gentler wavy motion
+    game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;  // Reduced amplitude and frequency
+
+    // Keep within screen bounds
+    if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
+    if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
+        game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
+
+    // Check if powerup went off screen
+    if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
+        game->powerupActive = false;
+        return;
     }
 
-    // Handle active powerup effects (timers) using queue
-    SLLNode* prev = NULL;
-    SLLNode* node = game->activePowerupsQ.Front;
-    while (node != NULL) {
-        ActivePowerup* ap = (ActivePowerup*)node->data;
-        SLLNode* next = node->next; // Save next node in case we remove current
+    // Check collision with shooter
+    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,40,40 };
 
-        if (ap && ap->active) {
-            ap->duration -= GetFrameTime();
-            if (ap->duration <= 0) {
-                // Remove node from queue and free memory
-                if (prev == NULL) {
-                    // Removing front node
-                    game->activePowerupsQ.Front = next;
-                    if (game->activePowerupsQ.Rear == node)
-                        game->activePowerupsQ.Rear = NULL;
-                } else {
-                    prev->next = next;
-                    if (game->activePowerupsQ.Rear == node)
-                        game->activePowerupsQ.Rear = prev;
-                }
-                free(ap);
-                free(node);
-                game->activePowerupsQ.size--;
-                node = next;
-                continue;
-            }
-        }
-        prev = node;
-        node = next;
+    Rectangle shooterRect = { P.x - 32,P.y - 32,96,64 };
+
+    if (CheckCollisionRecs(powerupRect, shooterRect)) {
+        activatePowerUp(game, resources);
     }
 }
-
 //=====================Queue Structure==============================
