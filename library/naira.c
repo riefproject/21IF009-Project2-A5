@@ -1,4 +1,5 @@
 #include "defines.h"
+#include "queue.h"
 #include "all.h"
 
 //Total lines converted into Queue: 80 - 100 lines
@@ -21,21 +22,20 @@ void spawnPowerUp(Game* game) {
 //==============================Conversion of Queue===================================
 
 // Helper function to check if a powerup type is already active in the queue
-bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index) {
-    int queueActive = queueCount(q);
-    for (int i = 0; i < queueActive; i++) {
-        ActivePowerup* ap = (ActivePowerup*)queue_peek_at(q, i);
+bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
+    int idx = 0;
+    for (SLLNode* node = q->Front; node != NULL; node = node->next, idx++) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
         if (ap && ap->type == type) {
-            if (index) *index = i;
+            if (index_out) *index_out = idx;
             return true;
         }
     }
     return false;
 }
 
-
 void activatePowerUp(Game* game, GameResources* resources) {
-    if (queueCount(&game->activePowerupsQ) >= 3) return; // Maximum 3 active effects
+    if (game->activePowerupsQ.size >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
@@ -45,9 +45,19 @@ void activatePowerUp(Game* game, GameResources* resources) {
     }
 
     int foundIdx = -1;
-    if (isPowerupTypeActive(&game->activePowerupsQ, type, &foundIdx)) {
+    SLLNode* foundNode = NULL;
+    int idx = 0;
+    for (SLLNode* node = game->activePowerupsQ.Front; node != NULL; node = node->next, idx++) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
+        if (ap && ap->type == type) {
+            foundNode = node;
+            foundIdx = idx;
+            break;
+        }
+    }
+    if (foundNode) {
         // Reset duration if already active
-        ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerupsQ, foundIdx);
+        ActivePowerup* ap = (ActivePowerup*)foundNode->data;
         if (ap) ap->duration = 10.0f;
         game->powerupActive = false;
         game->powerupTimer = 7.0f + (rand() % 8);
@@ -88,8 +98,11 @@ void activatePowerUp(Game* game, GameResources* resources) {
     }
 
     if (duration > 0) {
-        ActivePowerup ap = { type, duration, true };
-        queue_enqueue(&game->activePowerupsQ, &ap, sizeof(ActivePowerup));
+        ActivePowerup* ap = malloc(sizeof(ActivePowerup));
+        ap->type = type;
+        ap->duration = duration;
+        ap->active = true;
+        Enqueue(&game->activePowerupsQ, ap);
     }
 
     game->powerupActive = false;
@@ -214,7 +227,7 @@ void drawPowerUp(Game* game, GameResources* resources) {
         local_scale,
         WHITE);
 }
-
+//=====================Queue Structure==============================
 void updatePowerups(Game* game, GameResources* resources) {
     // Handle floating powerup (not yet collected)
     if (game->powerupActive) {
@@ -241,17 +254,36 @@ void updatePowerups(Game* game, GameResources* resources) {
     }
 
     // Handle active powerup effects (timers) using queue
-    int n = queueCount(&game->activePowerupsQ);
-    for (int i = 0; i < n; ) {
-        ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerupsQ, i);
+    SLLNode* prev = NULL;
+    SLLNode* node = game->activePowerupsQ.Front;
+    while (node != NULL) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
+        SLLNode* next = node->next; // Save next node in case we remove current
+
         if (ap && ap->active) {
             ap->duration -= GetFrameTime();
             if (ap->duration <= 0) {
-                queue_remove_at(&game->activePowerupsQ, i);
-                n--;
+                // Remove node from queue and free memory
+                if (prev == NULL) {
+                    // Removing front node
+                    game->activePowerupsQ.Front = next;
+                    if (game->activePowerupsQ.Rear == node)
+                        game->activePowerupsQ.Rear = NULL;
+                } else {
+                    prev->next = next;
+                    if (game->activePowerupsQ.Rear == node)
+                        game->activePowerupsQ.Rear = prev;
+                }
+                free(ap);
+                free(node);
+                game->activePowerupsQ.size--;
+                node = next;
                 continue;
             }
         }
-        i++;
+        prev = node;
+        node = next;
     }
 }
+
+//=====================Queue Structure==============================
