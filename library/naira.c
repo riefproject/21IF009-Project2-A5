@@ -19,6 +19,7 @@ void spawnPowerUp(Game* game) {
     };
 }
 
+
 //==============================Conversion of Queue===================================
 
 // Helper function to check if a powerup type is already active in the queue
@@ -109,7 +110,6 @@ void activatePowerUp(Game* game, GameResources* resources) {
     game->powerupTimer = 7.0f + (rand() % 8);
 }
 //==============================Conversion of Queue===================================
-
 
 
 //==========================Array Old=======================================
@@ -227,6 +227,8 @@ void drawPowerUp(Game* game, GameResources* resources) {
         local_scale,
         WHITE);
 }
+
+
 //=====================Queue Structure==============================
 void updatePowerups(Game* game, GameResources* resources) {
     // Handle floating powerup (not yet collected)
