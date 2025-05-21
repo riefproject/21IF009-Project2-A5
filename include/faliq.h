@@ -7,6 +7,11 @@ typedef struct {
     int y;
 }position;
 
+SingleLinkedList* shooterAssets();
+Texture2D SLL_Shooter_top(GameResources* rsc);
+Texture2D SLL_Shooter_mid(GameResources* rsc);
+Texture2D SLL_Shooter_left(GameResources* rsc);
+Texture2D SLL_Shooter_right(GameResources* rsc);
 extern position P;
 
 // Membuat Bentuk Shooter 

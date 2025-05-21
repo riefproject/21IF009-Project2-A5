@@ -4,26 +4,58 @@
 #define SHOOTER_STEP auto_x(32)
 #define GAME_WIDTH (BLOCK_SIZE * MAX_COLUMNS)
 #define GAME_HEIGHT (BLOCK_SIZE * MAX_ROWS)
+// #define SHOOTER_TOP (*(Texture2D*)(getAsset((rsc)->assets->Shooter->head, (TEXTURE_SHOOTER_T))))
+// #define SHOOTER_MID (*(Texture2D*)(getAsset((rsc)->assets->Shooter->head, (TEXTURE_SHOOTER_M))))
+// #define SHOOTER_LEFT (*(Texture2D*)(getAsset((rsc)->assets->Shooter->head, (TEXTURE_SHOOTER_L))))
+// #define SHOOTER_RIGHT (*(Texture2D*)(getAsset((rsc)->assets->Shooter->head, (TEXTURE_SHOOTER_R))))
 position P;
 Music soundGameplay;
 
+
+SingleLinkedList* shooterAssets(){
+    SingleLinkedList* list = new(SingleLinkedList);
+    if(list != NULL){
+    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
+    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
+    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
+    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
+    }
+    return list;
+}
+
+Texture2D SLL_Shooter_top(GameResources* rsc){
+    return (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_T))));
+}
+Texture2D SLL_Shooter_mid(GameResources* rsc){
+    return (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_M))));
+}
+Texture2D SLL_Shooter_left(GameResources* rsc){
+    return (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_L))));
+}
+Texture2D SLL_Shooter_right(GameResources* rsc){
+    return (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_R))));
+}
 
 void shooter(int* x, int* y, GameResources* resources) {
     float blockSize = BLOCK_SIZE;
     float positionX = (float)*x;
     float positionY = (float)*y;
+    Texture2D shooterM = SLL_Shooter_mid(resources);
+    Texture2D shooterT = SLL_Shooter_top(resources);
+    Texture2D shooterR = SLL_Shooter_right(resources);
+    Texture2D shooterL = SLL_Shooter_left(resources);
 
     float imgScale = blockSize / (float)TEXTURE(resources, TEXTURE_SHOOTER_M).width;
 
-    DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_M), (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
-    if (positionX >= blockSize) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_L), (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
-        DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_T), (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
-
-        // Draw bagian kanan jika dalam batas area game
-        if (positionX + blockSize < GAME_WIDTH) {
-            DrawTextureEx(TEXTURE(resources, TEXTURE_SHOOTER_R), (Vector2) { positionX + blockSize, positionY }, 0, imgScale, WHITE);
-        }
+    if(positionX + blockSize >= GAME_WIDTH){
+        DrawTextureEx(shooterM, (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
+        DrawTextureEx(shooterT, (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
+        DrawTextureEx(shooterL, (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
+    }else {
+        DrawTextureEx(shooterL, (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
+        DrawTextureEx(shooterM, (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
+        DrawTextureEx(shooterT, (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
+        DrawTextureEx(shooterR, (Vector2) { positionX + blockSize, positionY }, 0, imgScale, WHITE);
     }
 }
 

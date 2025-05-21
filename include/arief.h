@@ -72,4 +72,5 @@ void handleBulletCollisions(Game* game);                               // Menang
 bool isValidGridPosition(int x, int y);                                // Validasi posisi grid
 void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets);                                         // Memproses tembakan peluru
 void drawGameUI(Game* game, GameResources* resources);         // Menggambar UI game
+InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
 #endif

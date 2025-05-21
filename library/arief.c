@@ -249,10 +249,6 @@ Assets* createAssets(void) {
     // Load textures
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BULLET, "assets/sprites/bullet_brick.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_HEART, "assets/sprites/heart.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_LASER_BUTTON, "assets/sprites/laser_button.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_RANDOM, "assets/sprites/random.png"));
@@ -262,7 +258,7 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_PLS1_HP, "assets/sprites/heal.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SPECIAL_BULLET, "assets/sprites/bomb.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_WHITE_ICON, "assets/icon/icon.png"));
-
+    assets->Shooter = *shooterAssets();
     // skin
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SKIN_1, "assets/sprites/skin_1.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SKIN_2, "assets/sprites/skin_2.png"));
