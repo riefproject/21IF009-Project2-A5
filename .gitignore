@@ -18,7 +18,7 @@
 *.stackdump
 
 # Ignore all .dat files anywhere in the project
-**/*.dat
+/**/*.dat
 
 # Ignore OS-specific files
 .DS_Store
@@ -35,3 +35,6 @@ init.ps1
 !/db/
 /db/*
 !/db/.gitkeep
+
+# todo
+todo.txt

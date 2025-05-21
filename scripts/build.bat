@@ -18,7 +18,7 @@ set BIN_PATH=bin
 set TMP_PATH=temp
 
 REM Target
-set TARGET_NAME="Block Shooter.exe"
+set TARGET_NAME="BlockShooter.exe"
 set TARGET=%BIN_PATH%\%TARGET_NAME%
 set TEST_TARGET=%BIN_PATH%\test.exe
 
