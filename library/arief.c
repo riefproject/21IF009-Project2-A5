@@ -318,12 +318,29 @@ void* getAsset(SLLNode* head, uint id) {
     return NULL;
 }
 
-void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*)) {
+void unloadAndFree(SLLNode* head, TypeofAssets type) {
     SLLNode* temp = head;
     while (temp) {
         InputAsset* asset = (InputAsset*)temp->data;
         if (asset && asset->data) {
-            unloadFunc(asset->data);
+            switch(type){
+                case TYPE_SOUND: {
+                    UnloadSound(*(Sound*)asset->data);
+                    break;
+                }
+                case TYPE_FONT: {
+                    UnloadFont(*(Font*)asset->data);
+                    break;
+                }
+                case TYPE_TEXTURE: {
+                    UnloadTexture(*(Texture2D*)asset->data);
+                    break;
+                }
+                default: {
+                    printf("Unknown asset type.\n");
+                    break;
+                }
+            }
         }
         temp = temp->next;
     }
@@ -334,20 +351,20 @@ void destroyAssets(Assets* assets) {
 
 
     // Unload sounds
-    unloadAndFree(assets->sounds.head, (void (*)(void*))UnloadSound);
+    unloadAndFree(assets->sounds.head, TYPE_SOUND);
 
     // Unload fonts
-    unloadAndFree(assets->fonts.head, (void (*)(void*))UnloadFont);
+    unloadAndFree(assets->fonts.head, TYPE_FONT);
 
     // Unload textures
-    unloadAndFree(assets->textures.head, (void (*)(void*))UnloadTexture);
+    unloadAndFree(assets->textures.head,TYPE_TEXTURE);
 
     // Unload backgrounds
-    unloadAndFree(assets->bg.head, (void (*)(void*))UnloadTexture);
+    unloadAndFree(assets->bg.head, TYPE_TEXTURE);
 
     // Unload background modes
-    unloadAndFree(assets->bgMode.head, (void (*)(void*))UnloadTexture);
-    unloadAndFree(assets->txMode.head, (void (*)(void*))UnloadTexture);
+    unloadAndFree(assets->bgMode.head, TYPE_TEXTURE);
+    unloadAndFree(assets->txMode.head, TYPE_TEXTURE);
 
     delete(assets);
 }
@@ -639,7 +656,7 @@ void showControls(GameResources* resources) {
     int spacing = auto_x(4);
 
     const char* lines[] = {
-        "W / Up Arrow    : Up",
+        "W / ↑    : Up",
         "S / Down Arrow  : Down",
         "A / Left Arrow  : Left",
         "D / Right Arrow : Right",
@@ -654,7 +671,7 @@ void showControls(GameResources* resources) {
     while (resources->currentState == STATE_CONTROLS && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        drawBG(resources, BG_SETTINGS);
+        drawBG(resources, BG_CONTROLS);
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
             totalHeight += fontSize + spacing;

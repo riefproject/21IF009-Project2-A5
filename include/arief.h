@@ -13,9 +13,11 @@ void destroyGameContext(Game* game);        // Membersihkan dan menghapus kontek
 // Resources Function
 #ifndef ASSET_INPUT_HELPERS
 #define ASSET_INPUT_HELPERS
+void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight);
+InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
 Assets* createAssets(void);
-void* getAsset(SLLNode* node, uint id);
-void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
+void* getAsset(SLLNode* head, uint id);
+void unloadAndFree(SLLNode* head, TypeofAssets type);
 void destroyAssets(Assets* assets);
 #endif
 

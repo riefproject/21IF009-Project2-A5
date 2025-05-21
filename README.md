@@ -55,37 +55,27 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
     cd 21IF009-Project2-A5
     ```
 
-3. Clean previous build (optional but recommended):
+3. rebuild and run the project:
 
     - Using **Makefile** (recommended for Linux/macOS/Windows with MinGW):
         ```bash
-        make clean
+        make rebuild
         ```
     - Or manually using script:
         - **Windows:**
             ```sh
-            scripts/clean.bat
+            ./scripts/clean.bat rebuild
             ```
         - **Linux/macOS:**
             ```sh
-            scripts/clean.sh
+            . scripts/build.sh
+            # OR
+            chmod +x scripts/build.sh  # Only needed the first time
+            ./scripts/clean.sh rebuild
             ```
 
-4. Build and run the project:
-    - Using **Makefile** (recommended):
-        ```bash
-        make run
-        ```
-    - Or manually using script:
-        - **Windows:**
-            ```sh
-            scripts/build.bat
-            ```
-        - **Linux/macOS:**
-            ```sh
-            chmod +x scripts/build.sh  # Only needed the first time
-            scripts/build.sh
-            ```
+4. Additioal build options:
+   Both build scripts support various commands for different build tasks. For all available commands and detailed documentation, see [`📋scripts/README.md`](https://github.com/riefproject/21IF009-Project2-A5/blob/main/scripts/README.md). Common commands include: build (default), run, clean, rebuild, test, and help.
 
 ## 🎮 Gameplay Instructions
 

@@ -1,1 +1,0 @@
-:: Nanti deh buatnya, ngantuk

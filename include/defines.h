@@ -17,16 +17,17 @@ enum TextureAsset;
 enum BgTextures;
 enum BgModeTextures;
 enum TypeofAssets;
-struct PowerUp;
-struct HiScore;
-struct Settings;
-struct Shooter;
-struct BlockList;
-struct BlockQueue;
-struct Assets;
-struct GameResources;
-struct Game;
-struct openingTransition;
+typedef struct PowerUp PowerUp;
+typedef struct HiScore HiScore;
+typedef struct Settings Settings;
+typedef struct Shooter Shooter;
+typedef struct BlockList BlockList;
+typedef struct BlockQueue BlockQueue;
+typedef struct Assets Assets;
+typedef struct GameResources GameResources;
+typedef struct Game Game;
+typedef struct openingTransition openingTransition;
+typedef struct InputAsset InputAsset;
 // =======================================
 //           Game Constants
 // =======================================
@@ -275,9 +276,11 @@ typedef struct Assets {
 // Resources Function
 #ifndef ASSET_INPUT_HELPERS
 #define ASSET_INPUT_HELPERS
+void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight);
+InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
 Assets* createAssets(void);
-void* getAsset(SLLNode* node, uint id);
-void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
+void* getAsset(SLLNode* head, uint id);
+void unloadAndFree(SLLNode* head, TypeofAssets type);
 void destroyAssets(Assets* assets);
 #endif
 
