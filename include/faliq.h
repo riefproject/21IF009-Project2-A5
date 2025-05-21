@@ -9,6 +9,12 @@ typedef struct {
 
 extern position P;
 
+SingleLinkedList* shooterAssets();
+Texture2D SLL_Shooter_top(GameResources* rsc);
+Texture2D SLL_Shooter_mid(GameResources* rsc);
+Texture2D SLL_Shooter_left(GameResources* rsc);
+Texture2D SLL_Shooter_right(GameResources* rsc);
+
 // Membuat Bentuk Shooter 
 void shooter(int* x, int* y, GameResources* resources);
 

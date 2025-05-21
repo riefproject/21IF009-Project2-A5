@@ -269,6 +269,7 @@ typedef struct Assets {
     SingleLinkedList bg;        // Array untuk menyimpan background
     SingleLinkedList bgMode;    // Array untuk menyimpan background for mode
     SingleLinkedList txMode;    // Array untuk menyimpan text for mode
+    SingleLinkedList Shooter;    // SLL untuk menyimpan shooter
 } Assets;
 
 // Resources Function

@@ -278,6 +278,7 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAIN, "assets/bg/BG_Plain.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, CREDIT_SCENE, "assets/bg/CreditScene.png"));
 
+    assets->Shooter = *shooterAssets();
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_EZ, "assets/bg/mode/EZ.png"));
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_BEGINNER, "assets/bg/mode/Beginner.png"));
