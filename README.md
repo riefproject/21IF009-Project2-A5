@@ -68,7 +68,7 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
             ```
         - **Linux/macOS:**
             ```sh
-            . scripts/build.sh
+            . scripts/build.sh rebuild
             # OR
             chmod +x scripts/build.sh  # Only needed the first time
             ./scripts/clean.sh rebuild
