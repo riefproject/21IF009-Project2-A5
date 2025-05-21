@@ -1254,10 +1254,15 @@ void selectMode(GameResources* resources) {
     float transitionSpeed = 4.0f; // Kecepatan transisi, bisa disesuaikan
     int transitionDirection = 0;  // -1 untuk kiri, 1 untuk kanan
     int skin = TEXTURE_SKIN_1; // 15
+    int currentSkin = skin;
+    int targetSkin = skin;
+    float skinTransition = 0.0f;
+    int skinTransitionDirection = 0;  // -1 untuk naik, 1 untuk turun
 
     while (selecting && !WindowShouldClose()) {
-        // Update transisi
         float deltaTime = GetFrameTime();
+        
+        // Update transisi mode
         if (transition < 1.0f && transitionDirection != 0) {
             transition += deltaTime * transitionSpeed;
             if (transition >= 1.0f) {
@@ -1267,15 +1272,23 @@ void selectMode(GameResources* resources) {
             }
         }
 
+        // Update transisi skin
+        if (skinTransition < 1.0f && skinTransitionDirection != 0) {
+            skinTransition += deltaTime * transitionSpeed;
+            if (skinTransition >= 1.0f) {
+                skinTransition = 0.0f;
+                currentSkin = targetSkin;
+                skinTransitionDirection = 0;
+            }
+        }
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        // Draw current image
         float imgScale = (float)GetScreenHeight() / BGMODE(resources, currentSelection).height;
         float scaledWidth = BGMODE(resources, currentSelection).width * imgScale;
         float baseXPos = (GetScreenWidth() - scaledWidth) / 2;
 
-        // Calculate positions for transition
         float currentXPos = baseXPos;
         float nextXPos = baseXPos;
 
@@ -1283,34 +1296,57 @@ void selectMode(GameResources* resources) {
             currentXPos += (transitionDirection * GetScreenWidth() * -transition);
             nextXPos += (transitionDirection * GetScreenWidth() * (1.0f - transition));
 
-            // Draw next image
             DrawTextureEx(BGMODE(resources, targetSelection), (Vector2) { nextXPos, 0 }, 0.0f, imgScale, WHITE);
         }
 
         DrawTextureEx(BGMODE(resources, currentSelection), (Vector2) { currentXPos, 0 }, 0.0f, imgScale, WHITE);
-
         imgScale = (float)GetScreenHeight() / TXMODE(resources, currentSelection).height;
         scaledWidth = TXMODE(resources, currentSelection).width * imgScale;
         baseXPos = (GetScreenWidth() - scaledWidth) / 2;
+        DrawTextureEx(TXMODE(resources, currentSelection), (Vector2) { baseXPos, 0 }, 0.0f, imgScale, WHITE);
 
+        // Di dalam fungsi selectMode()
+        
         { //select skin
             float skin_scaledWidth = (float)120 / TEXTURE(resources, skin).width;
             float centerX = (GetScreenWidth() - TEXTURE(resources, skin).width * skin_scaledWidth) / 2;
             float centerY = (GetScreenHeight() - TEXTURE(resources, skin).height * skin_scaledWidth) / 2;
-            DrawTextureEx(TEXTURE(resources, skin), (Vector2) { centerX, centerY + auto_y(120) }, 0.0f, skin_scaledWidth, WHITE);
+            
+            float currentSkinY = centerY + auto_y(120);
+            float baseSkinX = centerX;
+            
+            if (skinTransitionDirection != 0) {
+                // Hitung posisi untuk current dan target skin (horizontal)
+                float currentOffset = skinTransitionDirection * GetScreenWidth() * skinTransition;
+                float targetOffset = skinTransitionDirection * GetScreenWidth() * (skinTransition - 1.0f);
+                
+                // Draw current skin
+                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2){baseSkinX + currentOffset, currentSkinY}, 0.0f, skin_scaledWidth, Fade(WHITE, 1.0f - skinTransition));
+        
+                // Draw target skin
+                float targetScaledWidth = (float)120 / TEXTURE(resources, targetSkin).width;
+                DrawTextureEx(TEXTURE(resources, targetSkin), (Vector2){baseSkinX + targetOffset, currentSkinY}, 0.0f, targetScaledWidth, Fade(WHITE, skinTransition));
+            } else {
+                // Normal drawing when not transitioning
+                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2){baseSkinX, currentSkinY}, 0.0f, skin_scaledWidth, WHITE);
+            }
         }
-        DrawTextureEx(TXMODE(resources, currentSelection), (Vector2) { baseXPos, 0 }, 0.0f, imgScale, WHITE);
         EndDrawing();
 
-        // Handle input only when not transitioning
-        if (transitionDirection == 0) {
+        if (transitionDirection == 0 && skinTransitionDirection == 0) {
             if (MOVE_DOWN) {
-                skin--;
-                if (skin < TEXTURE_SKIN_1) skin = TEXTURE_SKIN_2;
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                targetSkin = currentSkin - 1;
+                if (targetSkin < TEXTURE_SKIN_1) targetSkin = TEXTURE_SKIN_2;
+                skinTransitionDirection = 1;  // Transisi ke bawah
+                skinTransition = 0.0f;
             }
             if (MOVE_UP) {
-                skin++;
-                if (skin > TEXTURE_SKIN_2) skin = TEXTURE_SKIN_1;
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                targetSkin = currentSkin + 1;
+                if (targetSkin > TEXTURE_SKIN_2) targetSkin = TEXTURE_SKIN_1;
+                skinTransitionDirection = -1;  // Transisi ke atas
+                skinTransition = 0.0f;
             }
             if (MOVE_LEFT) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
@@ -2546,4 +2582,4 @@ void drawGameUI(Game* game, GameResources* resources) {
             boxY + auto_y(4)   // +4 untuk padding
     },
         15, 2, WHITE);
-}
+}                                                                                                
