@@ -75,7 +75,7 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
             ```
 
 4. Additioal build options:
-   Both build scripts support various commands for different build tasks. For all available commands and detailed documentation, see [`📋scripts/README.md`](https://github.com/riefproject/21IF009-Project2-A5/blob/main/scripts/README.md). Common commands include: build (default), run, clean, rebuild, test, and help.
+   Both build scripts support various commands for different build tasks. For all available commands and detailed documentation, see [`📋scripts/README.md`](https://github.com/riefproject/21IF009-Project2-A5/blob/main/scripts). Common commands include: build (default), run, clean, rebuild, test, and help.
 
 ## 🎮 Gameplay Instructions
 
