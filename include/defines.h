@@ -333,12 +333,7 @@ typedef struct Game {
     PowerUp currentPowerup;            // Power-up yang sedang aktif
     Vector2 powerupPosition;           // Posisi power-up
     bool powerupActive;                // Status power-up aktif
-    Queue activePowerupsQ;
-    struct {
-        PowerUpType type;              // Tipe power-up
-        float duration;                // Durasi power-up
-        bool active;                   // Status aktif
-    } activePowerups[3];              // Array power-up aktif (maksimal 3)
+    Queue activePowerups;              // Array power-up aktif (maksimal 3)
     int activeEffectsCount;           // Jumlah efek yang aktif
 } Game;
 

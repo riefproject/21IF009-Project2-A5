@@ -101,7 +101,7 @@ Game* createGameContext(void) {
 
     /*
 
-    // SLL activePowerupsQ;
+    // SLL activePowerups;
     // activePowerUpsQ berisi:
     // SLLNode* activePowerUpsQ.rear = NULL
     // SLLNode* activePowerUpsQ.front = NULL
@@ -110,15 +110,11 @@ Game* createGameContext(void) {
     // SLLNode berisi:
     // void* data; -> casting (PowerUp*) data
     // SLLNode* next = NULL;
-    game->activePowerupsQ = NULL;
+    game->activePowerups = NULL;
 
     */
     game->activeEffectsCount = 0;
-    for (int i = 0; i < 3; i++) {
-        game->activePowerups[i].type = POWERUP_NONE;
-        game->activePowerups[i].duration = 0;
-        game->activePowerups[i].active = false;
-    }
+    game->activePowerups = *createQueue();
     game->bullets = (SingleLinkedList*)malloc(sizeof(SingleLinkedList));
     game->bullets->head = NULL;
     game->bullets->tail = NULL;
@@ -1663,13 +1659,16 @@ void displayGame(GameResources* resources) {
 
     // Update powerups
     float deltaTime = GetFrameTime();
-    for (int i = 0; i < gameContext->activeEffectsCount; i++) {
-        if (gameContext->activePowerups[i].active) {
-            gameContext->activePowerups[i].duration -= deltaTime;
+    SLLNode* prev = NULL;
+    SLLNode* node = gameContext->activePowerups.Front;
+    while (node != NULL) {
+        PowerUp* powerup = (PowerUp*)node->data;
+        if (powerup && powerup->active) {
+            powerup->duration -= deltaTime;
 
-            if (gameContext->activePowerups[i].duration <= 0) {
+            if (powerup->duration <= 0) {
                 // Reverse efek
-                switch (gameContext->activePowerups[i].type) {
+                switch (powerup->type) {
                 case POWERUP_SPEED_UP:
                     gameContext->rowAddDelay *= 4;
                     break;
@@ -1677,15 +1676,28 @@ void displayGame(GameResources* resources) {
                     gameContext->rowAddDelay = (int)(gameContext->rowAddDelay / 2.5f);
                     break;
                 }
-
-                // Hapus efek
-                for (int j = i; j < gameContext->activeEffectsCount - 1; j++) {
-                    gameContext->activePowerups[j] = gameContext->activePowerups[j + 1];
+                // Remove node from queue
+                SLLNode* toDelete = node;
+                if (prev == NULL) {
+                    // Removing front
+                    gameContext->activePowerups.Front = node->next;
+                    node = node->next;
                 }
-                gameContext->activeEffectsCount--;
-                i--;
+                else {
+                    prev->next = node->next;
+                    node = node->next;
+                }
+                if (gameContext->activePowerups.Rear == toDelete) {
+                    gameContext->activePowerups.Rear = prev;
+                }
+                free(toDelete->data);
+                free(toDelete);
+                gameContext->activePowerups.size--;
+                continue;
             }
         }
+        prev = node;
+        node = node->next;
     }
     drawGameUI(gameContext, resources);
     if (gameContext->lives <= 0) {
@@ -2152,12 +2164,15 @@ bool isValidGridPosition(int x, int y) {
 
 void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
     bool hasSpecialBullet = false;
-    for (int i = 0; i < game->activeEffectsCount; i++) {
-        if (game->activePowerups[i].active &&
-            game->activePowerups[i].type == POWERUP_SPECIAL_BULLET) {
+    SLLNode* node = game->activePowerups.Front;
+    while (node) {
+        PowerUp* powerup = (PowerUp*)node->data;
+        if (powerup && powerup->active &&
+            powerup->type == POWERUP_SPECIAL_BULLET) {
             hasSpecialBullet = true;
             break;
         }
+        node = node->next;
     }
 
     // Find the target row
@@ -2439,15 +2454,18 @@ void drawGameUI(Game* game, GameResources* resources) {
             const int SPACING = auto_x(10);     // Spacing antar icon
             const int startIconX = auto_x(345); // Align left dengan hearts
 
-            // Draw active power-ups
-            for (int i = 0; i < game->activeEffectsCount; i++) {
-                if (game->activePowerups[i].active) {
+            // Draw active power-ups (Queue version)
+            int iconIdx = 0;
+            SLLNode* node = game->activePowerups.Front;
+            while (node) {
+                PowerUp* powerup = (PowerUp*)node->data;
+                if (powerup && powerup->active) {
                     Texture2D iconTexture;
                     Color timerColor;
                     float scale;
 
                     // Pilih texture, warna, dan scale berdasarkan tipe
-                    switch (game->activePowerups[i].type) {
+                    switch (powerup->type) {
                     case POWERUP_SPEED_UP:
                         iconTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
                         scale = (float)ICON_SIZE / 640.0f;
@@ -2469,7 +2487,7 @@ void drawGameUI(Game* game, GameResources* resources) {
                         timerColor = WHITE;
                     }
 
-                    int iconX = startIconX + (i * (ICON_SIZE + SPACING));
+                    int iconX = startIconX + (iconIdx * (ICON_SIZE + SPACING));
 
                     // Draw icon
                     DrawTextureEx(iconTexture,
@@ -2480,7 +2498,7 @@ void drawGameUI(Game* game, GameResources* resources) {
 
                     // Draw timer below icon
                     char timerText[8];
-                    sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
+                    sprintf(timerText, "%.1fs", powerup->duration);
                     Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
                     float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
                     float timerY = curY + ICON_SIZE + 5;
@@ -2490,7 +2508,10 @@ void drawGameUI(Game* game, GameResources* resources) {
                         timerX, timerY
                     },
                         15, 2, timerColor);
+
+                    iconIdx++;
                 }
+                node = node->next;
             }
 
             curY += ICON_SIZE + auto_y(40);

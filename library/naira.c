@@ -1,6 +1,6 @@
 #include "defines.h"
-#include "queue.h"
 #include "all.h"
+#include "queue.h"
 
 //Total lines converted into Queue: 80 - 100 lines
 struct Queue;
@@ -36,7 +36,7 @@ bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
 }
 
 void activatePowerUp(Game* game, GameResources* resources) {
-    if (game->activePowerupsQ.size >= 3) return; // Maximum 3 active effects
+    if (game->activePowerups.size >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
@@ -48,7 +48,7 @@ void activatePowerUp(Game* game, GameResources* resources) {
     int foundIdx = -1;
     SLLNode* foundNode = NULL;
     int idx = 0;
-    for (SLLNode* node = game->activePowerupsQ.Front; node != NULL; node = node->next, idx++) {
+    for (SLLNode* node = game->activePowerups.Front; node != NULL; node = node->next, idx++) {
         ActivePowerup* ap = (ActivePowerup*)node->data;
         if (ap && ap->type == type) {
             foundNode = node;
@@ -103,7 +103,7 @@ void activatePowerUp(Game* game, GameResources* resources) {
         ap->type = type;
         ap->duration = duration;
         ap->active = true;
-    enqueue(&game->activePowerupsQ, ap);
+        enqueue(&game->activePowerups, ap);
     }
 
     game->powerupActive = false;
@@ -255,13 +255,13 @@ void drawPowerUp(Game* game, GameResources* resources) {
 //     }
 
 //     // Handle active powerup effects (timers) using queue
-//     int n = queue_count(&game->activePowerupsQ);
+//     int n = queue_count(&game->activePowerups);
 //     for (int i = 0; i < n; ) {
-//         ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerupsQ, i);
+//         ActivePowerup* ap = (ActivePowerup*)queue_peek_at(&game->activePowerups, i);
 //         if (ap && ap->active) {
 //             ap->duration -= GetFrameTime();
 //             if (ap->duration <= 0) {
-//                 queue_remove_at(&game->activePowerupsQ, i);
+//                 queue_remove_at(&game->activePowerups, i);
 //                 n--;
 //                 continue;
 //             }
@@ -291,6 +291,8 @@ void updatePowerUp(Game* game, GameResources* resources) {
     // Check if powerup went off screen
     if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
         game->powerupActive = false;
+        // Add delay before spawning next powerup (5-7 seconds)
+        game->powerupTimer = 5.0f + (rand() % 3);
         return;
     }
 
