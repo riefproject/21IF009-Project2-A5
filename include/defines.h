@@ -17,17 +17,16 @@ enum TextureAsset;
 enum BgTextures;
 enum BgModeTextures;
 enum TypeofAssets;
-typedef struct PowerUp PowerUp;
-typedef struct HiScore HiScore;
-typedef struct Settings Settings;
-typedef struct Shooter Shooter;
-typedef struct BlockList BlockList;
-typedef struct BlockQueue BlockQueue;
-typedef struct Assets Assets;
-typedef struct GameResources GameResources;
-typedef struct Game Game;
-typedef struct openingTransition openingTransition;
-typedef struct InputAsset InputAsset;
+struct PowerUp;
+struct HiScore;
+struct Settings;
+struct Shooter;
+struct BlockList;
+struct BlockQueue;
+struct Assets;
+struct GameResources;
+struct Game;
+struct openingTransition;
 // =======================================
 //           Game Constants
 // =======================================
@@ -167,8 +166,6 @@ typedef enum TextureAsset {
     TEXTURE_PLS1_HP,
     TEXTURE_SPECIAL_BULLET,
     TEXTURE_WHITE_ICON,
-    TEXTURE_SKIN_1,
-    TEXTURE_SKIN_2,
     TEXTURE_COUNT
 } TextureAsset;
 
@@ -270,17 +267,14 @@ typedef struct Assets {
     SingleLinkedList bg;        // Array untuk menyimpan background
     SingleLinkedList bgMode;    // Array untuk menyimpan background for mode
     SingleLinkedList txMode;    // Array untuk menyimpan text for mode
-    SingleLinkedList Shooter;    // SLL untuk menyimpan shooter
 } Assets;
 
 // Resources Function
 #ifndef ASSET_INPUT_HELPERS
 #define ASSET_INPUT_HELPERS
-void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight);
-InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
 Assets* createAssets(void);
-void* getAsset(SLLNode* head, uint id);
-void unloadAndFree(SLLNode* head, TypeofAssets type);
+void* getAsset(SLLNode* node, uint id);
+void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
 void destroyAssets(Assets* assets);
 #endif
 
@@ -339,12 +333,7 @@ typedef struct Game {
     PowerUp currentPowerup;            // Power-up yang sedang aktif
     Vector2 powerupPosition;           // Posisi power-up
     bool powerupActive;                // Status power-up aktif
-    Queue activePowerupsQ;
-    struct {
-        PowerUpType type;              // Tipe power-up
-        float duration;                // Durasi power-up
-        bool active;                   // Status aktif
-    } activePowerups[3];              // Array power-up aktif (maksimal 3)
+    Queue activePowerups;              // Array power-up aktif (maksimal 3)
     int activeEffectsCount;           // Jumlah efek yang aktif
 } Game;
 

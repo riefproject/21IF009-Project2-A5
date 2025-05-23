@@ -1,5 +1,14 @@
 #include "defines.h"
 #include "all.h"
+#include "queue.h"
+
+//Total lines converted into Queue: 80 - 100 lines
+struct Queue;
+typedef struct {
+    PowerUpType type;
+    float duration;
+    bool active;
+} ActivePowerup;
 
 void spawnPowerUp(Game* game) {
     game->powerupActive = true;
@@ -10,28 +19,53 @@ void spawnPowerUp(Game* game) {
     };
 }
 
+
+//==============================Conversion of Queue===================================
+
+// Helper function to check if a powerup type is already active in the queue
+bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
+    int idx = 0;
+    for (SLLNode* node = q->Front; node != NULL; node = node->next, idx++) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
+        if (ap && ap->type == type) {
+            if (index_out) *index_out = idx;
+            return true;
+        }
+    }
+    return false;
+}
+
 void activatePowerUp(Game* game, GameResources* resources) {
-    if (game->activeEffectsCount >= 3) return; // Maximum 3 active effects
+    if (game->activePowerups.size >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
-        // Keep randomizing until we get a non-RANDOM powerup
         do {
             type = rand() % POWERUP_COUNT;
         } while (type == POWERUP_RANDOM);
     }
 
-    // Dont add temporary effects if same type is already active
-    for (int i = 0; i < game->activeEffectsCount; i++) {
-        if (game->activePowerups[i].type == type) {
-            game->activePowerups[i].duration = 10.0f; // Reset duration
-            game->powerupActive = false;
-            game->powerupTimer = 7.0f + (rand() % 8);
-            return;
+    int foundIdx = -1;
+    SLLNode* foundNode = NULL;
+    int idx = 0;
+    for (SLLNode* node = game->activePowerups.Front; node != NULL; node = node->next, idx++) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
+        if (ap && ap->type == type) {
+            foundNode = node;
+            foundIdx = idx;
+            break;
         }
     }
+    if (foundNode) {
+        // Reset duration if already active
+        ActivePowerup* ap = (ActivePowerup*)foundNode->data;
+        if (ap) ap->duration = 10.0f;
+        game->powerupActive = false;
+        game->powerupTimer = 7.0f + (rand() % 8);
+        return;
+    }
 
-    float duration = 10.0f; // Default duration for temporary effects
+    float duration = 10.0f;
 
     switch (type) {
     case POWERUP_SPEED_UP:
@@ -53,28 +87,100 @@ void activatePowerUp(Game* game, GameResources* resources) {
             game->lives++;
             PlaySound(SOUND(resources, SOUND_HEAL));
         }
-        duration = 0; // Instant effect
+        duration = 0;
         break;
     case POWERUP_BOMB:
         game->lives--;
         PlaySound(SOUND(resources, SOUND_POISON));
-        duration = 0; // Instant effect
+        duration = 0;
         break;
     default:
         break;
     }
 
-    // Only add to active effects if it's a temporary powerup
     if (duration > 0) {
-        game->activePowerups[game->activeEffectsCount].type = type;
-        game->activePowerups[game->activeEffectsCount].duration = duration;
-        game->activePowerups[game->activeEffectsCount].active = true;
-        game->activeEffectsCount++;
+        ActivePowerup* ap = malloc(sizeof(ActivePowerup));
+        ap->type = type;
+        ap->duration = duration;
+        ap->active = true;
+        enqueue(&game->activePowerups, ap);
     }
 
     game->powerupActive = false;
     game->powerupTimer = 7.0f + (rand() % 8);
 }
+//==============================Conversion of Queue===================================
+
+
+//==========================Array Old=======================================
+
+// void activatePowerUp(Game* game, GameResources* resources) {
+//     if (game->activeEffectsCount >= 3) return; // Maximum 3 active effects
+
+//     PowerUpType type = game->currentPowerup.type;
+//     if (type == POWERUP_RANDOM) {
+//         // Keep randomizing until we get a non-RANDOM powerup
+//         do {
+//             type = rand() % POWERUP_COUNT;
+//         } while (type == POWERUP_RANDOM);
+//     }
+
+//     // Dont add temporary effects if same type is already active
+//     for (int i = 0; i < game->activeEffectsCount; i++) {
+//         if (game->activePowerups[i].type == type) {
+//             game->activePowerups[i].duration = 10.0f; // Reset duration
+//             game->powerupActive = false;
+//             game->powerupTimer = 7.0f + (rand() % 8);
+//             return;
+//         }
+//     }
+
+//     float duration = 10.0f; // Default duration for temporary effects
+
+//     switch (type) {
+//     case POWERUP_SPEED_UP:
+//         game->rowAddDelay = (int)(game->rowAddDelay * 0.25f);
+//         if (game->rowAddDelay < 10) game->rowAddDelay = 10;
+//         PlaySound(SOUND(resources, SOUND_SPEEDUP));
+//         break;
+//     case POWERUP_SLOW_DOWN:
+//         game->rowAddDelay = (int)(game->rowAddDelay * 2.5f);
+//         if (game->rowAddDelay > 240) game->rowAddDelay = 240;
+//         PlaySound(SOUND(resources, SOUND_SLOWDOWN));
+//         break;
+//     case POWERUP_SPECIAL_BULLET:
+//         game->bulletCount = 0;
+//         PlaySound(SOUND(resources, SOUND_SPECIAL_BULLET));
+//         break;
+//     case POWERUP_EXTRA_LIFE:
+//         if (game->lives < 3) {
+//             game->lives++;
+//             PlaySound(SOUND(resources, SOUND_HEAL));
+//         }
+//         duration = 0; // Instant effect
+//         break;
+//     case POWERUP_BOMB:
+//         game->lives--;
+//         PlaySound(SOUND(resources, SOUND_POISON));
+//         duration = 0; // Instant effect
+//         break;
+//     default:
+//         break;
+//     }
+
+//     // Only add to active effects if it's a temporary powerup
+//     if (duration > 0) {
+//         game->activePowerups[game->activeEffectsCount].type = type;
+//         game->activePowerups[game->activeEffectsCount].duration = duration;
+//         game->activePowerups[game->activeEffectsCount].active = true;
+//         game->activeEffectsCount++;
+//     }
+
+//     game->powerupActive = false;
+//     game->powerupTimer = 7.0f + (rand() % 8);
+// }
+
+// =================================Array Old=======================================================
 
 void drawPowerUp(Game* game, GameResources* resources) {
     if (!game->powerupActive) return;
@@ -122,6 +228,8 @@ void drawPowerUp(Game* game, GameResources* resources) {
         WHITE);
 }
 
+
+//=====================Queue Structure==============================
 void updatePowerUp(Game* game, GameResources* resources) {
     if (!game->powerupActive) return;
 
@@ -139,6 +247,8 @@ void updatePowerUp(Game* game, GameResources* resources) {
     // Check if powerup went off screen
     if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
         game->powerupActive = false;
+        // Add delay before spawning next powerup (5-7 seconds)
+        game->powerupTimer = 5.0f + (rand() % 3);
         return;
     }
 
@@ -151,3 +261,4 @@ void updatePowerUp(Game* game, GameResources* resources) {
         activatePowerUp(game, resources);
     }
 }
+//=====================Queue Structure==============================
