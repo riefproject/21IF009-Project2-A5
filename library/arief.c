@@ -1,5 +1,6 @@
 #include "defines.h"
 #include "all.h"
+#define PRIMARY_COLOR (Color){0, 65, 57, 255}
 // =======================================
 //                Database 
 // =======================================
@@ -114,11 +115,7 @@ Game* createGameContext(void) {
 
     */
     game->activeEffectsCount = 0;
-    for (int i = 0; i < 3; i++) {
-        game->activePowerups[i].type = POWERUP_NONE;
-        game->activePowerups[i].duration = 0;
-        game->activePowerups[i].active = false;
-    }
+    game->activePowerups = *createQueue();
     game->bullets = (SingleLinkedList*)malloc(sizeof(SingleLinkedList));
     game->bullets->head = NULL;
     game->bullets->tail = NULL;
@@ -277,6 +274,11 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_CONFIRM, "assets/bg/BG_Confirm.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAIN, "assets/bg/BG_Plain.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, CREDIT_SCENE, "assets/bg/CreditScene.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, GAME_AREA, "assets/bg/GameArea.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, UI_AREA, "assets/bg/UIArea.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_LOADING, "assets/bg/BG_Loading.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, ICON_LOADING, "assets/icon/ICON_Loading.png"));
+    
 
     assets->Shooter = *shooterAssets();
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
@@ -302,6 +304,9 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/tx/Legend.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
+    system("cls");
+    printf("\e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
+    printf("Let the fun begin!\n\n");
 
     return assets;
 }
@@ -349,7 +354,6 @@ void unloadAndFree(SLLNode* head, TypeofAssets type) {
 void destroyAssets(Assets* assets) {
     if (!assets) return;
 
-
     // Unload sounds
     unloadAndFree(assets->sounds.head, TYPE_SOUND);
 
@@ -368,6 +372,7 @@ void destroyAssets(Assets* assets) {
 
     delete(assets);
 }
+
 
 /*    Core of Display
  * ====================== */
@@ -445,7 +450,7 @@ void mainWindow(void) {
         }
         switch (resources->currentState) {
         case STATE_LOADING:
-            if (loadingScreen(&loadingTime)) {
+            if (loadingScreen(resources, &loadingTime)) {
                 resources->currentState = STATE_MAIN_MENU;
             }
             break;
@@ -492,9 +497,9 @@ void drawBG(GameResources* resources, uint id) {
     DrawTextureEx(BG(resources, id), (Vector2) { xPos, 0 }, 0.0f, imgScale, WHITE);
 }
 
-int loadingScreen(float* loadingTime) {
+int loadingScreen(GameResources* resources, float* loadingTime) {
 
-    const int blockSize = 50;
+    const int blockSize = auto_x(50);
     const float stepDuration = 0.25f;
     const int totalSteps = 9;
     const float cycleDuration = stepDuration * totalSteps;
@@ -532,8 +537,8 @@ int loadingScreen(float* loadingTime) {
     float alpha = (elapsed - (currentStep * stepDuration)) / stepDuration;
 
     BeginDrawing();
-    ClearBackground(RAYWHITE);
-
+    ClearBackground(PRIMARY_COLOR);
+    drawBG(resources, BG_PLAIN);
     for (int i = 0; i < 4; i++) {
         Vector2 currentPos = steps[currentStep][i];
         Vector2 nextPos = steps[nextStep][i];
@@ -542,7 +547,7 @@ int loadingScreen(float* loadingTime) {
             currentPos.x + (nextPos.x - currentPos.x) * alpha,
             currentPos.y + (nextPos.y - currentPos.y) * alpha
         };
-        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color) { 34, 104, 8, 255 });
+        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color){9,88,78,255});
     }
     EndDrawing();
 
@@ -561,7 +566,7 @@ void showCredits(GameResources* resources) {
         scrollY -= scrollSpeed * GetFrameTime();
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_PLAIN);
 
         DrawTextureEx(BG(resources, CREDIT_SCENE), (Vector2) { xPos, scrollY }, 0.0f, creditScale, WHITE);
@@ -586,26 +591,26 @@ void mainMenu(GameResources* resources) {
     };
 
 
-    int fontSize = auto_y(30);
-    int spacing = auto_y(51);
+    int fontSize = auto_x(30);
+    int spacing = auto_x(51);
     int lineCount = len(lines);
     int selection = 0;
 
     while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         EndDrawing();
     }
 
     while (resources->currentState == STATE_MAIN_MENU && !WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
 
         drawBG(resources, BG_MAIN_MENU);
 
         float totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
+            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, auto_x(2));
             totalHeight += textSize.y + spacing;
         }
         totalHeight -= spacing;
@@ -613,10 +618,10 @@ void mainMenu(GameResources* resources) {
         int startY = auto_y(1023) * MIN_SCREEN_HEIGHT / BG(resources, BG_MAIN_MENU).height;
 
         for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, 2);
+            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, auto_x(2));
             int startX = (GetScreenWidth() - textSize.x) / 2;
 
-            DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? ORANGE : DARKGRAY);
+            DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, auto_x(2), selection == i ? ORANGE : DARKGRAY);
             startY += textSize.y + spacing;
         }
 
@@ -670,7 +675,7 @@ void showControls(GameResources* resources) {
 
     while (resources->currentState == STATE_CONTROLS && !WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONTROLS);
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
@@ -691,7 +696,7 @@ void showControls(GameResources* resources) {
         }
 
         int padding = auto_x(20);
-        int totalWidth = maxLabelWidth + 10 + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5 + maxValueWidth;
+        int totalWidth = maxLabelWidth + auto_x(10) + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5 + maxValueWidth;
         int startX = (GetScreenWidth() - totalWidth) / 2;
         if (startX < padding) { startX = padding; }
 
@@ -699,7 +704,7 @@ void showControls(GameResources* resources) {
         for (int i = 0; i < lineCount; i++) {
             char label[50], value[50];
             sscanf(lines[i], "%[^:]:%[^\n]", label, value);
-            int colonX = startX + maxLabelWidth + 10;
+            int colonX = startX + maxLabelWidth + auto_x(10);
             int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
             DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, RAYWHITE);
             DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
@@ -715,9 +720,9 @@ void showControls(GameResources* resources) {
             else {
                 infoText = "[A]: Main Menu    [F]: Settings";
             }
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f);
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? auto_x(12) : auto_x(20), 2.0f);
             int startXInfo = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, 560 }, (resources->prevState == STATE_PLAY) ? 15 : 20, 2.0f, RAYWHITE);
+            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, auto_y(560) }, (resources->prevState == STATE_PLAY) ? auto_x(12) : auto_x(20), 2.0f, RAYWHITE);
         }
         EndDrawing();
 
@@ -778,7 +783,7 @@ void showSettings(GameResources* resources) {
 
     while (resources->currentState == STATE_SETTINGS && !WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         {
             float imgScale = (float)GetScreenHeight() / BG(resources, BG_SETTINGS).height;
             float scaledWidth = BG(resources, BG_SETTINGS).width * imgScale;
@@ -803,7 +808,7 @@ void showSettings(GameResources* resources) {
         }
 
         int padding = auto_x(20);
-        int totalWidth = maxLabelWidth + 10 + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5 + maxValueWidth;
+        int totalWidth = maxLabelWidth + auto_x(10) + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + auto_x(5) + maxValueWidth;
         int startX = (GetScreenWidth() - totalWidth) / 2;
         if (startX < padding) { startX = padding; }
 
@@ -821,15 +826,15 @@ void showSettings(GameResources* resources) {
         y += 50;
         for (int i = 2; i < 5; ++i) {
             const char* optionText = lines[i];
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), optionText, 20, 2.0f);
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), optionText, auto_x(20), 2.0f);
             int startXOption = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), optionText, (Vector2) { startXOption, y }, 20, 2.0f, selection == i ? ORANGE : RAYWHITE);
-            y += 50;
+            DrawTextEx(FONT(resources, FONT_BODY), optionText, (Vector2) { startXOption, y }, auto_x(20), 2.0f, selection == i ? ORANGE : RAYWHITE);
+            y += auto_y(50);
         }
         {
             const char* infoText;
             if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
-                infoText = "[R]: Resume    [P]: Pause Menu    [F]: ke Controls";
+                infoText = "[B]: Back    [R]: Resume    [F]: Controls";
             }
             else {
                 infoText = "[A]: Main Menu    [F]: Controls";
@@ -956,7 +961,7 @@ void showHiScore(GameResources* resources) {
 
     while (resources->currentState == STATE_HIGH_SCORES && !WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_HIGHSCORES);
         int totalHeight = 0;
         for (int i = 0; i < lineCount; i++) {
@@ -1028,7 +1033,7 @@ bool confirmExit(GameResources* resources) {
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1101,7 +1106,7 @@ bool confirmBack(GameResources* resources) {
 
     while (deciding && !WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message1, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1244,7 +1249,7 @@ void countdownPause(GameResources* resources) {
             float scale = 2.5f - (2.5f - 1.0f) * (1.0f - timeInSecond);
 
             BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground(PRIMARY_COLOR);
             drawBG(resources, BG_PLAIN);
             char text[8];
             sprintf(text, "%d", currentNumber);
@@ -1301,7 +1306,7 @@ void selectMode(GameResources* resources) {
         }
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
 
         float imgScale = (float)GetScreenHeight() / BGMODE(resources, currentSelection).height;
         float scaledWidth = BGMODE(resources, currentSelection).width * imgScale;
@@ -1408,7 +1413,7 @@ bool confirmReset(GameResources* resources) {
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, fontSize, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1466,7 +1471,7 @@ void rejectReset(GameResources* resources) {
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONFIRM);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, 20, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1511,7 +1516,7 @@ void gameOver(GameResources* resources, ll currentScore) {
         if (countdown <= 0) canSelect = true;
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_PLAIN);
         Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, 30, 2);
         int startX = (GetScreenWidth() - textSize.x) / 2;
@@ -1532,22 +1537,10 @@ void gameOver(GameResources* resources, ll currentScore) {
                 newTagSize.y + auto_y(6)
             };
             DrawRectangle(newBox.x, newBox.y, newBox.width, newBox.height, ORANGE);
-            DrawTextEx(FONT(resources, FONT_BODY), newTag,
-                (Vector2) {
-                newBox.x + 5,
-                    newBox.y + 3
-            },
-                12, 2, WHITE);
-            startY += 25;
-        }
+            DrawTextEx(FONT(resources, FONT_BODY), newTag,(Vector2) {newBox.x + 5,newBox.y + 3},12, 2, WHITE);startY += 25;}
 
         // Draw High Score
-        DrawTextEx(FONT(resources, FONT_BODY), highScoreText,
-            (Vector2) {
-            (GetScreenWidth() - highScoreSize.x) / 2,
-                startY
-        },
-            fontSize, 2, RAYWHITE);
+        DrawTextEx(FONT(resources, FONT_BODY), highScoreText,(Vector2) {(GetScreenWidth() - highScoreSize.x) / 2,startY},fontSize, 2, RAYWHITE);
 
         // 3. Draw Current Score
         startY += 30;
@@ -1697,7 +1690,6 @@ void displayGame(GameResources* resources) {
         }
     }
 
-
     BeginDrawing();
     ClearBackground(WHITE);
 
@@ -1709,25 +1701,22 @@ void displayGame(GameResources* resources) {
     float gameAreaY = 0;
 
     // main game area
-    // DrawRectangle(gameAreaX, gameAreaY, gameWidth, GetScreenHeight(), (Color) { 236, 244, 255, 255 });
-
+    float imgScale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
+    DrawTexturePro(BG(resources, GAME_AREA), (Rectangle) { 0, 0, BG(resources, GAME_AREA).width, BG(resources, GAME_AREA).height },
+        (Rectangle) { gameAreaX, gameAreaY, gameWidth, GetScreenHeight() }, (Vector2) { 0, 0 }, 0.0f, WHITE);
+    
     float sidebarX = gameWidth;
     float sidebarWidth = GetScreenWidth() - gameWidth;
 
-    // Left border
-    DrawRectangle(sidebarX, 0, auto_x(3), GetScreenHeight(), (Color) { 27, 45, 4, 255 });
+    imgScale = (float)GetScreenHeight() / BG(resources, UI_AREA).height;
+    DrawTexturePro(BG(resources, UI_AREA), (Rectangle) { 0, 0, BG(resources, UI_AREA).width, BG(resources, UI_AREA).height },
+        (Rectangle) { sidebarX, 0, sidebarWidth, GetScreenHeight() }, (Vector2) { 0, 0 }, 0.0f, WHITE);
 
-    // Middle border
-    DrawRectangle(sidebarX + auto_x(3), 0, auto_x(7), GetScreenHeight(), (Color) { 65, 71, 71, 255 });
-
-    // UI area
-    // DrawRectangle(sidebarX + auto_x(10), 0, sidebarWidth - auto_x(10), GetScreenHeight(), (Color) { 25, 38, 47, 255 });
 
     // Bottom boundary 
-    // DrawRectangle(gameAreaX, gameHeight, gameWidth, auto_y(1), BLACK);
-    drawBG(resources, BG_PLAY);
+    DrawRectangle(gameAreaX, gameHeight, gameWidth, auto_y(1), RAYWHITE);
+    // drawBG(resources, BG_PLAY);
 
-    // (Color) { 25, 38, 47, 255 }
     drawBlocks(gameContext, resources);
     drawPowerUp(gameContext, resources);
 
@@ -1751,13 +1740,16 @@ void displayGame(GameResources* resources) {
 
     // Update powerups
     float deltaTime = GetFrameTime();
-    for (int i = 0; i < gameContext->activeEffectsCount; i++) {
-        if (gameContext->activePowerups[i].active) {
-            gameContext->activePowerups[i].duration -= deltaTime;
+    SLLNode* prev = NULL;
+    SLLNode* node = gameContext->activePowerups.Front;
+    while (node != NULL) {
+        PowerUp* powerup = (PowerUp*)node->data;
+        if (powerup && powerup->active) {
+            powerup->duration -= deltaTime;
 
-            if (gameContext->activePowerups[i].duration <= 0) {
+            if (powerup->duration <= 0) {
                 // Reverse efek
-                switch (gameContext->activePowerups[i].type) {
+                switch (powerup->type) {
                 case POWERUP_SPEED_UP:
                     gameContext->rowAddDelay *= 4;
                     break;
@@ -1765,17 +1757,30 @@ void displayGame(GameResources* resources) {
                     gameContext->rowAddDelay = (int)(gameContext->rowAddDelay / 2.5f);
                     break;
                 }
-
-                // Hapus efek
-                for (int j = i; j < gameContext->activeEffectsCount - 1; j++) {
-                    gameContext->activePowerups[j] = gameContext->activePowerups[j + 1];
+                // Remove node from queue
+                SLLNode* toDelete = node;
+                if (prev == NULL) {
+                    // Removing front
+                    gameContext->activePowerups.Front = node->next;
+                    node = node->next;
                 }
-                gameContext->activeEffectsCount--;
-                i--;
+                else {
+                    prev->next = node->next;
+                    node = node->next;
+                }
+                if (gameContext->activePowerups.Rear == toDelete) {
+                    gameContext->activePowerups.Rear = prev;
+                }
+                free(toDelete->data);
+                free(toDelete);
+                gameContext->activePowerups.size--;
+                continue;
             }
         }
+        prev = node;
+        node = node->next;
     }
-    // drawGameUI(gameContext, resources);
+    drawGameUI(gameContext, resources);
     if (gameContext->lives <= 0) {
         gameContext->gameOver = true;
         resources->currentState = STATE_GAME_OVER;
@@ -2234,13 +2239,17 @@ bool isValidGridPosition(int x, int y) {
 
 void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
     bool hasSpecialBullet = false;
-    for (int i = 0; i < game->activeEffectsCount; i++) {
-        if (game->activePowerups[i].active &&
-            game->activePowerups[i].type == POWERUP_SPECIAL_BULLET) {
+    SLLNode* node = game->activePowerups.Front;
+    while (node) {
+        PowerUp* powerup = (PowerUp*)node->data;
+        if (powerup && powerup->active &&
+            powerup->type == POWERUP_SPECIAL_BULLET) {
             hasSpecialBullet = true;
             break;
         }
+        node = node->next;
     }
+
 
     // cari target baris
     DLLNode* rowNode = game->grid->head;
@@ -2410,26 +2419,18 @@ void drawGameUI(Game* game, GameResources* resources) {
     const int mid = auto_x(405);
     const int linespacing = auto_y(30);
     int curY = 50;
-
+    float uiScale = (float)GetScreenHeight() / BG(resources, UI_AREA).height;
+    float gamescale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
+    float uiscaledWidth = BG(resources, UI_AREA).width * uiScale;
+    float gamescaledWidth = BG(resources, GAME_AREA).width * gamescale;
+    
     // Mode ==========================================================
     {
-        textSize = MeasureTextEx(GetFontDefault(), "MODE", 20, 2);
-        startX = mid - (textSize.x / 2);
-        DrawTextEx(GetFontDefault(), "MODE", (Vector2) { startX, curY }, 20, 2, WHITE);
-        curY += linespacing;
-
         sprintf(obj, "%s", gameMode(resources));
         textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+        float xPos = gamescaledWidth + (uiscaledWidth - textSize.x) / 2;
 
-        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
-
-        startX = rect.x + (rect.width - textSize.x) / 2;
-        int centerY = rect.y + (rect.height - textSize.y) / 2;
-
-        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-        curY += linespacing;
-        curY += auto_y(30);
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { xPos, auto_y(107) }, auto_x(18), 2, WHITE);
     }
     // High-Score ====================================================
     {
@@ -2449,155 +2450,124 @@ void drawGameUI(Game* game, GameResources* resources) {
                 newBox.x + 5,
                     newBox.y + auto_y(3)
             },
-                12, 2, WHITE);
+                auto_x(12), 2, WHITE);
         }
-        curY += auto_y(21);
-        textSize = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
-        startX = mid - (textSize.x / 2);
-        DrawTextEx(GetFontDefault(), "HIGH-SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
-        curY += linespacing;
-
 
         sprintf(obj, "%lld", getMax(resources->scores, game, resources));
         textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+        float xPos = gamescaledWidth + (uiscaledWidth - textSize.x) / 2;
 
-        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
-
-        startX = rect.x + (rect.width - textSize.x) / 2;
-        int centerY = rect.y + (rect.height - textSize.y) / 2;
-
-        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-        curY += linespacing;
-        curY += auto_y(30);
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { xPos, auto_y(215) }, auto_x(18), 2, WHITE);
     }
     // Score =========================================================
     {
-        textSize = MeasureTextEx(GetFontDefault(), "SCORE", 20, 2);
-        startX = mid - (textSize.x / 2);
-        DrawTextEx(GetFontDefault(), "SCORE", (Vector2) { startX, curY }, 20, 2, WHITE);
-        curY += linespacing;
-
-
         sprintf(obj, "%lld", playerScore(game));
-        textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
+        textSize = MeasureTextEx(GetFontDefault(), obj, auto_x(18), auto_x(2));
+        float xPos = gamescaledWidth + (uiscaledWidth - textSize.x) / 2;
 
-        Rectangle rect = { auto_x(345), curY - 5, auto_x(120), textSize.y + 10 };
-        DrawRectangle(rect.x, rect.y, rect.width, rect.height, (Color) { 214, 214, 214, 255 });
-
-        startX = rect.x + (rect.width - textSize.x) / 2;
-        int centerY = rect.y + (rect.height - textSize.y) / 2;
-
-        DrawTextEx(GetFontDefault(), obj, (Vector2) { startX, centerY }, 18, 2, WHITE);
-        curY += linespacing;
-        curY += auto_y(30);
+        DrawTextEx(GetFontDefault(), obj, (Vector2) { xPos, auto_y(305) }, auto_x(18), auto_x(2), WHITE);
     }
     {
-        textSize = MeasureTextEx(GetFontDefault(), "POWERUP", 20, 2);
-        startX = mid - (textSize.x / 2);
-        DrawTextEx(GetFontDefault(), "POWER-UP", (Vector2) { startX, curY }, 20, 2, ORANGE);
-        curY += linespacing;
-
         // Power-up icons container
-        {
-            const int ICON_SIZE = auto_x(40);   // Ukuran yang diinginkan untuk semua icon
+            {
+            const int ICON_SIZE = auto_x(35);   // Ukuran yang diinginkan untuk semua icon
             const int SPACING = auto_x(10);     // Spacing antar icon
             const int startIconX = auto_x(345); // Align left dengan hearts
 
-            // Draw active power-ups
-            for (int i = 0; i < game->activeEffectsCount; i++) {
-                if (game->activePowerups[i].active) {
+            // Draw active power-ups (Queue version)
+            int iconIdx = 0;
+            SLLNode* node = game->activePowerups.Front;
+            while (node) {
+                PowerUp* powerup = (PowerUp*)node->data;
+                if (powerup && powerup->active) {
                     Texture2D iconTexture;
                     Color timerColor;
                     float scale;
 
                     // Pilih texture, warna, dan scale berdasarkan tipe
-                    switch (game->activePowerups[i].type) {
+                    switch (powerup->type) {
                     case POWERUP_SPEED_UP:
                         iconTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
-                        scale = (float)ICON_SIZE / 640.0f;
+                        scale = (float)ICON_SIZE / TEXTURE(resources, TEXTURE_SPEEDUP).width;
                         timerColor = GREEN;
                         break;
                     case POWERUP_SLOW_DOWN:
                         iconTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
-                        scale = (float)ICON_SIZE / 1024.0f;
+                        scale = (float)ICON_SIZE / TEXTURE(resources, TEXTURE_SLOWDOWN).width;
                         timerColor = RED;
                         break;
                     case POWERUP_SPECIAL_BULLET:
                         iconTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET); // Temporary
-                        scale = (float)ICON_SIZE / 1024.0f;
+                        scale = (float)ICON_SIZE / TEXTURE(resources, TEXTURE_SPECIAL_BULLET).width;
                         timerColor = BLUE;
                         break;
                     default:
                         iconTexture = TEXTURE(resources, TEXTURE_RANDOM);
-                        scale = (float)ICON_SIZE / 1024.0f;
+                        scale = (float)ICON_SIZE / TEXTURE(resources, TEXTURE_RANDOM).width;
                         timerColor = WHITE;
                     }
 
-                    int iconX = startIconX + (i * (ICON_SIZE + SPACING));
+                    int iconX = startIconX + (iconIdx * (ICON_SIZE + SPACING));
 
                     // Draw icon
+                    curY= auto_y(380);
                     DrawTextureEx(iconTexture,
                         (Vector2) {
                         iconX, curY
                     },
                         0, scale, WHITE);
 
-                    // timer
+                    // Draw timer below icon
                     char timerText[8];
-                    sprintf(timerText, "%.1fs", game->activePowerups[i].duration);
+                    sprintf(timerText, "%.1fs", powerup->duration);
                     Vector2 timerSize = MeasureTextEx(GetFontDefault(), timerText, 15, 2);
                     float timerX = iconX + (ICON_SIZE - timerSize.x) / 2;
                     float timerY = curY + ICON_SIZE + 5;
 
-                    DrawTextEx(GetFontDefault(), timerText, (Vector2) { timerX, timerY }, 15, 2, timerColor);
+                    DrawTextEx(GetFontDefault(), timerText,
+                        (Vector2) {
+                        timerX, timerY
+                    },
+                        15, 2, timerColor);
+
+                    iconIdx++;
                 }
+                node = node->next;
             }
 
             curY += ICON_SIZE + auto_y(40);
         }
     }
-    textSize = MeasureTextEx(GetFontDefault(), "HITPOINT", 18, 2);
-    startX = mid - (textSize.x / 2);
-    DrawTextEx(GetFontDefault(), "HITPOINT", (Vector2) { auto_x(345), auto_y(480) - textSize.y }, 18, 2, WHITE);
-    curY += linespacing;
+
     for (int i = 0; i < game->lives; i++) {
-        float local_scale = 30.0f / 640.0f;
+        float local_scale = auto_x(30.0f) / 640.0f;
         DrawTextureEx(TEXTURE(resources, TEXTURE_HEART), (Vector2) {
-            auto_x(345) + (i * auto_x(35)), auto_y(480)
+            auto_x(345) + (i * auto_x(35)), auto_y(482)
         }, // posisi
             0,  // rotation
             local_scale, // local_scale factor
             WHITE);
     }
 
-    float local_scale = (float)auto_x(80.0f) / 640.0f;
-    Vector2 buttonPos = (Vector2){ auto_x(345), auto_y(540) };
-    Rectangle buttonRect = { buttonPos.x, buttonPos.y, TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale, TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale
-    };
+    float local_scale = (float)auto_x(80) * 1.0f / TEXTURE(resources, TEXTURE_LASER_BUTTON).width;
+    float imgSize = local_scale * TEXTURE(resources, TEXTURE_LASER_BUTTON).width;
+    float xPos = gamescaledWidth + (uiscaledWidth - imgSize) / 2;
+    Rectangle buttonRect = { xPos, auto_y(482), TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale, TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale};
 
     if (game->laserCooldown > 0) {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, (Color) { 255, 255, 255, 80 });
-
+        float buttonHeight = TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale;
+    
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2){xPos, auto_y(542)}, 0, local_scale, (Color) { 255, 255, 255, 150 });
+    
         char cooldownText[5];
         sprintf(cooldownText, "%.1f", game->laserCooldown);
-        Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, 20, 2);
-        float textX = buttonRect.x + (buttonRect.width - textSize.x) / 2;
-        float textY = buttonRect.y + (buttonRect.height - textSize.y) / 2;
-        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX, textY }, 20, 2, WHITE);
+        Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, auto_x(20), auto_x(2));
+        
+        float textX = xPos + (imgSize - textSize.x) / 2;
+        float textY = auto_y(542) + (buttonHeight - textSize.y) / 2;
+        
+        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX - auto_x(7), textY - auto_y(3)}, auto_x(20), auto_x(2), WHITE);
+    } else {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2){xPos, auto_y(542)}, 0, local_scale, WHITE);
     }
-    else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), buttonPos, 0, local_scale, WHITE);
-    }
-    textSize = MeasureTextEx(GetFontDefault(), "E", 15, 2);
-    float boxX = buttonRect.x + buttonRect.width - (textSize.x + auto_x(8)); // 8 untuk padding
-    float boxY = buttonRect.y + buttonRect.height - (textSize.y + auto_y(8));
-
-    DrawRectangle(boxX, boxY, textSize.x + auto_x(8), textSize.y + auto_y(8), DARKGRAY);
-    DrawTextEx(GetFontDefault(), "E",
-        (Vector2) {
-        boxX + auto_x(4),  // +4 untuk padding
-            boxY + auto_y(4)   // +4 untuk padding
-    },
-        15, 2, WHITE);
 }                                                                                                

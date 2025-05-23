@@ -166,6 +166,8 @@ typedef enum TextureAsset {
     TEXTURE_PLS1_HP,
     TEXTURE_SPECIAL_BULLET,
     TEXTURE_WHITE_ICON,
+    TEXTURE_SKIN_1,
+    TEXTURE_SKIN_2,
     TEXTURE_COUNT
 } TextureAsset;
 
@@ -179,6 +181,10 @@ typedef enum BgTextures {
     BG_CONFIRM,
     BG_PLAIN,
     CREDIT_SCENE,
+    GAME_AREA,
+    UI_AREA,
+    BG_LOADING,
+    ICON_LOADING,
     BG_COUNT
 }BgTextures;
 
@@ -267,14 +273,20 @@ typedef struct Assets {
     SingleLinkedList bg;        // Array untuk menyimpan background
     SingleLinkedList bgMode;    // Array untuk menyimpan background for mode
     SingleLinkedList txMode;    // Array untuk menyimpan text for mode
+    SingleLinkedList Shooter;    // Array untuk menyimpan text for mode
 } Assets;
-
+typedef struct InputAsset {
+    uint id;
+    void* data;
+}InputAsset;
 // Resources Function
 #ifndef ASSET_INPUT_HELPERS
 #define ASSET_INPUT_HELPERS
+void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight);
+InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
 Assets* createAssets(void);
-void* getAsset(SLLNode* node, uint id);
-void unloadAndFree(SLLNode* head, void (*unloadFunc)(void*));
+void* getAsset(SLLNode* head, uint id);
+void unloadAndFree(SLLNode* head, TypeofAssets type);
 void destroyAssets(Assets* assets);
 #endif
 
@@ -340,9 +352,4 @@ typedef struct Game {
 typedef struct openingTransition { // Ditambahkan oleh Faliq
     float progress; // Ditambahkan oleh Faliq
 }openingTransition;// Ditambahkan oleh Faliq
-
-typedef struct InputAsset {
-    uint id;
-    void* data;
-}InputAsset;
 #endif

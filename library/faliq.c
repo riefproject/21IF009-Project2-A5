@@ -11,27 +11,27 @@
 position P;
 Music soundGameplay;
 
-SingleLinkedList* shooterAssets(){
+SingleLinkedList* shooterAssets() {
     SingleLinkedList* list = new(SingleLinkedList);
-    if(list != NULL){
-    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
-    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
-    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
-    SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
+    if (list != NULL) {
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
     }
     return list;
 }
 
-Texture2D SLL_Shooter_top(GameResources* rsc){
+Texture2D SLL_Shooter_top(GameResources* rsc) {
     return SHOOTER_TOP
 }
-Texture2D SLL_Shooter_mid(GameResources* rsc){
+Texture2D SLL_Shooter_mid(GameResources* rsc) {
     return SHOOTER_MID
 }
-Texture2D SLL_Shooter_left(GameResources* rsc){
+Texture2D SLL_Shooter_left(GameResources* rsc) {
     return SHOOTER_LEFT
 }
-Texture2D SLL_Shooter_right(GameResources* rsc){
+Texture2D SLL_Shooter_right(GameResources* rsc) {
     return SHOOTER_RIGHT
 }
 
@@ -46,11 +46,12 @@ void shooter(int* x, int* y, GameResources* resources) {
 
     float imgScale = blockSize / (float)shooterM.width;
 
-    if(positionX + blockSize >= GAME_WIDTH){
+    if (positionX + blockSize >= GAME_WIDTH) {
         DrawTextureEx(shooterM, (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
         DrawTextureEx(shooterT, (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
         DrawTextureEx(shooterL, (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
-    }else {
+    }
+    else {
         DrawTextureEx(shooterL, (Vector2) { positionX - blockSize, positionY }, 0, imgScale, WHITE);
         DrawTextureEx(shooterM, (Vector2) { positionX, positionY }, 0, imgScale, WHITE);
         DrawTextureEx(shooterT, (Vector2) { positionX, positionY - blockSize }, 0, imgScale, WHITE);
@@ -149,33 +150,29 @@ Color fadeOutOpeningAnimation(float* trans) {
 void openingAnimation(float* trans, GameResources* resources) {
     BeginDrawing();
 
-    Texture2D icon = TEXTURE(resources, TEXTURE_WHITE_ICON);
+    Texture2D icon = BG(resources, ICON_LOADING);
 
-    float targetWidth = 400;
-    float scaleFactor = targetWidth / icon.width;
-    float scaledWidth = icon.width * scaleFactor;
-    float scaledHeight = icon.height * scaleFactor;
-
+    float imgScale = (float)GetScreenHeight() / icon.height;
+    float scaledWidth = icon.width * imgScale;
     int iconX = (GetScreenWidth() - scaledWidth) / 2;
-    int iconY = (GetScreenHeight() - scaledHeight) / 2;
 
     while (*trans < 1.0f) {
         BeginDrawing();
         ClearBackground(fadeInOpeningAnimation(trans));
-        DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
+        DrawTextureEx(icon, (Vector2) { iconX, 0 }, 0.0f, imgScale, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
         EndDrawing();
     }
 
     BeginDrawing();
     ClearBackground(WHITE);
-    DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, WHITE);
+    DrawTextureEx(icon, (Vector2) { iconX, 0 }, 0.0f, imgScale, WHITE);
     EndDrawing();
     WaitTime(1);
 
     while (*trans > 0.0f) {
         BeginDrawing();
         ClearBackground(fadeOutOpeningAnimation(trans));
-        DrawTextureEx(icon, (Vector2) { iconX, iconY }, 0.0f, scaleFactor, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
+        DrawTextureEx(icon, (Vector2) { iconX, 0 }, 0.0f, imgScale, (Color) { 255, 255, 255, (unsigned char)(*trans * 255) });
         EndDrawing();
     }
 }

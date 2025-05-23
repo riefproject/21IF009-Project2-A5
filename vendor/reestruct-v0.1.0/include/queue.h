@@ -27,7 +27,7 @@ RSTAPI uint getQueueSize(Queue* queue);
 
 /*     QUEUE OPERATIONS
  * ==================== */
-RSTAPI void Enqueue(Queue* queue, void* data);
+RSTAPI void enqueue(Queue* queue, void* data);
 RSTAPI void* Dequeue(Queue* queue);
 RSTAPI void* Queue_Peek(Queue* queue);
 

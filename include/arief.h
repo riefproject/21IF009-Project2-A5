@@ -29,7 +29,7 @@ void destroyAssets(Assets* assets);
 // =====================================================================
 
 /* Fungsi-fungsi untuk menangani tampilan dan menu */
-int loadingScreen(float* loadingTime);          // Menampilkan layar loading
+int loadingScreen(GameResources* resources, float* loadingTime);          // Menampilkan layar loading
 void mainWindow(void);                          // Menampilkan jendela utama
 void mainMenu(GameResources* resources);        // Menampilkan menu utama
 void resetHiScores(GameResources* resources);   // Reset skor tertinggi
