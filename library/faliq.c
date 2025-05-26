@@ -4,35 +4,42 @@
 #define SHOOTER_STEP auto_x(32)
 #define GAME_WIDTH (BLOCK_SIZE * MAX_COLUMNS)
 #define GAME_HEIGHT (BLOCK_SIZE * MAX_ROWS)
-#define SHOOTER_TOP (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_T))));
-#define SHOOTER_MID (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_M))));
-#define SHOOTER_LEFT (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_L))));
-#define SHOOTER_RIGHT (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (TEXTURE_SHOOTER_R))));
+// base texture skin. skin dijamin >= 0. dikalikan 4 karena terdapat 4 texture untuk setiap skin 
+#define SHOOTER_LEFT(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_L + (skin*4)))));
+#define SHOOTER_RIGHT(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_R + (skin*4)))));
+#define SHOOTER_MID(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_M + (skin*4)))));
+#define SHOOTER_TOP(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_T + (skin*4)))));
 position P;
 Music soundGameplay;
 
 SingleLinkedList* shooterAssets() {
     SingleLinkedList* list = new(SingleLinkedList);
     if (list != NULL) {
-        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
-        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
-        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
-        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
+        // SKIN 1
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_1_L, "assets/sprites/shooter1l.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_1_M, "assets/sprites/shooter1m.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_1_R, "assets/sprites/shooter1r.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_1_T, "assets/sprites/shooter1t.png"));
+        // SKIN 2
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_2_L, "assets/sprites/shooter2l.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_2_M, "assets/sprites/shooter2m.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_2_R, "assets/sprites/shooter2r.png"));
+        SLL_insertFront(list, inputAssets(TYPE_TEXTURE, SHOOTER_SKIN_2_T, "assets/sprites/shooter2t.png"));
     }
     return list;
 }
 
 Texture2D SLL_Shooter_top(GameResources* rsc) {
-    return SHOOTER_TOP
+    return SHOOTER_TOP(rsc->settings.skin)
 }
 Texture2D SLL_Shooter_mid(GameResources* rsc) {
-    return SHOOTER_MID
+    return SHOOTER_MID(rsc->settings.skin)
 }
 Texture2D SLL_Shooter_left(GameResources* rsc) {
-    return SHOOTER_LEFT
+    return SHOOTER_LEFT(rsc->settings.skin)
 }
 Texture2D SLL_Shooter_right(GameResources* rsc) {
-    return SHOOTER_RIGHT
+    return SHOOTER_RIGHT(rsc->settings.skin)
 }
 
 void shooter(int* x, int* y, GameResources* resources) {

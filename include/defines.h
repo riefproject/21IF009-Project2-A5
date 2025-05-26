@@ -153,10 +153,6 @@ typedef enum FontAsset {
 typedef enum TextureAsset {
     TEXTURE_BLOCK,
     TEXTURE_BULLET,
-    TEXTURE_SHOOTER_L,
-    TEXTURE_SHOOTER_R,
-    TEXTURE_SHOOTER_M,
-    TEXTURE_SHOOTER_T,
     TEXTURE_HEART,
     TEXTURE_LASER_BUTTON,
     TEXTURE_RANDOM,
@@ -166,10 +162,27 @@ typedef enum TextureAsset {
     TEXTURE_PLS1_HP,
     TEXTURE_SPECIAL_BULLET,
     TEXTURE_WHITE_ICON,
-    TEXTURE_SKIN_1,
-    TEXTURE_SKIN_2,
     TEXTURE_COUNT
 } TextureAsset;
+
+typedef enum Skin {
+    TEXTURE_SKIN_1 = TEXTURE_COUNT,
+    TEXTURE_SKIN_2,
+    TEXTURE_SKIN_COUNT
+} Skin;
+
+
+typedef enum TextureSkin {
+    SHOOTER_SKIN_1_L = TEXTURE_SKIN_COUNT,
+    SHOOTER_SKIN_1_M,
+    SHOOTER_SKIN_1_R,
+    SHOOTER_SKIN_1_T,
+    SHOOTER_SKIN_2_L,
+    SHOOTER_SKIN_2_M,
+    SHOOTER_SKIN_2_R,
+    SHOOTER_SKIN_2_T,
+    SHOOTER_SKIN_COUNT
+} TextureSkin;
 
 typedef enum BgTextures {
     BG_PLAY,
@@ -246,6 +259,7 @@ typedef struct Settings {
     int music;   // Status musik
     int sfx;     // Status efek suara
     int mode;    // Mode permainan
+    uint skin;    // Skin yang digunakan
 } Settings;
 
 /* Struktur Shooter:

@@ -11,6 +11,7 @@ void loadSettings(Settings* settings) {
         settings->music = 1;
         settings->sfx = 1;
         settings->mode = 1;
+        settings->skin = 0;
         return;
     }
 
@@ -27,6 +28,9 @@ void loadSettings(Settings* settings) {
         else if (strcmp(key, "mode") == 0) {
             settings->mode = value;
         }
+        else if (strcmp(key, "skin") == 0) {
+            settings->skin = value;
+        }
     }
     fclose(file);
 }
@@ -41,6 +45,7 @@ void saveSettings(Settings settings) {
     fprintf(file, "music,%d\n", settings.music);
     fprintf(file, "sfx,%d\n", settings.sfx);
     fprintf(file, "mode,%d\n", settings.mode);
+    fprintf(file, "skin,%d\n", settings.skin);
 
     fclose(file);
 }
@@ -246,10 +251,6 @@ Assets* createAssets(void) {
     // Load textures
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BLOCK, "assets/sprites/block.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_BULLET, "assets/sprites/bullet_brick.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_L, "assets/sprites/shooter1.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_R, "assets/sprites/shooter2.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_M, "assets/sprites/shooter3.png"));
-    SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_SHOOTER_T, "assets/sprites/shooter4.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_HEART, "assets/sprites/heart.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_LASER_BUTTON, "assets/sprites/laser_button.png"));
     SLL_insertFront(&assets->textures, inputAssets(TYPE_TEXTURE, TEXTURE_RANDOM, "assets/sprites/random.png"));
@@ -278,7 +279,7 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, UI_AREA, "assets/bg/UIArea.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_LOADING, "assets/bg/BG_Loading.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, ICON_LOADING, "assets/icon/ICON_Loading.png"));
-    
+
 
     assets->Shooter = *shooterAssets();
     SLL_insertFront(&assets->bgMode, inputAssets(TYPE_TEXTURE, BGMODE_SUPER_EZ, "assets/bg/mode/SuperEZ.png"));
@@ -328,23 +329,23 @@ void unloadAndFree(SLLNode* head, TypeofAssets type) {
     while (temp) {
         InputAsset* asset = (InputAsset*)temp->data;
         if (asset && asset->data) {
-            switch(type){
-                case TYPE_SOUND: {
-                    UnloadSound(*(Sound*)asset->data);
-                    break;
-                }
-                case TYPE_FONT: {
-                    UnloadFont(*(Font*)asset->data);
-                    break;
-                }
-                case TYPE_TEXTURE: {
-                    UnloadTexture(*(Texture2D*)asset->data);
-                    break;
-                }
-                default: {
-                    printf("Unknown asset type.\n");
-                    break;
-                }
+            switch (type) {
+            case TYPE_SOUND: {
+                UnloadSound(*(Sound*)asset->data);
+                break;
+            }
+            case TYPE_FONT: {
+                UnloadFont(*(Font*)asset->data);
+                break;
+            }
+            case TYPE_TEXTURE: {
+                UnloadTexture(*(Texture2D*)asset->data);
+                break;
+            }
+            default: {
+                printf("Unknown asset type.\n");
+                break;
+            }
             }
         }
         temp = temp->next;
@@ -361,7 +362,7 @@ void destroyAssets(Assets* assets) {
     unloadAndFree(assets->fonts.head, TYPE_FONT);
 
     // Unload textures
-    unloadAndFree(assets->textures.head,TYPE_TEXTURE);
+    unloadAndFree(assets->textures.head, TYPE_TEXTURE);
 
     // Unload backgrounds
     unloadAndFree(assets->bg.head, TYPE_TEXTURE);
@@ -547,7 +548,7 @@ int loadingScreen(GameResources* resources, float* loadingTime) {
             currentPos.x + (nextPos.x - currentPos.x) * alpha,
             currentPos.y + (nextPos.y - currentPos.y) * alpha
         };
-        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color){9,88,78,255});
+        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color) { 9, 88, 78, 255 });
     }
     EndDrawing();
 
@@ -1276,7 +1277,7 @@ void selectMode(GameResources* resources) {
     float transition = 0.0f;
     float transitionSpeed = 4.0f; // Kecepatan transisi, bisa disesuaikan
     int transitionDirection = 0;  // -1 untuk kiri, 1 untuk kanan
-    int skin = TEXTURE_SKIN_1; // 15
+    int skin = resources->settings.skin + TEXTURE_COUNT;
     int currentSkin = skin;
     int targetSkin = skin;
     float skinTransition = 0.0f;
@@ -1284,7 +1285,7 @@ void selectMode(GameResources* resources) {
 
     while (selecting && !WindowShouldClose()) {
         float deltaTime = GetFrameTime();
-        
+
         // Update transisi mode
         if (transition < 1.0f && transitionDirection != 0) {
             transition += deltaTime * transitionSpeed;
@@ -1329,29 +1330,30 @@ void selectMode(GameResources* resources) {
         DrawTextureEx(TXMODE(resources, currentSelection), (Vector2) { baseXPos, 0 }, 0.0f, imgScale, WHITE);
 
         // Di dalam fungsi selectMode()
-        
+
         { //select skin
             float skin_scaledWidth = (float)120 / TEXTURE(resources, skin).width;
             float centerX = (GetScreenWidth() - TEXTURE(resources, skin).width * skin_scaledWidth) / 2;
             float centerY = (GetScreenHeight() - TEXTURE(resources, skin).height * skin_scaledWidth) / 2;
-            
+
             float currentSkinY = centerY + auto_y(120);
             float baseSkinX = centerX;
-            
+
             if (skinTransitionDirection != 0) {
                 // Hitung posisi untuk current dan target skin (horizontal)
                 float currentOffset = skinTransitionDirection * GetScreenWidth() * skinTransition;
                 float targetOffset = skinTransitionDirection * GetScreenWidth() * (skinTransition - 1.0f);
-                
+
                 // Draw current skin
-                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2){baseSkinX + currentOffset, currentSkinY}, 0.0f, skin_scaledWidth, Fade(WHITE, 1.0f - skinTransition));
-        
+                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2) { baseSkinX + currentOffset, currentSkinY }, 0.0f, skin_scaledWidth, Fade(WHITE, 1.0f - skinTransition));
+
                 // Draw target skin
                 float targetScaledWidth = (float)120 / TEXTURE(resources, targetSkin).width;
-                DrawTextureEx(TEXTURE(resources, targetSkin), (Vector2){baseSkinX + targetOffset, currentSkinY}, 0.0f, targetScaledWidth, Fade(WHITE, skinTransition));
-            } else {
+                DrawTextureEx(TEXTURE(resources, targetSkin), (Vector2) { baseSkinX + targetOffset, currentSkinY }, 0.0f, targetScaledWidth, Fade(WHITE, skinTransition));
+            }
+            else {
                 // Normal drawing when not transitioning
-                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2){baseSkinX, currentSkinY}, 0.0f, skin_scaledWidth, WHITE);
+                DrawTextureEx(TEXTURE(resources, currentSkin), (Vector2) { baseSkinX, currentSkinY }, 0.0f, skin_scaledWidth, WHITE);
             }
         }
         EndDrawing();
@@ -1390,6 +1392,7 @@ void selectMode(GameResources* resources) {
                 resources->currentState = STATE_PLAY;
                 selecting = false;
                 resources->settings.mode = currentSelection;
+                resources->settings.skin = currentSkin - TEXTURE_SKIN_1; // 15
                 saveSettings(resources->settings);
                 resources->gameLevel = currentSelection;
                 countdownPause(resources);
@@ -1537,10 +1540,11 @@ void gameOver(GameResources* resources, ll currentScore) {
                 newTagSize.y + auto_y(6)
             };
             DrawRectangle(newBox.x, newBox.y, newBox.width, newBox.height, ORANGE);
-            DrawTextEx(FONT(resources, FONT_BODY), newTag,(Vector2) {newBox.x + 5,newBox.y + 3},12, 2, WHITE);startY += 25;}
+            DrawTextEx(FONT(resources, FONT_BODY), newTag, (Vector2) { newBox.x + 5, newBox.y + 3 }, 12, 2, WHITE);startY += 25;
+        }
 
         // Draw High Score
-        DrawTextEx(FONT(resources, FONT_BODY), highScoreText,(Vector2) {(GetScreenWidth() - highScoreSize.x) / 2,startY},fontSize, 2, RAYWHITE);
+        DrawTextEx(FONT(resources, FONT_BODY), highScoreText, (Vector2) { (GetScreenWidth() - highScoreSize.x) / 2, startY }, fontSize, 2, RAYWHITE);
 
         // 3. Draw Current Score
         startY += 30;
@@ -1703,14 +1707,18 @@ void displayGame(GameResources* resources) {
     // main game area
     float imgScale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
     DrawTexturePro(BG(resources, GAME_AREA), (Rectangle) { 0, 0, BG(resources, GAME_AREA).width, BG(resources, GAME_AREA).height },
-        (Rectangle) { gameAreaX, gameAreaY, gameWidth, GetScreenHeight() }, (Vector2) { 0, 0 }, 0.0f, WHITE);
-    
+        (Rectangle) {
+        gameAreaX, gameAreaY, gameWidth, GetScreenHeight()
+    }, (Vector2) { 0, 0 }, 0.0f, WHITE);
+
     float sidebarX = gameWidth;
     float sidebarWidth = GetScreenWidth() - gameWidth;
 
     imgScale = (float)GetScreenHeight() / BG(resources, UI_AREA).height;
     DrawTexturePro(BG(resources, UI_AREA), (Rectangle) { 0, 0, BG(resources, UI_AREA).width, BG(resources, UI_AREA).height },
-        (Rectangle) { sidebarX, 0, sidebarWidth, GetScreenHeight() }, (Vector2) { 0, 0 }, 0.0f, WHITE);
+        (Rectangle) {
+        sidebarX, 0, sidebarWidth, GetScreenHeight()
+    }, (Vector2) { 0, 0 }, 0.0f, WHITE);
 
 
     // Bottom boundary 
@@ -2423,7 +2431,7 @@ void drawGameUI(Game* game, GameResources* resources) {
     float gamescale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
     float uiscaledWidth = BG(resources, UI_AREA).width * uiScale;
     float gamescaledWidth = BG(resources, GAME_AREA).width * gamescale;
-    
+
     // Mode ==========================================================
     {
         sprintf(obj, "%s", gameMode(resources));
@@ -2469,7 +2477,7 @@ void drawGameUI(Game* game, GameResources* resources) {
     }
     {
         // Power-up icons container
-            {
+        {
             const int ICON_SIZE = auto_x(35);   // Ukuran yang diinginkan untuk semua icon
             const int SPACING = auto_x(10);     // Spacing antar icon
             const int startIconX = auto_x(345); // Align left dengan hearts
@@ -2510,7 +2518,7 @@ void drawGameUI(Game* game, GameResources* resources) {
                     int iconX = startIconX + (iconIdx * (ICON_SIZE + SPACING));
 
                     // Draw icon
-                    curY= auto_y(380);
+                    curY = auto_y(380);
                     DrawTextureEx(iconTexture,
                         (Vector2) {
                         iconX, curY
@@ -2552,22 +2560,29 @@ void drawGameUI(Game* game, GameResources* resources) {
     float local_scale = (float)auto_x(80) * 1.0f / TEXTURE(resources, TEXTURE_LASER_BUTTON).width;
     float imgSize = local_scale * TEXTURE(resources, TEXTURE_LASER_BUTTON).width;
     float xPos = gamescaledWidth + (uiscaledWidth - imgSize) / 2;
-    Rectangle buttonRect = { xPos, auto_y(482), TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale, TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale};
+    Rectangle buttonRect = { xPos, auto_y(482), TEXTURE(resources, TEXTURE_LASER_BUTTON).width * local_scale, TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale };
 
     if (game->laserCooldown > 0) {
         float buttonHeight = TEXTURE(resources, TEXTURE_LASER_BUTTON).height * local_scale;
-    
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2){xPos, auto_y(542)}, 0, local_scale, (Color) { 255, 255, 255, 150 });
-    
+
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2) { xPos, auto_y(542) }, 0, local_scale, (Color) { 255, 255, 255, 150 });
+
         char cooldownText[5];
         sprintf(cooldownText, "%.1f", game->laserCooldown);
         Vector2 textSize = MeasureTextEx(GetFontDefault(), cooldownText, auto_x(20), auto_x(2));
-        
+
         float textX = xPos + (imgSize - textSize.x) / 2;
         float textY = auto_y(542) + (buttonHeight - textSize.y) / 2;
-        
-        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX - auto_x(7), textY - auto_y(3)}, auto_x(20), auto_x(2), WHITE);
-    } else {
-        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2){xPos, auto_y(542)}, 0, local_scale, WHITE);
+
+        DrawTextEx(GetFontDefault(), cooldownText, (Vector2) { textX - auto_x(7), textY - auto_y(3) }, auto_x(20), auto_x(2), WHITE);
     }
-}                                                                                                
+    else {
+        DrawTextureEx(TEXTURE(resources, TEXTURE_LASER_BUTTON), (Vector2) { xPos, auto_y(542) }, 0, local_scale, WHITE);
+    }
+}
+
+// 
+// SELECT SKIN
+// 
+
+void* hehe;
