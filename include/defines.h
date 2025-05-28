@@ -111,7 +111,7 @@ struct openingTransition;
 
 
 // Debug Helper
-#define DBG printf("Haiiii");
+#define DBG printf("[LOG] Haiiii");
 
 typedef unsigned int uint;
 typedef long long int ll;
@@ -328,7 +328,7 @@ typedef struct PowerUp {
 typedef struct GameResources {
     Assets* assets;                    // Pointer ke aset game
     Settings settings;                 // Pengaturan game
-    HiScore scores[MAX_LEVELS];        // Array skor tertinggi
+    SingleLinkedList scores;        // Array skor tertinggi
     GameState currentState;            // Status game saat ini
     GameState prevState;              // Status game sebelumnya
     int gameLevel;                    // Level game saat ini

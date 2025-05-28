@@ -60,7 +60,7 @@ Atau untuk lebih efisien (khusus kebutuhan):
 #include <stdio.h>
 
 void printInt(void* data) {
-    printf("%d ", *(int*)data);
+    printf("[LOG] %d ", *(int*)data);
 }
 
 int main() {

@@ -32,8 +32,8 @@ const char* levelNames[] = {
 SingleLinkedList* initializeDb() {
     FILE* file = fopen("db/hiscores.dat", "w");
     if (!file) {
-        printf("Database belum dibuat!\n");
-        return;
+        printf("[LOG] Database belum dibuat!\n");
+        return NULL;
     }
     SingleLinkedList* list = createSingleLinkedList();
 
@@ -51,7 +51,7 @@ SingleLinkedList* initializeDb() {
 SingleLinkedList* loadHiScores() {
     FILE* file = fopen("db/hiscores.dat", "r");
     if (!file) {
-        printf("File tidak ditemukan! Menggunakan default skor 0.\n");
+        printf("[LOG] File tidak ditemukan! Menggunakan default skor 0.\n");
         return initializeDb();
     }
 
@@ -60,42 +60,72 @@ SingleLinkedList* loadHiScores() {
     long long int score;
 
     while (fscanf(file, "%[^,],%lld\n", mode, &score) != EOF) {
-        HiScore* score = (HiScore*)malloc(sizeof(HiScore));
-        strcpy(score->mode, mode);
-        score->score = score;
-        SLL_insertBack(list, score);
+        HiScore* hscore = (HiScore*)malloc(sizeof(HiScore));
+        strcpy(hscore->mode, mode);  // Pake hscore, bukan score
+        hscore->score = score;       // Assign score value ke hscore->score
+        SLL_insertBack(list, hscore); // Insert hscore, bukan score
     }
     fclose(file);
     return list;
 }
 
 void saveHiScores(SingleLinkedList* list) {
-    FILE* file = fopen("db/hiscores.dat", "w");
-    if (!file) {
-        printf("Gagal menyimpan skor!\n");
+    if (!list || !list->head) {
+        printf("[LOG] Invalid list - tidak menyimpan skor!\n");
         return;
     }
 
-    SLLNode* temp = SLL_getFront(list);
-    while (temp) {
-        HiScore* score = (HiScore*)SLL_getNodeData(temp);
-        fprintf(file, "%s,%lld\n", score->mode, score->score);
-        temp = SLL_getNextNode(temp);
+    FILE* file = fopen("db/hiscores.dat", "w");
+    if (!file) {
+        printf("[LOG] Gagal menyimpan skor!\n");
+        return;
     }
 
+    for (int i = 0; i < MAX_LEVELS; ++i) {
+        char* curMode = levelNames[i];
+        ll curScore = 0;
+        bool found = false;
+
+        SLLNode* temp = list->head;
+        while (temp != NULL) {
+            HiScore* score = (HiScore*)SLL_getNodeData(temp);
+            if (score && score->mode && strcmp(score->mode, curMode) == 0) {
+                curScore = score->score;
+                found = true;
+                break;
+            }
+            temp = SLL_getNextNode(temp);
+        }
+
+        // Debug: Print if mode not found
+        if (!found) {
+            printf("[LOG] Warning: Mode '%s' not found in scores list\n", curMode);
+        }
+
+        // Validate fprintf result
+        if (fprintf(file, "%s,%lld\n", curMode, curScore) < 0) {
+            printf("[LOG] Error writing to file for mode: %s\n", curMode);
+            fclose(file);
+            return;
+        }
+    }
+
+    // Ensure data is written to disk
+    fflush(file);
     fclose(file);
+    printf("[LOG] High scores saved successfully\n"); // Debug confirmation
 }
 
 void updateHighScore(Game* game, GameResources* resources) {
     if (!game) return;
 
-    SingleLinkedList* list = loadHiScores();
-    SLLNode* temp = SLL_getFront(list);
+    // Use existing scores instead of loading new ones
+    SLLNode* temp = resources->scores.head;  // ⚠️ No validation here
     const char* mode = levelNames[resources->gameLevel];
 
     while (temp) {
         HiScore* score = (HiScore*)SLL_getNodeData(temp);
-        if (strcmp(score->mode, mode) == 0) {
+        if (strcmp(score->mode, mode) == 0) {  // ⚠️ No null check for score
             if (score->score < game->score) {
                 score->score = game->score;
             }
@@ -103,9 +133,10 @@ void updateHighScore(Game* game, GameResources* resources) {
         }
         temp = SLL_getNextNode(temp);
     }
-    saveHiScores(list);
-}
 
+    // Save the existing scores structure
+    saveHiScores(&resources->scores);  // ⚠️ Passes empty/invalid list
+}
 void addScore(Game* game, int row) {
     int basePoints = 20;
     int rowMultiplier = row + 1; // Semakin bawah multiplier semakin besar

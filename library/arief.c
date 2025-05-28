@@ -1,13 +1,14 @@
 #include "defines.h"
 #include "all.h"
 #define PRIMARY_COLOR (Color){0, 65, 57, 255}
+
 // =======================================
 //                Database 
 // =======================================
 void loadSettings(Settings* settings) {
     FILE* file = fopen("db/settings.dat", "r");
     if (!file) {
-        printf("File tidak ditemukan! Menggunakan default settings.\n");
+        printf("[LOG] File tidak ditemukan! Menggunakan default settings.\n");
         settings->music = 1;
         settings->sfx = 1;
         settings->mode = 1;
@@ -38,7 +39,7 @@ void loadSettings(Settings* settings) {
 void saveSettings(Settings settings) {
     FILE* file = fopen("db/settings.dat", "w");
     if (!file) {
-        printf("Gagal menyimpan settings!\n");
+        printf("[LOG] Gagal menyimpan settings!\n");
         return;
     }
 
@@ -182,7 +183,7 @@ void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight)
 InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
     InputAsset* metadata = malloc(sizeof(InputAsset));
     if (!metadata) {
-        printf("Failed to allocate memory for InputAsset.\n");
+        printf("[LOG] Failed to allocate memory for InputAsset.\n");
         return NULL;
     }
 
@@ -192,7 +193,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
     case TYPE_SOUND: {
         metadata->data = malloc(sizeof(Sound));
         if (!metadata->data) {
-            printf("Failed to allocate memory for Sound.\n");
+            printf("[LOG] Failed to allocate memory for Sound.\n");
             delete(metadata);
             return NULL;
         }
@@ -202,7 +203,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
     case TYPE_FONT: {
         metadata->data = malloc(sizeof(Font));
         if (!metadata->data) {
-            printf("Failed to allocate memory for Font.\n");
+            printf("[LOG] Failed to allocate memory for Font.\n");
             delete(metadata);
             return NULL;
         }
@@ -212,7 +213,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
     case TYPE_TEXTURE: {
         metadata->data = malloc(sizeof(Texture2D));
         if (!metadata->data) {
-            printf("Failed to allocate memory for Texture2D.\n");
+            printf("[LOG] Failed to allocate memory for Texture2D.\n");
             delete(metadata);
             return NULL;
         }
@@ -220,7 +221,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
         break;
     }
     default: {
-        printf("Unknown asset type.\n");
+        printf("[LOG] Unknown asset type.\n");
         delete(metadata);
         return NULL;
     }
@@ -306,8 +307,8 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
     system("cls");
-    printf("\e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
-    printf("Let the fun begin!\n\n");
+    printf("[LOG] \e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
+    printf("[LOG] Let the fun begin!\n\n");
 
     return assets;
 }
@@ -343,12 +344,12 @@ void unloadAndFree(SLLNode* head, TypeofAssets type) {
                 break;
             }
             default: {
-                printf("Unknown asset type.\n");
+                printf("[LOG] Unknown asset type.\n");
                 break;
             }
             }
         }
-        temp = temp->next;
+        temp = SLL_getNextNode(temp);
     }
 }
 
@@ -381,18 +382,12 @@ void destroyAssets(Assets* assets) {
 void mainWindow(void) {
     GameResources* resources = malloc(sizeof(GameResources));
     if (!resources) {
-        printf("Failed to allocate resources!\n");
+        printf("[LOG] Failed to allocate resources!\n");
         return;
     }
 
     loadSettings(&resources->settings);
-    loadHiScores(resources->scores);
-
-    if (!resources->assets) {
-        delete(resources);
-        printf("Failed to create assets!\n");
-        return;
-    }
+    resources->scores = *loadHiScores();
 
     float loadingTime = 0.0f;
 
@@ -412,7 +407,11 @@ void mainWindow(void) {
     musicGameplay(resources); // Ditambahkan faliq
     SetTargetFPS(60);
     resources->assets = createAssets();
-
+    if (!resources->assets) {
+        delete(resources);
+        printf("[LOG] Failed to create assets!\n");
+        return;
+    }
     SetMusicVolume(soundGameplay, resources->settings.sfx ? 0.5f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_MOVE), resources->settings.sfx ? 1.0f : 0.0f);
     SetSoundVolume(SOUND(resources, SOUND_SELECT), resources->settings.sfx ? 1.0f : 0.0f);
@@ -951,11 +950,27 @@ void showHiScore(GameResources* resources) {
 
     int fontSize = auto_y(20);
     int spacing = auto_x(4);
-    loadHiScores(resources->scores);
+    resources->scores = *loadHiScores();
 
     char lines[MAX_LEVELS][65];
-    for (int i = 0; i < MAX_LEVELS; i++) {
-        snprintf(lines[i], sizeof(lines[i]), "%s: %lld", resources->scores[i].mode, resources->scores[i].score);
+
+    // for (int i = 0; i < MAX_LEVELS; i++) {
+    //     snprintf(lines[i], sizeof(lines[i]), "%s: %lld", resources->scores[i].mode, resources->scores[i].score);
+    // }
+
+    extern char* levelNames[];
+    int i = 0;
+    while (i < MAX_LEVELS) {  // Simplified loop structure
+        SLLNode* searchName = resources->scores.head;
+        while (searchName != NULL) {
+            HiScore* searchScore = (HiScore*)searchName->data;
+            if (strcmp(searchScore->mode, levelNames[i]) == 0) {
+                snprintf(lines[i], sizeof(lines[i]), "%s: %lld", searchScore->mode, searchScore->score);
+                break;
+            }
+            searchName = searchName->next;
+        }
+        i++;
     }
 
     int lineCount = len(lines);
@@ -1084,7 +1099,7 @@ bool confirmExit(GameResources* resources) {
 
 void exitGame(GameResources* resources) {
     if (confirmExit(resources)) {
-        saveHiScores(resources->scores);
+        saveHiScores(&resources->scores);
         destroyAssets(resources->assets);
         UnloadMusicStream(soundGameplay);
         CloseWindow();
@@ -1460,9 +1475,8 @@ void resetHiScores(GameResources* resources) {
         return;
     }
     if (confirmReset(resources)) {
-        HiScore scores[MAX_LEVELS];
-        initializeDb(scores);
-        saveHiScores(scores);
+        SingleLinkedList scores = *initializeDb();
+        saveHiScores(&scores);
     }
     else return;
 }
@@ -1506,9 +1520,8 @@ void gameOver(GameResources* resources, ll currentScore) {
     PlaySound(SOUND(resources, SOUND_DEATH));
 
     // Load current high scores untuk tampilan
-    HiScore scores[MAX_LEVELS];
-    loadHiScores(scores);
-    ll currentHighScore = scores[resources->gameLevel].score;
+    SingleLinkedList scores = *loadHiScores();
+    ll currentHighScore = getCurrentModeHighScore(resources);
 
     float countdown = 2.0f;  // 2 second countdown
     bool canSelect = false;
@@ -1530,7 +1543,7 @@ void gameOver(GameResources* resources, ll currentScore) {
         char highScoreText[50];
         sprintf(highScoreText, "High Score: %lld", currentHighScore);
         Vector2 highScoreSize = MeasureTextEx(FONT(resources, FONT_BODY), highScoreText, fontSize, 2);
-        if (currentScore > (resources->scores[resources->gameLevel].score)) {
+        if (currentScore > getCurrentModeHighScore(resources)) {
             const char* newTag = "[NEW]";
             Vector2 newTagSize = MeasureTextEx(FONT(resources, FONT_BODY), newTag, 12, 2);
             Rectangle newBox = {
@@ -2400,7 +2413,7 @@ void drawBlocks(Game* game, GameResources* resources) {
 
 void printGrid(Game* game) {
     system("cls");
-    printf("\n--- Grid State ---\n");
+    printf("[LOG] \n--- Grid State ---\n");
 
     DLLNode* rowNode = game->grid->head;
     while (rowNode) {
@@ -2412,11 +2425,11 @@ void printGrid(Game* game) {
             printf(block->active ? "[x]" : "   ");
             blockNode = blockNode->next;
         }
-        printf("\n");
+        printf("[LOG] \n");
         rowNode = rowNode->next;
     }
 
-    printf("-----------------\n");
+    printf("[LOG] -----------------\n");
 }
 
 void drawGameUI(Game* game, GameResources* resources) {
@@ -2442,7 +2455,7 @@ void drawGameUI(Game* game, GameResources* resources) {
     }
     // High-Score ====================================================
     {
-        if (game->score > (resources->scores[resources->gameLevel].score)) {
+        if (game->score > getCurrentModeHighScore(resources)) {
             const char* newTag = "[NEW]";
             Vector2 title = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
             Vector2 tag = MeasureTextEx(GetFontDefault(), newTag, 12, 2);
@@ -2461,7 +2474,7 @@ void drawGameUI(Game* game, GameResources* resources) {
                 auto_x(12), 2, WHITE);
         }
 
-        sprintf(obj, "%lld", getMax(resources->scores, game, resources));
+        sprintf(obj, "%lld", getMaxScoreToShow(game, resources));
         textSize = MeasureTextEx(GetFontDefault(), obj, 18, 2);
         float xPos = gamescaledWidth + (uiscaledWidth - textSize.x) / 2;
 
@@ -2582,7 +2595,23 @@ void drawGameUI(Game* game, GameResources* resources) {
 }
 
 // 
-// SELECT SKIN
+// UTILS FOR SCORING
 // 
 
-void* hehe;
+ll getCurrentModeHighScore(GameResources* resources) {
+    extern char* levelNames[];
+    char* curMode = levelNames[resources->gameLevel];
+    SLLNode* temp = resources->scores.head;
+    while (temp != NULL) {
+        HiScore* score = (HiScore*)SLL_getNodeData(temp);
+        if (score && strcmp(score->mode, curMode) == 0) {
+            return score->score;
+        }
+        temp = SLL_getNextNode(temp);
+    }
+    return 0;
+}
+
+ll getMaxScoreToShow(Game* game, GameResources* rsc) {
+    return game->score > getCurrentModeHighScore(rsc) ? game->score : getCurrentModeHighScore(rsc);
+}

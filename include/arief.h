@@ -20,7 +20,8 @@ void* getAsset(SLLNode* head, uint id);
 void unloadAndFree(SLLNode* head, TypeofAssets type);
 void destroyAssets(Assets* assets);
 #endif
-
+ll getCurrentModeHighScore(GameResources* resources);
+ll getMaxScoreToShow(Game* game, GameResources* rsc);
 // =====================================================================
 //                          BLOCK MANAGEMENT
 // =====================================================================
