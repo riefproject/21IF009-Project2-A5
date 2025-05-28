@@ -30,6 +30,7 @@ init.ps1
 #ignore Temp Folder
 /temp/*
 
+/**/*.res
 # keep folders
 !*/
 !/db/

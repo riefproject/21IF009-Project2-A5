@@ -2,14 +2,6 @@
 #define ARIEF_H
 #include "defines.h"
 
-// =====================================================================
-//                          GAME MANAGEMENT
-// =====================================================================
-
-/* Fungsi-fungsi untuk mengelola konteks game dan aset */
-Game* createGameContext(void);              // Membuat dan menginisialisasi konteks game baru
-void destroyGameContext(Game* game);        // Membersihkan dan menghapus konteks game
-
 // Resources Function
 #ifndef ASSET_INPUT_HELPERS
 #define ASSET_INPUT_HELPERS
@@ -20,60 +12,271 @@ void* getAsset(SLLNode* head, uint id);
 void unloadAndFree(SLLNode* head, TypeofAssets type);
 void destroyAssets(Assets* assets);
 #endif
-ll getCurrentModeHighScore(GameResources* resources);
-ll getMaxScoreToShow(Game* game, GameResources* rsc);
-// =====================================================================
-//                          BLOCK MANAGEMENT
-// =====================================================================
-// =====================================================================
-//                          USER INTERFACE
-// =====================================================================
 
-/* Fungsi-fungsi untuk menangani tampilan dan menu */
-int loadingScreen(GameResources* resources, float* loadingTime);          // Menampilkan layar loading
-void mainWindow(void);                          // Menampilkan jendela utama
-void mainMenu(GameResources* resources);        // Menampilkan menu utama
-void resetHiScores(GameResources* resources);   // Reset skor tertinggi
-void rejectReset(GameResources* resources);     // Membatalkan reset skor
-void gameOver(GameResources* resources, long long int currentScore);        // Menampilkan layar game over
-void showCredits(GameResources* resources);
-void selectMode(GameResources* resources);      // Memilih mode permainan
-void showControls(GameResources* resources);    // Menampilkan kontrol game
-void showHiScore(GameResources* resources);     // Menampilkan skor tertinggi
-void showSettings(GameResources* resources);    // Menampilkan pengaturan
-bool confirmExit(GameResources* resources);     // Konfirmasi keluar game
-void exitGame(GameResources* resources);        // Keluar dari game
-void pauseMenu(GameResources* resources);       // Menu pause
-void countdownPause(GameResources* resources);  // Hitung mundur pause
-bool confirmBack(GameResources* resources);     // Konfirmasi kembali
 
-// =====================================================================
-//                          GAME MECHANICS
-// =====================================================================
+// 
+// 
+// 
+void loadSettings(Settings* settings);
 
-/* Fungsi-fungsi untuk logika dan mekanika game */
-float getSpeedForMode(Game* game, int mode);              // Mendapatkan kecepatan berdasarkan mode
-void displayGame(GameResources* resources);               // Menampilkan game
-bool isGameOverCheck(Game* game);                         // Cek kondisi game over
-bool isRowFull(Game* game, int row);                      // Cek apakah baris penuh
-bool hasActiveBlockBelow(Game* game, int row);            // Cek blok aktif di bawah
-void shiftRowsUp(Game* game, int startRow);               // Geser baris ke atas
-void handleFullRow(Game* game, int row);                  // Menangani baris penuh
-void updateBlocks(Game* game, GameResources* resources);  // Update status blok
-void initBlocks(Game* game, GameResources* resources);    // Inisialisasi blok
-void drawBlocks(Game* game, GameResources* resources);    // Menggambar blok
-void drawBlockUI(Game* game);                             // Menggambar UI blok
-void printGrid(Game* game);                               // Menampilkan grid game
+// 
+// 
+// 
+void saveSettings(Settings settings);
 
-/* Fungsi-fungsi untuk pergerakan dan collision */
-void handleBlockMovement(Game* game, int minBlocks, int maxBlocks);    // Menangani pergerakan blok
-void moveBlocksDown(Game* game);                                       // Menggerakkan blok ke bawah
-void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLength, int totalEmptyColumns);     // Membuat blok baru
-int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength);                                       // Mengisi celah kritis
-void fillRemainingBlocks(Game* game, int remainingBlocks);             // Mengisi sisa blok
-void handleBulletCollisions(Game* game);                               // Menangani collision peluru
-bool isValidGridPosition(int x, int y);                                // Validasi posisi grid
-void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets);                                         // Memproses tembakan peluru
-void drawGameUI(Game* game, GameResources* resources);         // Menggambar UI game
+// 
+// 
+// 
+DoublyLinkedList* initGameGrid(void);
+
+// 
+// 
+// 
+Game* createGameContext(void);
+
+// 
+// 
+// 
+void destroyGameContext(Game* game);
+
+// 
+// 
+// 
+ScaleFactor GetScreenScaleFactor(void);
+
+// 
+// 
+// 
+void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight);
+
+// 
+// 
+// 
 InputAsset* inputAssets(TypeofAssets type, uint id, const char* path);
+
+// 
+// 
+// 
+Assets* createAssets(void);
+
+// 
+// 
+// 
+void* getAsset(SLLNode* head, uint id);
+
+// 
+// 
+// 
+void unloadAndFree(SLLNode* head, TypeofAssets type);
+
+// 
+// 
+// 
+void destroyAssets(Assets* assets);
+
+// 
+// 
+// 
+void mainWindow(void);
+
+// 
+// 
+// 
+void drawBG(GameResources* resources, uint id);
+
+// 
+// 
+// 
+int loadingScreen(GameResources* resources, float* loadingTime);
+
+// 
+// 
+// 
+void showCredits(GameResources* resources);
+
+// 
+// 
+// 
+void mainMenu(GameResources* resources);
+
+// 
+// 
+// 
+void showControls(GameResources* resources);
+
+// 
+// 
+// 
+void showSettings(GameResources* resources);
+
+// 
+// 
+// 
+void showHiScore(GameResources* resources);
+
+// 
+// 
+// 
+bool confirmExit(GameResources* resources);
+
+// 
+// 
+// 
+void exitGame(GameResources* resources);
+
+// 
+// 
+// 
+bool confirmBack(GameResources* resources);
+
+// 
+// 
+// 
+void pauseMenu(GameResources* resources);
+
+// 
+// 
+// 
+void countdownPause(GameResources* resources);
+
+// 
+// 
+// 
+void selectMode(GameResources* resources);
+
+// 
+// 
+// 
+bool confirmReset(GameResources* resources);
+
+// 
+// 
+// 
+void resetHiScores(GameResources* resources);
+
+// 
+// 
+// 
+void rejectReset(GameResources* resources);
+
+// 
+// 
+// 
+void gameOver(GameResources* resources, ll currentScore);
+
+// 
+// 
+// 
+float getSpeedForMode(Game* game, int mode);
+
+// 
+// 
+// 
+static void getBlockRangeForMode(int mode, int* minBlocks, int* maxBlocks);
+
+// 
+// 
+// 
+void displayGame(GameResources* resources);
+
+// 
+// 
+// 
+bool isGameOverCheck(Game* game);
+
+// 
+// 
+// 
+bool isRowFull(Game* game, int row);
+
+// 
+// 
+// 
+bool hasActiveBlockBelow(Game* game, int row);
+
+// 
+// 
+// 
+void shiftRowsUp(Game* game, int startRow);
+
+// 
+// 
+// 
+void handleFullRow(Game* game, int row);
+
+// 
+// 
+// 
+void handleBlockMovement(Game* game, int minBlocks, int maxBlocks);
+
+// 
+// 
+// 
+void moveBlocksDown(Game* game);
+
+// 
+// 
+// 
+void generateNewBlocks(Game* game, int minBlocks, int maxBlocks, int* emptyColLength, int totalEmptyColumns);
+
+// 
+// 
+// 
+int fillCriticalGaps(Game* game, int remainingBlocks, int* emptyColLength);
+
+// 
+// 
+// 
+void fillRemainingBlocks(Game* game, int remainingBlocks);
+
+// 
+// 
+// 
+void handleBulletCollisions(Game* game);
+
+// 
+// 
+// 
+bool isValidGridPosition(int x, int y);
+
+// 
+// 
+// 
+void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets);
+
+// 
+// 
+// 
+void updateBlocks(Game* game, GameResources* resources);
+
+// 
+// 
+// 
+void initBlocks(Game* game, GameResources* resources);
+
+// 
+// 
+// 
+void drawBlocks(Game* game, GameResources* resources);
+
+// 
+// 
+// 
+void printGrid(Game* game);
+
+// 
+// 
+// 
+void drawGameUI(Game* game, GameResources* resources);
+
+// 
+// 
+// 
+ll getCurrentModeHighScore(GameResources* resources);
+
+// 
+// 
+// 
+ll getMaxScoreToShow(Game* game, GameResources* rsc);
+
 #endif

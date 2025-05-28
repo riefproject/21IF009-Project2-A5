@@ -1,6 +1,7 @@
 #include "defines.h"
 #include "all.h"
 
+// Struktur 
 typedef enum {
     Super_EZ,
     Easy,
@@ -63,7 +64,7 @@ SingleLinkedList* loadHiScores() {
         HiScore* hscore = (HiScore*)malloc(sizeof(HiScore));
         strcpy(hscore->mode, mode);  // Pake hscore, bukan score
         hscore->score = score;       // Assign score value ke hscore->score
-        SLL_insertBack(list, hscore); // Insert hscore, bukan score
+        SLL_insertBack(list, hscore);// Insert hscore, bukan score
     }
     fclose(file);
     return list;
@@ -97,12 +98,10 @@ void saveHiScores(SingleLinkedList* list) {
             temp = SLL_getNextNode(temp);
         }
 
-        // Debug: Print if mode not found
         if (!found) {
             printf("[LOG] Warning: Mode '%s' not found in scores list\n", curMode);
         }
 
-        // Validate fprintf result
         if (fprintf(file, "%s,%lld\n", curMode, curScore) < 0) {
             printf("[LOG] Error writing to file for mode: %s\n", curMode);
             fclose(file);
@@ -110,22 +109,20 @@ void saveHiScores(SingleLinkedList* list) {
         }
     }
 
-    // Ensure data is written to disk
-    fflush(file);
+    // fflush(file);
     fclose(file);
-    printf("[LOG] High scores saved successfully\n"); // Debug confirmation
+    printf("[LOG] High scores saved successfully\n");
 }
 
 void updateHighScore(Game* game, GameResources* resources) {
     if (!game) return;
 
-    // Use existing scores instead of loading new ones
-    SLLNode* temp = resources->scores.head;  // ⚠️ No validation here
+    SLLNode* temp = resources->scores.head;  
     const char* mode = levelNames[resources->gameLevel];
 
     while (temp) {
         HiScore* score = (HiScore*)SLL_getNodeData(temp);
-        if (strcmp(score->mode, mode) == 0) {  // ⚠️ No null check for score
+        if (strcmp(score->mode, mode) == 0) { 
             if (score->score < game->score) {
                 score->score = game->score;
             }
@@ -134,9 +131,9 @@ void updateHighScore(Game* game, GameResources* resources) {
         temp = SLL_getNextNode(temp);
     }
 
-    // Save the existing scores structure
-    saveHiScores(&resources->scores);  // ⚠️ Passes empty/invalid list
+    saveHiScores(&resources->scores);  
 }
+
 void addScore(Game* game, int row) {
     int basePoints = 20;
     int rowMultiplier = row + 1; // Semakin bawah multiplier semakin besar
@@ -147,7 +144,6 @@ void addScore(Game* game, int row) {
 long long int playerScore(Game* game) {
     return game->score;
 }
-
 
 char* gameMode(GameResources* resources) {
     return levelNames[resources->gameLevel];

@@ -1,121 +1,201 @@
 #!/bin/bash
 
-# Compiler settings
-CC="gcc"
-WINDRES="windres"
+# pake array karna akan diiterasi. Kalo mau nambah subfolder tambahin aja
+SRC_DIRS=("src" 
+          "library")
 
-# Flags
-WNOFLAGS="-Wno-unused-variable -Wno-switch -Wno-unused-parameter"
-CFLAGS="$WNOFLAGS -Iinclude -Ivendor/raylib-v5.5/include -Ivendor/reestruct-v0.1.0/include"
-LDFLAGS="vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
-RSTFLAGS="vendor/reestruct-v0.1.0/lib/libreestruct.a"
-
-# Paths
-SRC_PATH="src library"
-OBJ_PATH="build/output"
-BIN_PATH="bin"
+BUILD_DIR="build/output"
+BIN_DIR="bin"
+EXE_NAME="BlockShooter.exe"
+EXE_PATH="$BIN_DIR/$EXE_NAME"
+TEST_EXE_NAME="test.exe"
+TEST_EXE_PATH="$BIN_DIR/$TEST_EXE_NAME"
+RESOURCE_RC="assets/resource.rc"
+RESOURCE_RES="$BUILD_DIR/resource.o"
 TMP_PATH="temp"
 
-# Target
-TARGET_NAME="BlockShooter.exe"
-TARGET="$BIN_PATH/$TARGET_NAME"
-TEST_TARGET="$BIN_PATH/test.exe"
+# bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
+WNO="-Wno-unused-variable
+     -Wno-switch
+     -Wno-unused-parameter"
 
-# Resource file
-RC_FILE="assets/resource.rc"
-RC_OBJ="$OBJ_PATH/resource.o"
+CFLAGS="$WNO
+        -Iinclude
+        -Ivendor/raylib-v5.5/include
+        -Ivendor/reestruct-v0.1.0/include"
+LDFLAGS="vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
+RSTFLAGS="vendor/reestruct-v0.1.0/lib/libreestruct.a"
+OBJECT_FILES=()
 
-# Show help function
-show_help() {
-    echo "Usage: ./build.sh [command]"
-    echo ""
-    echo "Commands:"
-    echo "  No command or 'build' - Build the game"
-    echo "  run     - Build and run the game"
-    echo "  clean   - Clean build directories"
-    echo "  rebuild - Clean and then build and run"
-    echo "  test    - Run tests"
-    echo "  clean-test - Clean test files"
-    echo "  help    - Show this help message"
+# Biar CLI nya cakep
+RED='\e[31m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+BLUE='\e[34m'
+RESET='\e[0m' # No Color
+BOLD='\e[1m'
+ITALIC='\e[3m'
+UNDERLINE='\e[4m'
+
+# =====================================================================================
+# . . . FUNCTIONS . . .
+# =====================================================================================
+
+clean() {
+    echo "🧹 Cleaning build directories..."
+    rm -rf "$BUILD_DIR" "$BIN_DIR" "$RESOURCE_RES"
+    echo "✅ Clean complete!"
 }
 
-# Build function
-build() {
-    echo "Creating necessary directories..."
-    mkdir -p "$OBJ_PATH/src" "$OBJ_PATH/library" "$BIN_PATH"
-    
-    # Compile resource file
-    echo "🔨 Compiling resources $RC_FILE..."
-    mkdir -p "$(dirname "$RC_OBJ")"
-    $WINDRES "$RC_FILE" -o "$RC_OBJ"
-    if [ $? -ne 0 ]; then
-        echo "❌ Compilation of resource file failed!"
-        exit 1
-    fi
-    
-    echo "🔨 Compiling source files..."
-    
-    # Compile main.c
-    echo "🔨 Compiling src/main.c..."
-    $CC $CFLAGS -c src/main.c -o "$OBJ_PATH/src/main.o"
-    if [ $? -ne 0 ]; then
-        echo "❌ Compilation of src/main.c failed!"
-        exit 1
-    fi
-    
-    # Compile library files
-    for file in arief naira raffi faliq goklas; do
-        echo "🔨 Compiling library/$file.c..."
-        $CC $CFLAGS -c "library/$file.c" -o "$OBJ_PATH/library/$file.o"
+clean_test() {
+    echo "🗑 Cleaning test files..."
+    rm -f "$TEST_EXE_PATH"
+    rm -rf "$BUILD_DIR/$TMP_PATH"
+    echo "✅ Test clean complete!"
+}
+
+compile_if_needed() {
+    local src_file=$1
+    local out_file=$2
+
+    mkdir -p "$(dirname "$out_file")"
+
+    if [ ! -f "$out_file" ] || [ "$src_file" -nt "$out_file" ]; then
+        echo "🔨 Compiling $src_file..."
+        gcc $CFLAGS -c "$src_file" -o "$out_file"
         if [ $? -ne 0 ]; then
-            echo "❌ Compilation of library/$file.c failed!"
+            echo -e "${RED}❌ Compilation failed: $src_file ${RESET}"
             exit 1
         fi
-    done
-    
-    echo "🔧 Linking..."
-    $CC "$OBJ_PATH/src/main.o" \
-        "$OBJ_PATH/library/arief.o" \
-        "$OBJ_PATH/library/naira.o" \
-        "$OBJ_PATH/library/raffi.o" \
-        "$OBJ_PATH/library/faliq.o" \
-        "$OBJ_PATH/library/goklas.o" \
-        "$RC_OBJ" \
-        -o "$TARGET" $LDFLAGS $RSTFLAGS
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Linking failed!"
-        exit 1
+    else
+        echo -e "${GREEN}✅ Skipping $src_file (up to date) ${RESET}"
     fi
-    
-    clear
-    echo "✅ Build successful! Run './$TARGET'"
+
+    OBJECT_FILES+=("$out_file")
 }
 
-# Run function
+compile_sources() {
+    for dir in "${SRC_DIRS[@]}"; do
+        for src_file in "$dir"/*.c; do
+            [ -f "$src_file" ] || continue
+            local filename=$(basename "$src_file" .c)
+            local out_file="$BUILD_DIR/$dir/${filename}.o"
+            compile_if_needed "$src_file" "$out_file"
+        done
+    done
+}
+
+compile_resource_if_needed() {
+    if [ ! -f "$RESOURCE_RES" ] || [ "$RESOURCE_RC" -nt "$RESOURCE_RES" ]; then
+        echo "🎨 Compiling resource file..."
+        mkdir -p "$(dirname "$RESOURCE_RES")"
+        windres "$RESOURCE_RC" -o "$RESOURCE_RES"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ Resource compilation failed! ${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}✅ Skipping resource compilation (up to date) ${RESET}"
+    fi
+}
+
+link_if_needed() {
+    compile_resource_if_needed
+
+    local need_link=false
+    if [ ! -f "$EXE_PATH" ] || [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
+        need_link=true
+    else
+        for obj in "${OBJECT_FILES[@]}"; do
+            if [ "$obj" -nt "$EXE_PATH" ]; then
+                need_link=true
+                break
+            fi
+        done
+    fi
+
+    if $need_link; then
+        echo "🔧 Linking..."
+        gcc "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS $RSTFLAGS
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ Linking failed! ${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}✅ Skipping linking (up to date) ${RESET}"
+    fi
+}
+
+build() {
+    echo "🚧 Starting build process..."
+    mkdir -p "$BIN_DIR"
+    compile_sources
+    link_if_needed
+
+    clear
+    echo -e "✅ Build successful! Run './$EXE_PATH'"
+}
+
 run() {
     build
     if [ $? -ne 0 ]; then
         exit 1
     fi
+
+    echo -e "\n🚀 Running ${BLUE}BlockShooter...${RESET}"
+    "./$EXE_PATH"
     
-    echo "🚀 Running game..."
-    "./$TARGET"
+    clear
+    if [ $? -eq 0 ]; then
+        echo -e "\n\nThanks for playing ${GREEN}Block Shooter${RESET}"
+    fi
+}
+
+test() {
+    clean_test
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+    
+    echo "Creating necessary directories..."
+    mkdir -p "$BUILD_DIR/$TMP_PATH" "$BIN_DIR"
+    
+    echo "🔨 Compiling test file $TMP_PATH/main.c..."
+    gcc $CFLAGS -c "$TMP_PATH/main.c" -o "$BUILD_DIR/$TMP_PATH/main.o"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Compilation of $TMP_PATH/main.c failed! ${RESET}"
+        exit 1
+    fi
+    
+    # Reset OBJECT_FILES for test compilation
+    OBJECT_FILES=()
+    
+    # Compile library files for tests
+    for src_file in library/*.c; do
+        [ -f "$src_file" ] || continue
+        local filename=$(basename "$src_file" .c)
+        local out_file="$BUILD_DIR/library/${filename}.o"
+        compile_if_needed "$src_file" "$out_file"
+    done
+    
+    echo "🔧 Linking test executable..."
+    gcc "$BUILD_DIR/$TMP_PATH/main.o" "${OBJECT_FILES[@]}" -o "$TEST_EXE_PATH" $LDFLAGS
     
     if [ $? -ne 0 ]; then
-        echo "❌ Game crashed with error code $?!"
+        echo -e "${RED}❌ Test linking failed! ${RESET}"
+        exit 1
+    fi
+    
+    echo "✅ Test build successful!"
+    echo "🧪 Running tests..."
+    "./$TEST_EXE_PATH"
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Tests failed with error code $?! ${RESET}"
         exit 1
     fi
 }
 
-# Clean function
-clean() {
-    echo "🗑 Cleaning build directory..."
-    rm -rf "$OBJ_PATH" "$BIN_PATH"
-    echo "✅ Clean complete!"
-}
-
-# Rebuild function - clean and then run
 rebuild() {
     echo "♻️ Rebuilding from scratch..."
     clean
@@ -125,90 +205,75 @@ rebuild() {
     run
 }
 
-# Test functions
-test() {
-    clean_test
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
-    
-    echo "Creating necessary directories..."
-    mkdir -p "$OBJ_PATH/$TMP_PATH" "$BIN_PATH"
-    
-    echo "🔨 Compiling test file $TMP_PATH/main.c..."
-    $CC $CFLAGS -c "$TMP_PATH/main.c" -o "$OBJ_PATH/$TMP_PATH/main.o"
-    if [ $? -ne 0 ]; then
-        echo "❌ Compilation of $TMP_PATH/main.c failed!"
-        exit 1
-    fi
-    
-    # Compile library files for tests
-    for file in arief naira raffi faliq goklas; do
-        echo "🔨 Compiling library/$file.c for test..."
-        $CC $CFLAGS -c "library/$file.c" -o "$OBJ_PATH/library/$file.o"
-        if [ $? -ne 0 ]; then
-            echo "❌ Compilation of library/$file.c failed!"
-            exit 1
+parse_args() {
+    DEBUG=0
+    HELP=0
+    POSITIONAL=()
+
+    for arg in "$@"; do
+        if [ "$arg" == "--debug" ]; then
+            DEBUG=1
+        elif [ "$arg" == "--help" ]; then
+            HELP=1
+        else
+            POSITIONAL+=("$arg")
         fi
     done
-    
-    echo "🔧 Linking test executable..."
-    $CC "$OBJ_PATH/$TMP_PATH/main.o" \
-        "$OBJ_PATH/library/arief.o" \
-        "$OBJ_PATH/library/naira.o" \
-        "$OBJ_PATH/library/raffi.o" \
-        "$OBJ_PATH/library/faliq.o" \
-        "$OBJ_PATH/library/goklas.o" \
-        -o "$TEST_TARGET" $LDFLAGS
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Test linking failed!"
-        exit 1
-    fi
-    
-    echo "✅ Test build successful!"
-    echo "🧪 Running tests..."
-    "./$TEST_TARGET"
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Tests failed with error code $?!"
-        exit 1
-    fi
-}
 
-# Clean test function
-clean_test() {
-    echo "🗑 Cleaning test files..."
-    rm -f "$TEST_TARGET"
-    rm -rf "$OBJ_PATH/$TMP_PATH"
-    echo "✅ Test clean complete!"
-}
-
-# Process arguments
-case "$1" in
-    "" | "build")
-        build
-        ;;
-    "run")
-        run
-        ;;
-    "clean")
-        clean
-        ;;
-    "rebuild")
-        rebuild
-        ;;
-    "test")
-        test
-        ;;
-    "clean-test")
-        clean_test
-        ;;
-    "help")
+    if [ $HELP -eq 1 ]; then
+        if [ ${#POSITIONAL[@]} -ne 0 ] || [ $DEBUG -eq 1 ]; then
+            echo "❌ Error: --help harus dipanggil tanpa parameter lain."
+            show_help
+            exit 1
+        fi
         show_help
-        ;;
+        exit 0
+    fi
+
+    # Set global variabel untuk dipakai di main
+    DEBUG_FLAG=$DEBUG
+    set -- "${POSITIONAL[@]}"
+    POSITIONAL_ARGS=("$@")
+}
+
+show_help() {
+    echo -e "\n${BOLD}${BLUE}BlockShooter${RESET}${BOLD} Build Script${RESET}"
+    echo -e "============================================================\n"
+    
+    echo -e "Usage: $0 [--debug] [clean|build|run|rebuild|test|clean-test] [--help]\n"
+    echo -e "${UNDERLINE}Commands:${RESET}"
+    echo -e "  ${BOLD}build      ${RESET}  : Compile dan link (incremental)"
+    echo -e "  ${BOLD}run        ${RESET}  : Build dan jalankan game"
+    echo -e "  ${BOLD}clean      ${RESET}  : Bersihkan hasil build"
+    echo -e "  ${BOLD}rebuild    ${RESET}  : Bersihkan lalu build dan run"
+    echo -e "  ${BOLD}test       ${RESET}  : Jalankan tests"
+    echo -e "  ${BOLD}clean-test ${RESET}  : Bersihkan file test"
+    echo -e "  ${BOLD}--debug    ${RESET}  : Aktifkan mode debug (set -x)"
+    echo -e "  ${BOLD}--help     ${RESET}  : Tampilkan pesan ini\n"
+    echo -e "${UNDERLINE}Notes:${RESET}"
+    echo -e "  --help harus dipanggil sendiri, tanpa param lain."
+}
+
+# =====================================================================================
+# . . . MAIN SCRIPT . . .
+# =====================================================================================
+
+parse_args "$@"
+
+if [ "$DEBUG_FLAG" -eq 1 ]; then
+    set -x
+fi
+
+# Lanjut dengan main case pakai "${POSITIONAL_ARGS[0]}"
+case "${POSITIONAL_ARGS[0]}" in
+    "clean") clean ;;
+    "rebuild") rebuild ;;
+    "run") run ;;
+    "test") test ;;
+    "clean-test") clean_test ;;
+    ""|"build") build; run;;
     *)
-        echo "❌ Unknown command: $1"
+        echo -e "${RED}❌ Unknown parameter: ${POSITIONAL_ARGS[0]} ${RESET}"
         show_help
         exit 1
         ;;

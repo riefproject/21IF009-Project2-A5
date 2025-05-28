@@ -5,6 +5,7 @@
 // =======================================
 //                Database 
 // =======================================
+
 void loadSettings(Settings* settings) {
     FILE* file = fopen("db/settings.dat", "r");
     if (!file) {
@@ -375,6 +376,75 @@ void destroyAssets(Assets* assets) {
     delete(assets);
 }
 
+void drawCenteredText(Font font, const char* text, float y, int fontSize, float spacing, Color color) {
+    Vector2 textSize = MeasureTextEx(font, text, auto_y(fontSize), auto_y(spacing));
+    int startX = (GetScreenWidth() - textSize.x) / 2;
+    DrawTextEx(font, text, (Vector2) { startX, y }, auto_y(fontSize), auto_y(spacing), color);
+}
+
+int handleMenuNavigation(int currentSelection, int maxOptions, GameResources* resources) {
+    if (MOVE_UP) {
+        PlaySound(SOUND(resources, SOUND_MOVE));
+        return (currentSelection - 1 + maxOptions) % maxOptions;
+    }
+    if (MOVE_DOWN) {
+        PlaySound(SOUND(resources, SOUND_MOVE));
+        return (currentSelection + 1) % maxOptions;
+    }
+    return currentSelection;
+}
+
+void drawMenuOption(Font font, const char* text, float y, int fontSize, bool selected, Color color) {
+    drawCenteredText(font, text, y, fontSize, 2.0f, color);
+}
+
+float calculateTotalTextHeight(Font font, const char* lines[], int lineCount, int fontSize, float spacing) {
+    float totalHeight = 0;
+    for (int i = 0; i < lineCount; i++) {
+        Vector2 textSize = MeasureTextEx(font, lines[i], fontSize, spacing);
+        totalHeight += textSize.y + spacing;
+    }
+    return totalHeight - spacing; // Kurangi spacing terakhir
+}
+
+void waitForKeyRelease(void) {
+    while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
+        BeginDrawing();
+        ClearBackground(PRIMARY_COLOR);
+        EndDrawing();
+    }
+}
+
+void calculateMaxWidths(const char* lines[], int lineCount, int fontSize, float spacing, int* maxLabelWidth, int* maxValueWidth, Font font) {
+    *maxLabelWidth = 0;
+    *maxValueWidth = 0;
+    for (int i = 0; i < lineCount; i++) {
+        char label[50], value[50];
+        sscanf(lines[i], "%[^:]:%[^\n]", label, value);
+        int labelWidth = MeasureTextEx(font, label, fontSize, spacing).x;
+        int valueWidth = MeasureTextEx(font, value, fontSize, spacing).x;
+        if (labelWidth > *maxLabelWidth) { *maxLabelWidth = labelWidth; }
+        if (valueWidth > *maxValueWidth) { *maxValueWidth = valueWidth; }
+    }
+}
+
+void drawLabelsAndValues(const char* lines[], int lineCount, int startX, int startY, int maxLabelWidth, int fontSize, float spacing, Font font, Color color) {
+    int y = startY;
+    for (int i = 0; i < lineCount; i++) {
+        char label[50], value[50];
+        sscanf(lines[i], "%[^:]:%[^\n]", label, value);
+        int colonX = startX + maxLabelWidth + auto_x(10);
+        int textX = colonX + MeasureTextEx(font, ":", fontSize, spacing).x + 5;
+        DrawTextEx(font, label, (Vector2) { startX, y }, fontSize, spacing, color);
+        DrawTextEx(font, ":", (Vector2) { colonX, y }, fontSize, spacing, color);
+        DrawTextEx(font, value, (Vector2) { textX, y }, fontSize, spacing, color);
+        y += fontSize + spacing;
+    }
+}
+
+int calculateTotalHeight(int lineCount, int fontSize, float spacing) {
+    return (lineCount * (fontSize + spacing)) - spacing;
+}
 
 /*    Core of Display
  * ====================== */
@@ -596,46 +666,21 @@ void mainMenu(GameResources* resources) {
     int lineCount = len(lines);
     int selection = 0;
 
-    while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
-        BeginDrawing();
-        ClearBackground(PRIMARY_COLOR);
-        EndDrawing();
-    }
+    void waitForKeyRelease(void);
 
     while (resources->currentState == STATE_MAIN_MENU && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(PRIMARY_COLOR);
-
         drawBG(resources, BG_MAIN_MENU);
-
-        float totalHeight = 0;
-        for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, auto_x(2));
-            totalHeight += textSize.y + spacing;
-        }
-        totalHeight -= spacing;
-
+        float totalHeight = calculateTotalTextHeight(defaultFont, lines, lineCount, fontSize, auto_x(2));
         int startY = auto_y(1023) * MIN_SCREEN_HEIGHT / BG(resources, BG_MAIN_MENU).height;
 
         for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(defaultFont, lines[i], fontSize, auto_x(2));
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-
-            DrawTextEx(defaultFont, lines[i], (Vector2) { startX, startY }, fontSize, auto_x(2), selection == i ? ORANGE : DARKGRAY);
-            startY += textSize.y + spacing;
+            drawCenteredText(defaultFont, lines[i], startY, fontSize, auto_x(2), selection == i ? ORANGE : DARKGRAY);
+            startY += fontSize + spacing;
         }
 
-        // Handle input
-        if (MOVE_UP) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection--;
-            if (selection < 0) selection = lineCount - 1;
-        }
-        if (MOVE_DOWN) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection++;
-            if (selection >= lineCount) selection = 0;
-        }
+        selection = handleMenuNavigation(selection, len(lines), resources);
 
         if (OK_KEY) {
             PlaySound(SOUND(resources, SOUND_SELECT));
@@ -656,7 +701,6 @@ void mainMenu(GameResources* resources) {
 }
 
 void showControls(GameResources* resources) {
-
     int fontSize = auto_y(16);
     int spacing = auto_x(4);
 
@@ -677,40 +721,20 @@ void showControls(GameResources* resources) {
         BeginDrawing();
         ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONTROLS);
-        int totalHeight = 0;
-        for (int i = 0; i < lineCount; i++) {
-            totalHeight += fontSize + spacing;
-        }
+        int totalHeight = calculateTotalHeight(lineCount, fontSize, spacing);
 
         int startY = (GetScreenHeight() - totalHeight) / 2;
 
-        int maxLabelWidth = 0;
-        int maxValueWidth = 0;
-        for (int i = 0; i < lineCount; i++) {
-            char label[50], value[50];
-            sscanf(lines[i], "%[^:]:%[^\n]", label, value);
-            int labelWidth = MeasureTextEx(FONT(resources, FONT_BODY), label, fontSize, spacing).x;
-            int valueWidth = MeasureTextEx(FONT(resources, FONT_BODY), value, fontSize, spacing).x;
-            if (labelWidth > maxLabelWidth) { maxLabelWidth = labelWidth; }
-            if (valueWidth > maxValueWidth) { maxValueWidth = valueWidth; }
-        }
+        int maxLabelWidth, maxValueWidth;
+        calculateMaxWidths(lines, lineCount, fontSize, spacing, &maxLabelWidth, &maxValueWidth, FONT(resources, FONT_BODY));
 
         int padding = auto_x(20);
         int totalWidth = maxLabelWidth + auto_x(10) + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5 + maxValueWidth;
         int startX = (GetScreenWidth() - totalWidth) / 2;
         if (startX < padding) { startX = padding; }
 
-        int y = startY;
-        for (int i = 0; i < lineCount; i++) {
-            char label[50], value[50];
-            sscanf(lines[i], "%[^:]:%[^\n]", label, value);
-            int colonX = startX + maxLabelWidth + auto_x(10);
-            int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
-            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, RAYWHITE);
-            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
-            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, RAYWHITE);
-            y += fontSize + spacing;
-        }
+        drawLabelsAndValues(lines, lineCount, startX, startY, maxLabelWidth, fontSize, spacing, FONT(resources, FONT_BODY), RAYWHITE);
+
         {
             const char* infoText;
             // Jika game dijeda (resources->prevState == STATE_SELECT_LEVEL) tampilkan tiga shortcut
@@ -763,7 +787,6 @@ void showControls(GameResources* resources) {
 }
 
 void showSettings(GameResources* resources) {
-
     int fontSize = auto_y(20);
     int spacing = auto_x(4);
     int menuSpacing = auto_y(25);
@@ -954,13 +977,9 @@ void showHiScore(GameResources* resources) {
 
     char lines[MAX_LEVELS][65];
 
-    // for (int i = 0; i < MAX_LEVELS; i++) {
-    //     snprintf(lines[i], sizeof(lines[i]), "%s: %lld", resources->scores[i].mode, resources->scores[i].score);
-    // }
-
     extern char* levelNames[];
     int i = 0;
-    while (i < MAX_LEVELS) {  // Simplified loop structure
+    while (i < MAX_LEVELS) {
         SLLNode* searchName = resources->scores.head;
         while (searchName != NULL) {
             HiScore* searchScore = (HiScore*)searchName->data;
@@ -972,34 +991,21 @@ void showHiScore(GameResources* resources) {
         }
         i++;
     }
-
-    int lineCount = len(lines);
+    const char* linePtrs[MAX_LEVELS];
+    for (int i = 0; i < MAX_LEVELS; i++) {
+        linePtrs[i] = lines[i];
+    }
+    int lineCount = len(linePtrs);
 
     while (resources->currentState == STATE_HIGH_SCORES && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_HIGHSCORES);
-        int totalHeight = 0;
-        for (int i = 0; i < lineCount; i++) {
-            totalHeight += fontSize + spacing;
-        }
+        int totalHeight = calculateTotalHeight(lineCount, fontSize, spacing);
         int startY = (GetScreenHeight() - totalHeight) / 2;
 
-        int maxLabelWidth = 0;
-        int maxValueWidth = 0;
-        for (int i = 0; i < lineCount; i++) {
-            char label[50], value[50];
-            sscanf(lines[i], "%[^:]:%[^\n]", label, value);
-
-            int labelWidth = MeasureTextEx(FONT(resources, FONT_BODY), label, fontSize, spacing).x;
-            int valueWidth = MeasureTextEx(FONT(resources, FONT_BODY), value, fontSize, spacing).x;
-            if (labelWidth > maxLabelWidth) {
-                maxLabelWidth = labelWidth;
-            }
-            if (valueWidth > maxValueWidth) {
-                maxValueWidth = valueWidth;
-            }
-        }
+        int maxLabelWidth, maxValueWidth;
+        calculateMaxWidths(linePtrs, lineCount, fontSize, spacing, &maxLabelWidth, &maxValueWidth, FONT(resources, FONT_BODY));
 
         int padding = auto_x(20);
         int totalWidth = maxLabelWidth + 10 + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5 + maxValueWidth;
@@ -1010,19 +1016,7 @@ void showHiScore(GameResources* resources) {
         }
 
         int y = startY;
-        for (int i = 0; i < lineCount; i++) {
-            char label[50], value[50];
-            sscanf(lines[i], "%[^:]:%[^\n]", label, value);
-
-            int colonX = startX + maxLabelWidth + 10;
-            int textX = colonX + MeasureTextEx(FONT(resources, FONT_BODY), ":", fontSize, spacing).x + 5;
-
-            DrawTextEx(FONT(resources, FONT_BODY), label, (Vector2) { startX, y }, fontSize, spacing, RAYWHITE);
-            DrawTextEx(FONT(resources, FONT_BODY), ":", (Vector2) { colonX, y }, fontSize, spacing, RAYWHITE);
-            DrawTextEx(FONT(resources, FONT_BODY), value, (Vector2) { textX, y }, fontSize, spacing, RAYWHITE);
-
-            y += fontSize + spacing;
-        }
+        drawLabelsAndValues(linePtrs, lineCount, startX, startY, maxLabelWidth, fontSize, spacing, FONT(resources, FONT_BODY), RAYWHITE);
         {
             const char* controlsText = "[A]: Main Menu";
             Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), controlsText, 20, 2.0f);
@@ -1193,26 +1187,13 @@ void pauseMenu(GameResources* resources) {
         }
         int startY = (GetScreenHeight() - totalHeight) / 2 + 20;
         for (int i = 0; i < lineCount; i++) {
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), lines[i], fontSize, 2);
-            int startX = (GetScreenWidth() - textSize.x) / 2;
-            if (selection == i) {
-                DrawRectangle(startX - 10, startY - 5, textSize.x + 20, textSize.y + 10, Fade(LIGHTGRAY, 0.3f));
-            }
-            DrawTextEx(FONT(resources, FONT_BODY), lines[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? ORANGE : RAYWHITE);
-            startY += textSize.y + auto_y(25);
+            drawCenteredText(FONT(resources, FONT_BODY), lines[i], startY, fontSize, 2, selection == i ? ORANGE : RAYWHITE);
+            startY += auto_y(fontSize) + auto_y(25);
         }
         EndDrawing();
 
-        if (MOVE_UP) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection--;
-            if (selection < 0) selection = lineCount - 1;
-        }
-        if (MOVE_DOWN) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            selection++;
-            if (selection >= lineCount) selection = 0;
-        }
+        selection = handleMenuNavigation(selection, len(lines), resources);
+
         if (OK_KEY) {
             PlaySound(SOUND(resources, SOUND_SELECT));
             switch (selection) {
