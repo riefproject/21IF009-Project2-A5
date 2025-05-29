@@ -1,17 +1,40 @@
+/**
+ * FALIQ MODULE - PLAYER SYSTEM & INPUT HANDLING
+ * ==============================================
+ *
+ * Modul yang menangani sistem player, input handling, dan character management.
+ * Berisi implementasi untuk shooter character, movement, visual effects, dan animasi.
+ *
+ * Komponen utama:
+ * - Shooter character rendering dan movement
+ * - Laser system untuk aiming
+ * - Opening animation dan visual effects
+ * - Asset management untuk shooter skins
+ */
 #include "defines.h"
 #include "all.h"
+
 #define BLOCK_SIZE auto_x(32)
 #define SHOOTER_STEP auto_x(32)
 #define GAME_WIDTH (BLOCK_SIZE * MAX_COLUMNS)
 #define GAME_HEIGHT (BLOCK_SIZE * MAX_ROWS)
-// base texture skin. skin dijamin >= 0. dikalikan 4 karena terdapat 4 texture untuk setiap skin 
+
+ // base texture skin. skin dijamin >= 0. dikalikan 4 karena terdapat 4 texture untuk setiap skin 
 #define SHOOTER_LEFT(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_L + (skin*4)))));
 #define SHOOTER_RIGHT(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_R + (skin*4)))));
 #define SHOOTER_MID(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_M + (skin*4)))));
 #define SHOOTER_TOP(skin) (*(Texture2D*)(getAsset((rsc)->assets->Shooter.head, (SHOOTER_SKIN_1_T + (skin*4)))));
+
 position P;
 Music soundGameplay;
 
+// =============================================================================
+// SHOOTER ASSET MANAGEMENT
+// Manajemen aset visual untuk karakter shooter
+// =============================================================================
+
+// Membuat linked list untuk menyimpan semua aset shooter
+// Menginisialisasi container untuk texture shooter dalam berbagai pose
 SingleLinkedList* shooterAssets() {
     SingleLinkedList* list = new(SingleLinkedList);
     if (list != NULL) {
@@ -29,19 +52,34 @@ SingleLinkedList* shooterAssets() {
     return list;
 }
 
+
+// Mendapatkan fragment texture shooter yang terletak di atas-tengah
 Texture2D SLL_Shooter_top(GameResources* rsc) {
     return SHOOTER_TOP(rsc->settings.skin)
 }
+
+//  Mendapatkan fragment texture shooter yang terletak di bawah-tengah
 Texture2D SLL_Shooter_mid(GameResources* rsc) {
     return SHOOTER_MID(rsc->settings.skin)
 }
+
+//  Mendapatkan fragment texture shooter yang terletak di bawah-kiri
 Texture2D SLL_Shooter_left(GameResources* rsc) {
     return SHOOTER_LEFT(rsc->settings.skin)
 }
+
+//  Mendapatkan fragment texture shooter yang terletak di bawah-kanan
 Texture2D SLL_Shooter_right(GameResources* rsc) {
     return SHOOTER_RIGHT(rsc->settings.skin)
 }
 
+// =============================================================================
+// SHOOTER MECHANICS AND CONTROL
+// Mekanika dan kontrol untuk karakter shooter
+// =============================================================================
+
+// Menggambar dan mengupdate posisi shooter
+// Rendering shooter dengan texture yang sesuai berdasarkan state
 void shooter(int* x, int* y, GameResources* resources) {
     float blockSize = BLOCK_SIZE;
     float positionX = (float)*x;
@@ -66,6 +104,8 @@ void shooter(int* x, int* y, GameResources* resources) {
     }
 }
 
+// Menangani input pergerakan shooter
+// Memproses keyboard input untuk movement kiri-kanan
 void moveSet(int* x, GameResources* resources) {
     float blockSize = BLOCK_SIZE;
     float gameWidth = GAME_WIDTH;
@@ -84,12 +124,26 @@ void moveSet(int* x, GameResources* resources) {
     *x = (*x + (int)blockSize > (int)gameWidth) ? (int)(gameWidth - blockSize) : *x;
 }
 
+// =============================================================================
+// AUDIO SYSTEM
+// Sistem audio untuk musik dan efek suara
+// =============================================================================
+
+// Variabel global untuk musik gameplay
+// Music stream yang akan diputar selama permainan berlangsung
 void musicGameplay(GameResources* resources) {
     soundGameplay = LoadMusicStream("assets/sounds/gameplay.mp3");
     PlayMusicStream(soundGameplay);
     SetMusicVolume(soundGameplay, resources->settings.music ? 0.5f : 0.0f);
 }
 
+// =============================================================================
+// SPECIAL ABILITIES SYSTEM
+// Sistem kemampuan khusus seperti laser dan power-up
+// =============================================================================
+
+// Menangani mekanika laser shooter
+// Memproses input laser, cooldown, dan efek visual laser beam
 void handleLaser(Game* game) {
     if (!game->laserActive) return;
     float blockSize = BLOCK_SIZE;
@@ -134,7 +188,14 @@ void handleLaser(Game* game) {
     DrawLineEx((Vector2) { shooterX, P.y }, (Vector2) { shooterX, intersectionY }, laserThickness, (Color) { 255, 0, 0, 128 });
     DrawCircle(shooterX, intersectionY, dotRadius, RED);
 }
-// Membuat animasi background
+
+// =============================================================================
+// VISUAL EFFECTS AND ANIMATIONS
+// Efek visual dan animasi untuk transisi dan opening
+// =============================================================================
+
+// Menghitung warna fade-in untuk animasi opening
+// Menghasilkan efek transisi opacity berdasarkan progress
 Color fadeInOpeningAnimation(float* trans) {
     if (*trans < 1.0f) {
         *trans = *trans + 0.005f;
@@ -143,6 +204,8 @@ Color fadeInOpeningAnimation(float* trans) {
     return (Color) { colorValue, colorValue, colorValue, 255 };
 }
 
+// Menghitung warna fade-out untuk animasi opening
+// Menghasilkan efek transisi opacity berdasarkan progress
 Color fadeOutOpeningAnimation(float* trans) {
     if (*trans > 0.0f) {
         *trans = *trans - 0.005f;
@@ -154,6 +217,8 @@ Color fadeOutOpeningAnimation(float* trans) {
     return (Color) { colorValue, colorValue, colorValue, 255 };
 }
 
+// Menjalankan animasi pembuka game
+// Sequence animasi intro dengan fade effects dan transitions
 void openingAnimation(float* trans, GameResources* resources) {
     BeginDrawing();
 

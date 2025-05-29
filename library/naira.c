@@ -10,6 +10,15 @@ typedef struct {
     bool active;
 } ActivePowerup;
 
+//=====================Queue Structure==============================
+
+// =============================================================================
+// POWER-UP SPAWN SYSTEM
+// System for generating and placing power-ups in the game
+// =============================================================================
+
+// Spawn a new power-up at random location in the game
+// Creates and places a new power-up with random type on the game grid
 void spawnPowerUp(Game* game) {
     game->powerupActive = true;
     game->currentPowerup.type = rand() % POWERUP_COUNT;
@@ -19,22 +28,13 @@ void spawnPowerUp(Game* game) {
     };
 }
 
+// =============================================================================
+// POWER-UP ACTIVATION SYSTEM
+// System for collecting and activating power-up effects
+// =============================================================================
 
-//==============================Conversion of Queue===================================
-
-// Helper function to check if a powerup type is already active in the queue
-bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
-    int idx = 0;
-    for (SLLNode* node = q->Front; node != NULL; node = node->next, idx++) {
-        ActivePowerup* ap = (ActivePowerup*)node->data;
-        if (ap && ap->type == type) {
-            if (index_out) *index_out = idx;
-            return true;
-        }
-    }
-    return false;
-}
-
+// Activate collected power-up and apply its effects
+// Processes power-up collection and applies corresponding game effects to player
 void activatePowerUp(Game* game, GameResources* resources) {
     if (game->activePowerups.size >= 3) return; // Maximum 3 active effects
 
@@ -109,7 +109,115 @@ void activatePowerUp(Game* game, GameResources* resources) {
     game->powerupActive = false;
     game->powerupTimer = 7.0f + (rand() % 8);
 }
-//==============================Conversion of Queue===================================
+
+// Check if a specific power-up type is currently active
+// Returns true if the power-up is active, and optionally returns its index
+bool isPowerupTypeActive(Queue* q, PowerUpType type, int* index_out) {
+    int idx = 0;
+    for (SLLNode* node = q->Front; node != NULL; node = node->next, idx++) {
+        ActivePowerup* ap = (ActivePowerup*)node->data;
+        if (ap && ap->type == type) {
+            if (index_out) *index_out = idx;
+            return true;
+        }
+    }
+    return false;
+}
+
+// =============================================================================
+// POWER-UP RENDERING SYSTEM
+// System for visual representation of power-ups
+// =============================================================================
+
+// Render all active power-ups on screen
+// Draws power-up sprites with their visual effects and animations
+void drawPowerUp(Game* game, GameResources* resources) {
+    if (!game->powerupActive) return;
+
+    Texture2D powerupTexture;
+    float local_scale;
+
+
+    switch (game->currentPowerup.type) {
+    case POWERUP_SPEED_UP:
+        powerupTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
+        local_scale = 40.0f / 640.0f;
+        break;
+    case POWERUP_SLOW_DOWN:
+        powerupTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
+        local_scale = 40.0f / 1024.0f;
+        break;
+    case POWERUP_SPECIAL_BULLET:  // Efek temporal
+        powerupTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET);
+        game->bulletCount = 0;
+        local_scale = 40.0f / 1024.0f;
+        break;
+    case POWERUP_EXTRA_LIFE:      // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_PLS1_HP);
+        local_scale = 40.0f / 672.0f;
+        break;
+    case POWERUP_BOMB:            // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_MIN1_HP);
+        local_scale = 40.0f / 762.0f;
+        break;
+    case POWERUP_RANDOM:      // Efek instan
+        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
+        local_scale = 40.0f / 1024.0f;
+        break;
+    default:
+        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
+        local_scale = 40.0f / 1024.0f;
+        break;
+    }
+
+    DrawTextureEx(powerupTexture,
+        game->powerupPosition,
+        0,
+        local_scale,
+        WHITE);
+}
+
+// =============================================================================
+// POWER-UP STATE MANAGEMENT
+// System for managing power-up states and timers
+// =============================================================================
+
+// Update all power-up states and timers
+// Processes power-up lifetime, animations, collision detection, and cleanup
+
+void updatePowerUp(Game* game, GameResources* resources) {
+    if (!game->powerupActive) return;
+
+    // Move powerup down slower
+    game->powerupPosition.y += 2.0f;  // Reduced from 2.0f
+
+    // Gentler wavy motion
+    game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;  // Reduced amplitude and frequency
+
+    // Keep within screen bounds
+    if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
+    if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
+        game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
+
+    // Check if powerup went off screen
+    if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
+        game->powerupActive = false;
+        // Add delay before spawning next powerup (5-7 seconds)
+        game->powerupTimer = 5.0f + (rand() % 3);
+        return;
+    }
+
+    // Check collision with shooter
+    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,40,40 };
+
+    Rectangle shooterRect = { P.x - 32,P.y - 32,96,64 };
+
+    if (CheckCollisionRecs(powerupRect, shooterRect)) {
+        activatePowerUp(game, resources);
+    }
+}
+
+//===================== End of Queue Structure==============================
 
 
 //==========================Array Old=======================================
@@ -180,85 +288,5 @@ void activatePowerUp(Game* game, GameResources* resources) {
 //     game->powerupTimer = 7.0f + (rand() % 8);
 // }
 
-// =================================Array Old=======================================================
+// =================================End of Array Old=======================================================
 
-void drawPowerUp(Game* game, GameResources* resources) {
-    if (!game->powerupActive) return;
-
-    Texture2D powerupTexture;
-    float local_scale;
-
-
-    switch (game->currentPowerup.type) {
-    case POWERUP_SPEED_UP:
-        powerupTexture = TEXTURE(resources, TEXTURE_SPEEDUP);
-        local_scale = 40.0f / 640.0f;
-        break;
-    case POWERUP_SLOW_DOWN:
-        powerupTexture = TEXTURE(resources, TEXTURE_SLOWDOWN);
-        local_scale = 40.0f / 1024.0f;
-        break;
-    case POWERUP_SPECIAL_BULLET:  // Efek temporal
-        powerupTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET);
-        game->bulletCount = 0;
-        local_scale = 40.0f / 1024.0f;
-        break;
-    case POWERUP_EXTRA_LIFE:      // Efek instan
-        powerupTexture = TEXTURE(resources, TEXTURE_PLS1_HP);
-        local_scale = 40.0f / 672.0f;
-        break;
-    case POWERUP_BOMB:            // Efek instan
-        powerupTexture = TEXTURE(resources, TEXTURE_MIN1_HP);
-        local_scale = 40.0f / 762.0f;
-        break;
-    case POWERUP_RANDOM:      // Efek instan
-        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
-        local_scale = 40.0f / 1024.0f;
-        break;
-    default:
-        powerupTexture = TEXTURE(resources, TEXTURE_RANDOM);
-        local_scale = 40.0f / 1024.0f;
-        break;
-    }
-
-    DrawTextureEx(powerupTexture,
-        game->powerupPosition,
-        0,
-        local_scale,
-        WHITE);
-}
-
-
-//=====================Queue Structure==============================
-void updatePowerUp(Game* game, GameResources* resources) {
-    if (!game->powerupActive) return;
-
-    // Move powerup down slower
-    game->powerupPosition.y += 2.0f;  // Reduced from 2.0f
-
-    // Gentler wavy motion
-    game->powerupPosition.x += sinf(GetTime() * 2) * 1.0f;  // Reduced amplitude and frequency
-
-    // Keep within screen bounds
-    if (game->powerupPosition.x < 0) game->powerupPosition.x = 0;
-    if (game->powerupPosition.x > GAME_SCREEN_WIDTH - 32)
-        game->powerupPosition.x = GAME_SCREEN_WIDTH - 32;
-
-    // Check if powerup went off screen
-    if (game->powerupPosition.y > GAME_SCREEN_HEIGHT) {
-        game->powerupActive = false;
-        // Add delay before spawning next powerup (5-7 seconds)
-        game->powerupTimer = 5.0f + (rand() % 3);
-        return;
-    }
-
-    // Check collision with shooter
-    Rectangle powerupRect = { game->powerupPosition.x,game->powerupPosition.y,40,40 };
-
-    Rectangle shooterRect = { P.x - 32,P.y - 32,96,64 };
-
-    if (CheckCollisionRecs(powerupRect, shooterRect)) {
-        activatePowerUp(game, resources);
-    }
-}
-//=====================Queue Structure==============================

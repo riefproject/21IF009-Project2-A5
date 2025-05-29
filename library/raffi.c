@@ -1,7 +1,21 @@
+/**
+ * RAFFI MODULE - GAME MECHANICS & PHYSICS
+ * =======================================
+ *
+ * Modul yang menangani game mechanics, physics, collision detection, dan gameplay logic.
+ * Berisi implementasi untuk sistem scoring, database management, dan level progression.
+ *
+ * Komponen utama:
+ * - Database initialization dan high score management
+ * - Score calculation dan progression system
+ * - Level difficulty configuration
+ * - Game state utilities dan data persistence
+ */
+
 #include "defines.h"
 #include "all.h"
 
-// Struktur 
+ // Struktur 
 typedef enum {
     Super_EZ,
     Easy,
@@ -30,6 +44,13 @@ const char* levelNames[] = {
     "Progressive",
 };
 
+// =============================================================================
+// DATABASE INITIALIZATION AND MANAGEMENT
+// Inisialisasi dan manajemen database untuk high scores
+// =============================================================================
+
+// Menginisialisasi struktur database untuk high scores
+// Membuat linked list kosong sebagai container untuk menyimpan data scores
 SingleLinkedList* initializeDb() {
     FILE* file = fopen("db/hiscores.dat", "w");
     if (!file) {
@@ -49,6 +70,8 @@ SingleLinkedList* initializeDb() {
     return list;
 }
 
+// Memuat data high scores dari file database
+// Membaca file save dan mengisi linked list dengan data high scores yang tersimpan
 SingleLinkedList* loadHiScores() {
     FILE* file = fopen("db/hiscores.dat", "r");
     if (!file) {
@@ -70,6 +93,8 @@ SingleLinkedList* loadHiScores() {
     return list;
 }
 
+// Menyimpan data high scores ke file database
+// Menulis linked list scores ke file untuk persistensi data
 void saveHiScores(SingleLinkedList* list) {
     if (!list || !list->head) {
         printf("[LOG] Invalid list - tidak menyimpan skor!\n");
@@ -114,15 +139,22 @@ void saveHiScores(SingleLinkedList* list) {
     printf("[LOG] High scores saved successfully\n");
 }
 
+// =============================================================================
+// SCORE MANAGEMENT SYSTEM
+// Sistem manajemen skor dan pencapaian pemain
+// =============================================================================
+
+// Memperbarui high score jika skor current lebih tinggi
+// Membandingkan skor current dengan high score dan update jika perlu
 void updateHighScore(Game* game, GameResources* resources) {
     if (!game) return;
 
-    SLLNode* temp = resources->scores.head;  
+    SLLNode* temp = resources->scores.head;
     const char* mode = levelNames[resources->gameLevel];
 
     while (temp) {
         HiScore* score = (HiScore*)SLL_getNodeData(temp);
-        if (strcmp(score->mode, mode) == 0) { 
+        if (strcmp(score->mode, mode) == 0) {
             if (score->score < game->score) {
                 score->score = game->score;
             }
@@ -131,9 +163,11 @@ void updateHighScore(Game* game, GameResources* resources) {
         temp = SLL_getNextNode(temp);
     }
 
-    saveHiScores(&resources->scores);  
+    saveHiScores(&resources->scores);
 }
 
+// Menambahkan skor berdasarkan baris yang dihancurkan
+// Menghitung dan menambahkan poin berdasarkan jumlah baris yang cleared
 void addScore(Game* game, int row) {
     int basePoints = 20;
     int rowMultiplier = row + 1; // Semakin bawah multiplier semakin besar
@@ -141,10 +175,19 @@ void addScore(Game* game, int row) {
     game->score += basePoints * rowMultiplier;
 }
 
+// Mendapatkan skor current pemain
+// Mengambil nilai skor yang sedang berjalan dalam game session
 long long int playerScore(Game* game) {
     return game->score;
 }
 
+// =============================================================================
+// GAME STATE UTILITIES
+// Utilitas untuk mengambil informasi state game
+// =============================================================================
+
+// Mendapatkan nama mode permainan yang sedang dimainkan
+// Mengembalikan string identifier untuk mode game current
 char* gameMode(GameResources* resources) {
     return levelNames[resources->gameLevel];
 }

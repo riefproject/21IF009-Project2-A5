@@ -1,14 +1,32 @@
+/**
+ * ARIEF MODULE - ASSET & RESOURCE MANAGEMENT
+ * ==========================================
+ *
+ * Modul yang menangani asset dan resource management, UI rendering, menu system, dan game screens.
+ * Berisi implementasi untuk pengelolaan aset, antarmuka pengguna, navigasi menu, dan tampilan layar.
+ *
+ * Komponen utama:
+ * - Asset loading dan resource management
+ * - UI rendering dan text layout utilities
+ * - Menu system dan navigation logic
+ * - Screen transitions dan visual effects
+ * - Game screens dan dialog system
+ * - Settings management dan configuration
+ * - Block management dan game mechanics
+ * - Score system dan achievement tracking
+ */
+
 #include "defines.h"
 #include "all.h"
 #define PRIMARY_COLOR (Color){0, 65, 57, 255}
 
-// =============================================================================
-// ASSET AND RESOURCE MANAGEMENT
-// Fungsi-fungsi untuk mengelola aset game, memuat dan membebaskan resource
-// =============================================================================
+ // =============================================================================
+ // ASSET AND RESOURCE MANAGEMENT
+ // Fungsi-fungsi untuk mengelola aset game, memuat dan membebaskan resource
+ // =============================================================================
 
-// Menyesuaikan ukuran window berdasarkan resolusi layar
-// Menghitung ukuran optimal untuk mencegah window terlalu besar/kecil
+ // Menyesuaikan ukuran window berdasarkan resolusi layar
+ // Menghitung ukuran optimal untuk mencegah window terlalu besar/kecil
 void GetAdjustedWindowSize(int width, int height, int* outWidth, int* outHeight) {
     float targetRatio = (float)ASPECT_RATIO_WIDTH / ASPECT_RATIO_HEIGHT; // 3:4
 
@@ -162,8 +180,8 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
     system("cls");
-    printf("[LOG] \e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
-    printf("[LOG] Let the fun begin!\n\n");
+    printf("\e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
+    printf("Let the fun begin!\n\n");
 
     return assets;
 }
@@ -552,7 +570,7 @@ void drawToggleOption(Font font, const char* line, int startX, int y, int maxLab
     // Tentukan warna berdasarkan selection dan editing state
     Color labelColor = normalColor;
     if (isSelected) {
-        labelColor = isEditing ? DARKBLUE : ORANGE;
+        labelColor = isEditing ? PRIMARY_COLOR : ORANGE;
     }
 
     DrawTextEx(font, label, (Vector2) { startX, y }, fontSize, spacing, labelColor);
@@ -721,8 +739,9 @@ void pauseMenu(GameResources* resources) {
     int selection = 0;
     int fontSize = auto_y(20);
     int lineCount = len(lines);
+    bool paused = true;
 
-    while (resources->currentState == STATE_PAUSE && !WindowShouldClose()) {
+    while (resources->currentState == STATE_PAUSE && paused) {
         BeginDrawing();
         ClearBackground(Fade(RAYWHITE, 0.9f));
         drawBG(resources, BG_PAUSED);
@@ -734,12 +753,13 @@ void pauseMenu(GameResources* resources) {
 
         if (OK_KEY) {
             PlaySound(SOUND(resources, SOUND_SELECT));
+            paused = false;
             switch (selection) {
-            case 0: resources->currentState = STATE_PLAY; break;
+            case 0: resources->currentState = STATE_PLAY; showCountdown(resources); break;
             case 1: resources->currentState = STATE_CONTROLS; break;
             case 2: resources->currentState = STATE_SETTINGS; break;
-            case 3: if (confirmBack(resources)) resources->currentState = STATE_MAIN_MENU; break;
-            case 4: resources->currentState = STATE_QUIT; break;
+            case 3: if (confirmBack(resources)) { resources->currentState = STATE_MAIN_MENU; resources->prevState = STATE_MAIN_MENU; } break;
+            case 4: resources->currentState = STATE_PAUSE;resources->currentState = STATE_QUIT; break;
             }
         }
     }
@@ -918,6 +938,7 @@ void exitGame(GameResources* resources) {
     }
     else {
         resources->currentState = resources->prevState;
+        showCountdown(resources);
     }
 }
 
@@ -926,7 +947,7 @@ void exitGame(GameResources* resources) {
 // Dialog konfirmasi untuk navigasi mundur yang destructive
 bool confirmBack(GameResources* resources) {
     const char* options[] = { "Yes", "No" };
-    return showConfirmationDialog(resources, "Are you sure you want to go back to the main menu?", options, 2, BLUE);
+    return showConfirmationDialog(resources, "Are you sure you want to go back to the main menu?", options, 2, ORANGE);
 }
 
 
@@ -934,7 +955,7 @@ bool confirmBack(GameResources* resources) {
 // Dialog peringatan sebelum menghapus semua high score
 bool confirmReset(GameResources* resources) {
     const char* options[] = { "Yes", "No" };
-    return showConfirmationDialog(resources, "Reset all high scores?", options, 2, DARKGRAY);
+    return showConfirmationDialog(resources, "Reset all high scores?", options, 2, ORANGE);
 }
 
 
@@ -945,7 +966,7 @@ void rejectReset(GameResources* resources) {
         "Cannot reset scores during gameplay!",
         "Press any key to go back",
         RED,
-        DARKGRAY);
+        RAYWHITE);
 }
 
 
@@ -1086,7 +1107,7 @@ int loadingScreen(GameResources* resources, float* loadingTime) {
             currentPos.x + (nextPos.x - currentPos.x) * alpha,
             currentPos.y + (nextPos.y - currentPos.y) * alpha
         };
-        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, (Color) { 9, 88, 78, 255 });
+        DrawRectangleV(smoothPos, (Vector2) { blockSize, blockSize }, ORANGE);
     }
     EndDrawing();
 
@@ -1236,22 +1257,8 @@ void showControls(GameResources* resources) {
         }
         EndDrawing();
 
-        if (resources->prevState != STATE_PLAY) {
-            if (MOVE_LEFT || BACK_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
-                if (resources->prevState == STATE_PLAY) {
-                    resources->currentState = STATE_PAUSE;
-                }
-                else if (resources->prevState == STATE_PAUSE) {
-                    resources->currentState = STATE_PAUSE;
-                }
-                else {
-                    resources->currentState = STATE_MAIN_MENU;
-                }
-            }
-        }
-
         if (resources->prevState == STATE_PLAY) {
+            // Jika datang dari game yang sedang berjalan
             if (IsKeyPressed(KEY_R)) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
                 resources->currentState = STATE_PLAY;
@@ -1263,14 +1270,46 @@ void showControls(GameResources* resources) {
                 resources->currentState = STATE_PAUSE;
                 break;
             }
+            if (FORWARD_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_SETTINGS;
+                break;
+            }
         }
-
-        if (FORWARD_KEY) {
-            PlaySound(SOUND(resources, SOUND_MOVE));
-            resources->currentState = STATE_SETTINGS;
+        else if (resources->prevState == STATE_PAUSE) {
+            // Jika datang dari pause menu
+            if (MOVE_LEFT || BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PAUSE;
+                break;
+            }
+            if (IsKeyPressed(KEY_P)) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PAUSE;
+                break;
+            }
+            if (FORWARD_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_SETTINGS;
+                break;
+            }
+        }
+        else {
+            // Jika datang dari menu lain (bukan dari game)
+            if (MOVE_LEFT || BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_MAIN_MENU;
+                break;
+            }
+            if (FORWARD_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_SETTINGS;
+                break;
+            }
         }
     }
 }
+
 
 
 // Menampilkan layar pengaturan game
@@ -1827,7 +1866,6 @@ void displayGame(GameResources* resources) {
     if (SHOOT_RELEASE) {
         gameContext->canShoot = true;
     }
-    EndDrawing();
 
     // Keperluan debug
     // if (IsKeyPressed(KEY_G)) {
@@ -1835,6 +1873,9 @@ void displayGame(GameResources* resources) {
     // }
 
     if (IsKeyPressed(KEY_P)) {
+        printf("[DEBUG] P key pressed! Current state: %d\n", resources->currentState);
+        printf("[DEBUG] P key pressed! Previous state: %d\n", resources->prevState);
+        resources->currentState = STATE_PAUSE;
         pauseMenu(resources);
         if (resources->currentState == STATE_MAIN_MENU) {
             updateHighScore(gameContext, resources);
@@ -1843,6 +1884,7 @@ void displayGame(GameResources* resources) {
             return;
         }
     }
+    EndDrawing();
 
     if (IsKeyPressed(KEY_F1)) {
         printGrid(gameContext);

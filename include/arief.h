@@ -365,10 +365,6 @@ void fillRemainingBlocks(Game* game, int remainingBlocks);
 // Fungsi-fungsi untuk deteksi tabrakan dan interaksi dalam game
 // =============================================================================
 
-// Menangani collision antara bullet dan blok
-// Deteksi hit, damage calculation, dan cleanup bullet
-void handleBulletCollisions(Game* game);
-
 // Memproses hit bullet pada grid position tertentu
 // Damage application, explosion effect, dan bullet removal
 void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets);
