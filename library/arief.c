@@ -2301,14 +2301,6 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
     }
 }
 
-
-// =============================================================================
-// COLLISION AND INTERACTION SYSTEM
-// Fungsi-fungsi untuk deteksi tabrakan dan interaksi dalam game
-// =============================================================================
-
-// Menangani collision antara bullet dan blok
-// Deteksi hit, damage calculation, dan cleanup bullet
 void handleBulletCollisions(Game* game) {
     SLLNode* current = game->bullets->head;
     while (current != NULL) {
@@ -2320,9 +2312,25 @@ void handleBulletCollisions(Game* game) {
             int gridY = (int)(bullets->position.y / blockSize);
 
             if (isValidGridPosition(gridX, gridY)) {
-                Block* block = getBlockAt(game, gridY, gridX);
-                if (block && block->active) {
-                    processBulletHit(game, gridX, gridY, bullets);
+                DLLNode* rowNode = game->grid->head;
+                for (int y = 0; y < gridY && rowNode; y++) {
+                    rowNode = rowNode->next;
+                }
+
+                if (rowNode) {
+                    DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+
+                    DLLNode* blockNode = row->head;
+                    for (int x = 0; x < gridX && blockNode; x++) {
+                        blockNode = blockNode->next;
+                    }
+
+                    if (blockNode) {
+                        Block* block = (Block*)blockNode->data;
+                        if (block->active) {
+                            processBulletHit(game, gridX, gridY, bullets);
+                        }
+                    }
                 }
             }
         }

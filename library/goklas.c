@@ -18,19 +18,6 @@ void ShootBullets(SingleLinkedList* P, Vector2 playerpos, int* BulletCount, bool
         *CanShoot = false;
     }
 
-    // if (*BulletCount < MAX_BULLETS && *CanShoot) {
-    //     for (int i = 0;i < MAX_BULLETS;i++) {
-    //         if (!bullets[i].active) {
-    //             bullets[i].position = (Vector2){ playerpos.x, GetScreenHeight() - 20 };
-    //             bullets[i].direction = direction;
-    //             bullets[i].active = true;
-    //             (*BulletCount)++;
-    //             PlaySound(SOUND(resources, SOUND_SHOOT));
-    //             *CanShoot = false;
-    //             break;
-    //         }
-    //     }
-    // }
 
 }
 
@@ -39,7 +26,7 @@ void MoveBullets(SingleLinkedList* P) {
     float blockSize = auto_x(32);
     SLLNode* current = P->head;
     SLLNode* prev = NULL;
-
+    
     while (current != NULL) {
         Bullets* bullet = (Bullets*)current->data;
         SLLNode* next = current->next; 
@@ -62,24 +49,6 @@ void MoveBullets(SingleLinkedList* P) {
 }
 
 
-    // for (int i = 0; i < MAX_BULLETS; i++) {
-    //     if (bullets[i].active) {
-    //         // Sesuaikan kecepatan peluru dengan scaling
-    //         bullets[i].position.y -= blockSize / 3;  // Sesuaikan dengan ukuran block
-
-    //         // Batasi area pergerakan peluru sesuai area game
-    //         if (bullets[i].position.x < 0 || bullets[i].position.x > auto_x(320)) {
-    //             bullets[i].active = false;
-    //         }
-
-    //         // Nonaktifkan peluru jika keluar dari layar atas
-    //         if (bullets[i].position.y < 0) {
-    //             bullets[i].active = false;
-    //         }
-    //     }
-    // }
-
-
 void DrawBullets(SingleLinkedList* P, GameResources* resource) {
     if (P == NULL) return;
     float blockSize = auto_x(32);
@@ -94,13 +63,42 @@ void DrawBullets(SingleLinkedList* P, GameResources* resource) {
             head = head->next;
         } 
     }
+}
 
-    // for (int i = 0; i < MAX_BULLETS; i++) {
-    //     if (bullets[i].active) {
-    //         // Sesuaikan ukuran peluru dengan grid
-    //         float scale = blockSize / (float)TEXTURE(resource, TEXTURE_BULLET).width;
-    //         DrawTextureEx(TEXTURE(resource, TEXTURE_BULLET), bullets[i].position, 0.0f, scale, WHITE
-    //         );
-    //     }
-    // }
+
+void handleBulletCollisions(Game* game) {
+    SLLNode* current = game->bullets->head;
+    while (current != NULL) {
+        Bullets* bullets = (Bullets*)current->data;
+        if (bullets->active) {
+            float blockSize = auto_x(32);
+
+            int gridX = (int)(bullets->position.x / blockSize);
+            int gridY = (int)(bullets->position.y / blockSize);
+
+            if (isValidGridPosition(gridX, gridY)) {
+                DLLNode* rowNode = game->grid->head;
+                for (int y = 0; y < gridY && rowNode; y++) {
+                    rowNode = rowNode->next;
+                }
+
+                if (rowNode) {
+                    DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
+
+                    DLLNode* blockNode = row->head;
+                    for (int x = 0; x < gridX && blockNode; x++) {
+                        blockNode = blockNode->next;
+                    }
+
+                    if (blockNode) {
+                        Block* block = (Block*)blockNode->data;
+                        if (block->active) {
+                            processBulletHit(game, gridX, gridY, bullets);
+                        }
+                    }
+                }
+            }
+        }
+        current = current->next;
+    }
 }
