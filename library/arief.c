@@ -1543,7 +1543,7 @@ void gameOver(GameResources* resources, ll currentScore) {
         drawBG(resources, BG_PLAIN);
 
         // Draw GAME OVER message menggunakan fungsi modular
-        drawCenteredText(FONT(resources, FONT_HEADER), message, (GetScreenHeight() / 2) - 250, 30, 2, RAYWHITE);
+        drawCenteredText(FONT(resources, FONT_HEADER), message, (GetScreenHeight() / 2) - 350, 30, 2, RAYWHITE);
 
         // Draw scores menggunakan fungsi modular
         int startY = (GetScreenHeight() / 2) - 100;
@@ -2300,44 +2300,6 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
         remainingBlocks--; // Mencegah inf loop jika tak meletakkan semua blok
     }
 }
-
-void handleBulletCollisions(Game* game) {
-    SLLNode* current = game->bullets->head;
-    while (current != NULL) {
-        Bullets* bullets = (Bullets*)current->data;
-        if (bullets->active) {
-            float blockSize = auto_x(32);
-
-            int gridX = (int)(bullets->position.x / blockSize);
-            int gridY = (int)(bullets->position.y / blockSize);
-
-            if (isValidGridPosition(gridX, gridY)) {
-                DLLNode* rowNode = game->grid->head;
-                for (int y = 0; y < gridY && rowNode; y++) {
-                    rowNode = rowNode->next;
-                }
-
-                if (rowNode) {
-                    DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
-
-                    DLLNode* blockNode = row->head;
-                    for (int x = 0; x < gridX && blockNode; x++) {
-                        blockNode = blockNode->next;
-                    }
-
-                    if (blockNode) {
-                        Block* block = (Block*)blockNode->data;
-                        if (block->active) {
-                            processBulletHit(game, gridX, gridY, bullets);
-                        }
-                    }
-                }
-            }
-        }
-        current = current->next;
-    }
-}
-
 
 // Memproses hit bullet pada grid position tertentu
 // Damage application, explosion effect, dan bullet removal
