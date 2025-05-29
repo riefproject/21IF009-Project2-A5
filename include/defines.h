@@ -9,24 +9,24 @@
 // =======================================
 //            Game Variables
 // =======================================
-enum GameState;
-enum PowerUpType;
-enum SoundAsset;
-enum FontAsset;
-enum TextureAsset;
-enum BgTextures;
-enum BgModeTextures;
-enum TypeofAssets;
-struct PowerUp;
-struct HiScore;
-struct Settings;
-struct Shooter;
-struct BlockList;
-struct BlockQueue;
-struct Assets;
-struct GameResources;
-struct Game;
-struct openingTransition;
+typedef enum GameState GameState;
+typedef enum PowerUpType PowerUpType;
+typedef enum SoundAsset SoundAsset;
+typedef enum FontAsset FontAsset;
+typedef enum TextureAsset TextureAsset;
+typedef enum BgTextures BgTextures;
+typedef enum BgModeTextures BgModeTextures;
+typedef enum TypeofAssets TypeofAssets;
+typedef struct PowerUp PowerUp;
+typedef struct HiScore HiScore;
+typedef struct Settings Settings;
+typedef struct Shooter Shooter;
+typedef struct BlockList BlockList;
+typedef struct BlockQueue BlockQueue;
+typedef struct Assets Assets;
+typedef struct GameResources GameResources;
+typedef struct Game Game;
+typedef struct openingTransition openingTransition;
 // =======================================
 //           Game Constants
 // =======================================
@@ -366,4 +366,8 @@ typedef struct Game {
 typedef struct openingTransition { // Ditambahkan oleh Faliq
     float progress; // Ditambahkan oleh Faliq
 }openingTransition;// Ditambahkan oleh Faliq
+typedef struct PowerUpVisuals {
+    Texture2D texture;
+    Color timerColor;
+} PowerUpVisuals;
 #endif
