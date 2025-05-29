@@ -2198,43 +2198,6 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
     }
 }
 
-void handleBulletCollisions(Game* game) {
-    SLLNode* current = game->bullets->head;
-    while (current != NULL) {
-        Bullets* bullets = (Bullets*)current->data;
-        if (bullets->active) {
-            float blockSize = auto_x(32);
-
-            int gridX = (int)(bullets->position.x / blockSize);
-            int gridY = (int)(bullets->position.y / blockSize);
-
-            if (isValidGridPosition(gridX, gridY)) {
-                DLLNode* rowNode = game->grid->head;
-                for (int y = 0; y < gridY && rowNode; y++) {
-                    rowNode = rowNode->next;
-                }
-
-                if (rowNode) {
-                    DoublyLinkedList* row = (DoublyLinkedList*)rowNode->data;
-
-                    DLLNode* blockNode = row->head;
-                    for (int x = 0; x < gridX && blockNode; x++) {
-                        blockNode = blockNode->next;
-                    }
-
-                    if (blockNode) {
-                        Block* block = (Block*)blockNode->data;
-                        if (block->active) {
-                            processBulletHit(game, gridX, gridY, bullets);
-                        }
-                    }
-                }
-            }
-        }
-        current = current->next;
-    }
-}
-
 bool isValidGridPosition(int x, int y) {
     return x >= 0 && x < MAX_COLUMNS && y >= 0 && y < MAX_ROWS;
 }
