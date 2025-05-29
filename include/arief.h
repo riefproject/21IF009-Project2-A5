@@ -221,6 +221,10 @@ void showCredits(GameResources* resources);
 
 // Menampilkan layar kontrol dan panduan bermain
 // Help screen dengan instruksi control dan gameplay
+void showHowToPlay(GameResources* resources);
+
+// Menampilkan layar kontrol dan panduan bermain
+// Help screen dengan instruksi control dan gameplay
 void showControls(GameResources* resources);
 
 // Menampilkan layar pengaturan game

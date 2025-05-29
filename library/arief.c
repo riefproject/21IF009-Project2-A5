@@ -149,9 +149,10 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_CONFIRM, "assets/bg/BG_Confirm.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_PLAIN, "assets/bg/BG_Plain.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, CREDIT_SCENE, "assets/bg/CreditScene.png"));
-    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, GAME_AREA, "assets/bg/GameArea.png"));
-    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, UI_AREA, "assets/bg/UIArea.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_GAMEAREA, "assets/bg/GameArea.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_UIGAME, "assets/bg/UIArea.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_LOADING, "assets/bg/BG_Loading.png"));
+    SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, BG_HOWTOPLAY, "assets/bg/BG_HowToPlay.png"));
     SLL_insertFront(&assets->bg, inputAssets(TYPE_TEXTURE, ICON_LOADING, "assets/icon/ICON_Loading.png"));
 
 
@@ -471,34 +472,16 @@ void mainWindow(void) {
                 resources->currentState = STATE_MAIN_MENU;
             }
             break;
-        case STATE_MAIN_MENU:
-            mainMenu(resources);
-            break;
-        case STATE_HIGH_SCORES:
-            showHiScore(resources);
-            break;
-        case STATE_CONTROLS:
-            showControls(resources);
-            break;
-        case STATE_SETTINGS:
-            showSettings(resources);
-            break;
-        case STATE_PLAY:
-            UpdateMusicStream(soundGameplay);
-            displayGame(resources);
-            break;
-        case STATE_QUIT:
-            exitGame(resources);
-            break;
-        case STATE_PAUSE:
-            pauseMenu(resources);
-            break;
-        case STATE_SELECT_LEVEL:
-            selectMode(resources);
-            break;
-        case STATE_SCENE:
-            showCredits(resources);
-            break;
+        case STATE_MAIN_MENU: mainMenu(resources); break;
+        case STATE_HIGH_SCORES: showHiScore(resources); break;
+        case STATE_CONTROLS: showControls(resources); break;
+        case STATE_SETTINGS: showSettings(resources); break;
+        case STATE_PLAY: UpdateMusicStream(soundGameplay); displayGame(resources); break;
+        case STATE_QUIT: exitGame(resources); break;
+        case STATE_PAUSE: pauseMenu(resources); break;
+        case STATE_SELECT_LEVEL: selectMode(resources); break;
+        case STATE_SCENE: showCredits(resources); break;
+        case STATE_HOWTOPLAY: showHowToPlay(resources); break;
         }
     }
 
@@ -683,7 +666,7 @@ void mainMenu(GameResources* resources) {
     const char* lines[] = {
         "PLAY",
         "HIGH SCORE",
-        "CONTROLS",
+        "HOW TO PLAY",
         "SETTINGS",
         "QUIT"
     };
@@ -719,7 +702,7 @@ void mainMenu(GameResources* resources) {
             switch (selection) {
             case 0: resources->currentState = STATE_SELECT_LEVEL; break;
             case 1: resources->currentState = STATE_HIGH_SCORES; break;
-            case 2: resources->currentState = STATE_CONTROLS; break;
+            case 2: resources->currentState = STATE_HOWTOPLAY; break;
             case 3: resources->currentState = STATE_SETTINGS; break;
             case 4:
                 resources->prevState = STATE_MAIN_MENU;
@@ -735,7 +718,7 @@ void mainMenu(GameResources* resources) {
 // Menampilkan menu pause saat game sedang berjalan
 // Menu overlay dengan opsi Resume, Settings, Exit to Menu
 void pauseMenu(GameResources* resources) {
-    const char* lines[] = { "RESUME", "CONTROLS", "SETTINGS", "MAIN MENU", "QUIT" };
+    const char* lines[] = { "RESUME", "HOW TO PLAY", "SETTINGS", "MAIN MENU", "QUIT" };
     int selection = 0;
     int fontSize = auto_y(20);
     int lineCount = len(lines);
@@ -756,7 +739,7 @@ void pauseMenu(GameResources* resources) {
             paused = false;
             switch (selection) {
             case 0: resources->currentState = STATE_PLAY; showCountdown(resources); break;
-            case 1: resources->currentState = STATE_CONTROLS; break;
+            case 1: resources->currentState = STATE_HOWTOPLAY; break;
             case 2: resources->currentState = STATE_SETTINGS; break;
             case 3: if (confirmBack(resources)) { resources->currentState = STATE_MAIN_MENU; resources->prevState = STATE_MAIN_MENU; } break;
             case 4: resources->currentState = STATE_PAUSE;resources->currentState = STATE_QUIT; break;
@@ -866,23 +849,47 @@ bool showConfirmationDialog(GameResources* resources, const char* message, const
         ClearBackground(PRIMARY_COLOR);
         drawBG(resources, BG_CONFIRM);
 
-        // Gambar pesan
-        Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), message, fontSize, 2);
-        int startX = (GetScreenWidth() - textSize.x) / 2;
-        int startY = (GetScreenHeight() - textSize.y) / 2 - 50;
-        DrawTextEx(FONT(resources, FONT_HEADER), message, (Vector2) { startX, startY }, fontSize, 2, RAYWHITE);
+        // Gambar pesan dengan support multiline
+        char messageCopy[1024];
+        strcpy(messageCopy, message);
+
+        // Split message by newlines
+        char* lines[10];
+        int lineCount = 0;
+        char* line = strtok(messageCopy, "\n");
+        while (line != NULL && lineCount < 10) {
+            lines[lineCount] = line;
+            lineCount++;
+            line = strtok(NULL, "\n");
+        }
+
+        // Calculate total height for centering
+        float totalTextHeight = 0;
+        for (int i = 0; i < lineCount; i++) {
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), lines[i], fontSize, 2);
+            totalTextHeight += textSize.y + (i < lineCount - 1 ? auto_y(10) : 0);
+        }
+
+        // Draw each line centered
+        float startY = (GetScreenHeight() - totalTextHeight) / 2 - 50;
+        for (int i = 0; i < lineCount; i++) {
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_HEADER), lines[i], fontSize, 2);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
+            DrawTextEx(FONT(resources, FONT_HEADER), lines[i], (Vector2) { startX, startY }, fontSize, 2, RAYWHITE);
+            startY += textSize.y + auto_y(10);
+        }
 
         // Gambar opsi
-        startY += textSize.y + auto_y(50);
+        startY += auto_y(40); // Extra spacing before options
         for (int i = 0; i < optionCount; i++) {
-            textSize = MeasureTextEx(FONT(resources, FONT_BODY), options[i], fontSize, 2);
-            startX = (GetScreenWidth() - textSize.x) / 2;
+            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), options[i], fontSize, 2);
+            int startX = (GetScreenWidth() - textSize.x) / 2;
             DrawTextEx(FONT(resources, FONT_BODY), options[i], (Vector2) { startX, startY }, fontSize, 2, selection == i ? highlightColor : RAYWHITE);
             startY += textSize.y + auto_y(20);
         }
         EndDrawing();
 
-        // Navigasi
+        // ...existing navigation code...
         if (MOVE_UP || MOVE_LEFT) {
             PlaySound(SOUND(resources, SOUND_MOVE));
             selection = (selection - 1 + optionCount) % optionCount;
@@ -893,7 +900,7 @@ bool showConfirmationDialog(GameResources* resources, const char* message, const
         }
         if (OK_KEY) {
             PlaySound(SOUND(resources, SOUND_SELECT));
-            return selection == 0; // Return true jika "Yes", false jika "No"
+            return selection == 0;
         }
         if (IsKeyPressed(KEY_N) || BACK_KEY) {
             PlaySound(SOUND(resources, SOUND_MOVE));
@@ -947,7 +954,7 @@ void exitGame(GameResources* resources) {
 // Dialog konfirmasi untuk navigasi mundur yang destructive
 bool confirmBack(GameResources* resources) {
     const char* options[] = { "Yes", "No" };
-    return showConfirmationDialog(resources, "Are you sure you want to go back to the main menu?", options, 2, ORANGE);
+    return showConfirmationDialog(resources, "Are you sure you want\nto go back to the main menu?", options, 2, ORANGE);
 }
 
 
@@ -963,7 +970,7 @@ bool confirmReset(GameResources* resources) {
 // Feedback visual ketika user membatalkan reset
 void rejectReset(GameResources* resources) {
     showMessageDialog(resources,
-        "Cannot reset scores during gameplay!",
+        "Cannot reset scores\nduring gameplay!",
         "Press any key to go back",
         RED,
         RAYWHITE);
@@ -1198,7 +1205,8 @@ void showCredits(GameResources* resources) {
         EndDrawing();
 
         if (scrollY <= -(BG(resources, CREDIT_SCENE).height * creditScale) ||
-            IsKeyPressed(KEY_ENTER)) {
+            GetKeyPressed() != 0) {
+            PlaySound(SOUND(resources, SOUND_MOVE));
             resources->currentState = STATE_SETTINGS;
         }
     }
@@ -1207,12 +1215,81 @@ void showCredits(GameResources* resources) {
 
 // Menampilkan layar kontrol dan panduan bermain
 // Help screen dengan instruksi control dan gameplay
+void showHowToPlay(GameResources* resources) {
+    while (resources->currentState == STATE_HOWTOPLAY && !WindowShouldClose()) {
+        // Rendering loop yang hilang
+        BeginDrawing();
+        ClearBackground(PRIMARY_COLOR);
+        drawBG(resources, BG_HOWTOPLAY);
+
+        // Info text yang konsisten dengan showControls()
+        {
+            const char* infoText;
+            if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
+                infoText = "[B]: Back    [R]: Resume    [F]: CONTROLS";
+            }
+            else {
+                infoText = "[A]: Main Menu    [F]: CONTROLS";
+            }
+            int infoFontSize = (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) ? auto_y(15) : auto_y(20);
+            drawCenteredText(FONT(resources, FONT_BODY), infoText, auto_y(560), infoFontSize, 2.0f, RAYWHITE);
+        }
+        EndDrawing();
+
+        // Input handling - logic kondisional
+        if (resources->prevState == STATE_PLAY) {
+            // Jika datang dari game yang sedang berjalan
+            if (IsKeyPressed(KEY_R) || MOVE_LEFT || BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PLAY;
+                showCountdown(resources);
+                break;
+            }
+            if (IsKeyPressed(KEY_P)) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PAUSE;
+                break;
+            }
+        }
+        else if (resources->prevState == STATE_PAUSE) {
+            // Jika datang dari pause menu
+            if (MOVE_LEFT || BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PAUSE;
+                break;
+            }
+            if (IsKeyPressed(KEY_P)) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_PAUSE;
+                break;
+            }
+        }
+        else {
+            // Jika datang dari menu lain (bukan dari game)
+            if (MOVE_LEFT || BACK_KEY) {
+                PlaySound(SOUND(resources, SOUND_MOVE));
+                resources->currentState = STATE_MAIN_MENU;
+                break;
+            }
+        }
+
+        // Input yang berlaku untuk semua state
+        if (FORWARD_KEY) {
+            PlaySound(SOUND(resources, SOUND_MOVE));
+            resources->currentState = STATE_CONTROLS;
+            break;
+        }
+    }
+}
+
+// Menampilkan layar kontrol dan panduan bermain
+// Help screen dengan instruksi control dan gameplay
 void showControls(GameResources* resources) {
     int fontSize = auto_y(16);
     int spacing = auto_x(4);
 
     const char* lines[] = {
-        "W / ↑    : Up",
+        "W / Up Arrow    : Up",
         "S / Down Arrow  : Down",
         "A / Left Arrow  : Left",
         "D / Right Arrow : Right",
@@ -1244,22 +1321,19 @@ void showControls(GameResources* resources) {
 
         {
             const char* infoText;
-            // Jika game dijeda (resources->prevState == STATE_SELECT_LEVEL) tampilkan tiga shortcut
             if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
-                infoText = "[R]: Resume    [P]: Pause Menu    [F]: ke Settings";
+                infoText = "[B]: Back    [R]: Resume    [F]: GUIDE";
             }
             else {
-                infoText = "[A]: Main Menu    [F]: Settings";
+                infoText = "[A]: Main Menu    [F]: GUIDE";
             }
-            Vector2 textSize = MeasureTextEx(FONT(resources, FONT_BODY), infoText, (resources->prevState == STATE_PLAY) ? auto_x(12) : auto_x(20), 2.0f);
-            int startXInfo = (GetScreenWidth() - textSize.x) / 2;
-            DrawTextEx(FONT(resources, FONT_BODY), infoText, (Vector2) { startXInfo, auto_y(560) }, (resources->prevState == STATE_PLAY) ? auto_x(12) : auto_x(20), 2.0f, RAYWHITE);
+            int infoFontSize = (resources->prevState == STATE_PLAY) ? 15 : 20;
+            drawCenteredText(FONT(resources, FONT_BODY), infoText, 560, infoFontSize, 2.0f, RAYWHITE);
         }
         EndDrawing();
 
         if (resources->prevState == STATE_PLAY) {
-            // Jika datang dari game yang sedang berjalan
-            if (IsKeyPressed(KEY_R)) {
+            if (IsKeyPressed(KEY_R) || MOVE_LEFT || BACK_KEY) {
                 PlaySound(SOUND(resources, SOUND_MOVE));
                 resources->currentState = STATE_PLAY;
                 showCountdown(resources);
@@ -1270,47 +1344,26 @@ void showControls(GameResources* resources) {
                 resources->currentState = STATE_PAUSE;
                 break;
             }
-            if (FORWARD_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = STATE_SETTINGS;
-                break;
-            }
         }
-        else if (resources->prevState == STATE_PAUSE) {
-            // Jika datang dari pause menu
-            if (MOVE_LEFT || BACK_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
+        if (MOVE_LEFT || BACK_KEY) {
+            PlaySound(SOUND(resources, SOUND_MOVE));
+            if (resources->prevState == STATE_PLAY) {
                 resources->currentState = STATE_PAUSE;
-                break;
             }
-            if (IsKeyPressed(KEY_P)) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
+            else if (resources->prevState == STATE_PAUSE) {
                 resources->currentState = STATE_PAUSE;
-                break;
             }
-            if (FORWARD_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = STATE_SETTINGS;
-                break;
-            }
-        }
-        else {
-            // Jika datang dari menu lain (bukan dari game)
-            if (MOVE_LEFT || BACK_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
+            else {
                 resources->currentState = STATE_MAIN_MENU;
-                break;
             }
-            if (FORWARD_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
-                resources->currentState = STATE_SETTINGS;
-                break;
-            }
+        }
+        if (FORWARD_KEY) {
+            PlaySound(SOUND(resources, SOUND_MOVE));
+            resources->currentState = STATE_HOWTOPLAY;
+            break;
         }
     }
 }
-
-
 
 // Menampilkan layar pengaturan game
 // Settings screen dengan berbagai opsi konfigurasi
@@ -1381,13 +1434,12 @@ void showSettings(GameResources* resources) {
         // Gambar info text menggunakan modul
         const char* infoText;
         if (resources->prevState == STATE_PLAY || resources->prevState == STATE_PAUSE) {
-            infoText = "[B]: Back    [R]: Resume    [F]: Controls";
+            infoText = "[B]: Back    [R]: Resume";
         }
         else {
-            infoText = "[A]: Main Menu    [F]: Controls";
+            infoText = "[A]: Main Menu";
         }
-        int infoFontSize = (resources->prevState == STATE_PLAY) ? 15 : 20;
-        drawCenteredText(FONT(resources, FONT_BODY), infoText, 560, infoFontSize, 2.0f, RAYWHITE);
+        drawCenteredText(FONT(resources, FONT_BODY), infoText, 560, auto_y(20), 2.0f, RAYWHITE);
 
         EndDrawing();
 
@@ -1466,24 +1518,17 @@ void showSettings(GameResources* resources) {
                 break;
             }
         }
-        else {
-            if (MOVE_LEFT || BACK_KEY) {
-                PlaySound(SOUND(resources, SOUND_MOVE));
-                if (resources->prevState == STATE_PLAY) {
-                    resources->currentState = STATE_PAUSE;
-                }
-                else if (resources->prevState == STATE_PAUSE) {
-                    resources->currentState = STATE_PAUSE;
-                }
-                else {
-                    resources->currentState = STATE_MAIN_MENU;
-                }
-            }
-        }
-
-        if (FORWARD_KEY) {
+        if (MOVE_LEFT || BACK_KEY) {
             PlaySound(SOUND(resources, SOUND_MOVE));
-            resources->currentState = STATE_CONTROLS;
+            if (resources->prevState == STATE_PLAY) {
+                resources->currentState = STATE_PAUSE;
+            }
+            else if (resources->prevState == STATE_PAUSE) {
+                resources->currentState = STATE_PAUSE;
+            }
+            else {
+                resources->currentState = STATE_MAIN_MENU;
+            }
         }
     }
 }
@@ -1671,7 +1716,8 @@ bool confirmExit(GameResources* resources) {
 // Reset semua high scores ke nilai default
 // Menghapus semua record high score dan kembalikan ke 0
 void resetHiScores(GameResources* resources) {
-    if (resources->prevState == STATE_PAUSE) {
+    if (resources->prevState == STATE_PAUSE
+        || resources->prevState == STATE_PLAY) {
         rejectReset(resources);
         return;
     }
@@ -1703,7 +1749,6 @@ void waitForKeyRelease(void) {
 void displayGame(GameResources* resources) {
 
     if (!resources) return;
-    resources->prevState = STATE_PLAY;
     static Game* gameContext = NULL;
     UpdateMusicStream(soundGameplay);
     // Inisialisasi new game
@@ -1714,6 +1759,7 @@ void displayGame(GameResources* resources) {
         gameContext = createGameContext();
         initBlocks(gameContext, resources);
     }
+    resources->prevState = STATE_PLAY;
 
     if (!gameContext->gameOver) {
         float deltaTime = GetFrameTime();
@@ -1750,8 +1796,8 @@ void displayGame(GameResources* resources) {
     float gameAreaY = 0;
 
     // main game area
-    float imgScale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
-    DrawTexturePro(BG(resources, GAME_AREA), (Rectangle) { 0, 0, BG(resources, GAME_AREA).width, BG(resources, GAME_AREA).height },
+    float imgScale = (float)GetScreenHeight() / BG(resources, BG_GAMEAREA).height;
+    DrawTexturePro(BG(resources, BG_GAMEAREA), (Rectangle) { 0, 0, BG(resources, BG_GAMEAREA).width, BG(resources, BG_GAMEAREA).height },
         (Rectangle) {
         gameAreaX, gameAreaY, gameWidth, GetScreenHeight()
     }, (Vector2) { 0, 0 }, 0.0f, WHITE);
@@ -1759,8 +1805,8 @@ void displayGame(GameResources* resources) {
     float sidebarX = gameWidth;
     float sidebarWidth = GetScreenWidth() - gameWidth;
 
-    imgScale = (float)GetScreenHeight() / BG(resources, UI_AREA).height;
-    DrawTexturePro(BG(resources, UI_AREA), (Rectangle) { 0, 0, BG(resources, UI_AREA).width, BG(resources, UI_AREA).height },
+    imgScale = (float)GetScreenHeight() / BG(resources, BG_UIGAME).height;
+    DrawTexturePro(BG(resources, BG_UIGAME), (Rectangle) { 0, 0, BG(resources, BG_UIGAME).width, BG(resources, BG_UIGAME).height },
         (Rectangle) {
         sidebarX, 0, sidebarWidth, GetScreenHeight()
     }, (Vector2) { 0, 0 }, 0.0f, WHITE);
@@ -1875,17 +1921,15 @@ void displayGame(GameResources* resources) {
     if (IsKeyPressed(KEY_P)) {
         printf("[DEBUG] P key pressed! Current state: %d\n", resources->currentState);
         printf("[DEBUG] P key pressed! Previous state: %d\n", resources->prevState);
+        resources->prevState = STATE_PLAY;
         resources->currentState = STATE_PAUSE;
-        pauseMenu(resources);
-        if (resources->currentState == STATE_MAIN_MENU) {
-            updateHighScore(gameContext, resources);
-            destroyGameContext(gameContext);
-            gameContext = NULL;
-            return;
-        }
+        return;
     }
     EndDrawing();
-
+    if (IsKeyPressed(KEY_H)) {
+        resources->currentState = STATE_HOWTOPLAY;
+        return;
+    }
     if (IsKeyPressed(KEY_F1)) {
         printGrid(gameContext);
     }
@@ -2626,10 +2670,10 @@ void drawGameUI(Game* game, GameResources* resources) {
     const int SPACING = auto_x(10);
     const int START_ICON_X = auto_x(345);
 
-    float uiScale = (float)GetScreenHeight() / BG(resources, UI_AREA).height;
-    float gamescale = (float)GetScreenHeight() / BG(resources, GAME_AREA).height;
-    float uiscaledWidth = BG(resources, UI_AREA).width * uiScale;
-    float gamescaledWidth = BG(resources, GAME_AREA).width * gamescale;
+    float uiScale = (float)GetScreenHeight() / BG(resources, BG_UIGAME).height;
+    float gamescale = (float)GetScreenHeight() / BG(resources, BG_GAMEAREA).height;
+    float uiscaledWidth = BG(resources, BG_UIGAME).width * uiScale;
+    float gamescaledWidth = BG(resources, BG_GAMEAREA).width * gamescale;
 
     // Mode
     formatGameText(obj, "%s", gameMode(resources));

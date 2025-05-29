@@ -158,7 +158,8 @@ typedef enum GameState {
     STATE_PAUSE,          // Game di-pause
     STATE_SELECT_LEVEL,   // Pemilihan level/mode
     STATE_GAME_OVER,      // Layar game over
-    STATE_SCENE           // Scene khusus
+    STATE_SCENE,          // Scene khusus
+    STATE_HOWTOPLAY       // Layar how to play
 } GameState;
 
 // =============================================================================
@@ -234,10 +235,11 @@ typedef enum BgTextures {
     BG_CONTROLS,    // Background kontrol
     BG_CONFIRM,     // Background konfirmasi
     BG_PLAIN,       // Background polos
-    CREDIT_SCENE,   // Background credits
-    GAME_AREA,      // Area permainan
-    UI_AREA,        // Area UI
     BG_LOADING,     // Background loading
+    BG_HOWTOPLAY,   // Background how to play
+    BG_GAMEAREA,    // Background area permainan
+    BG_UIGAME,      // Background area UI
+    CREDIT_SCENE,   // Background credits
     ICON_LOADING,   // Ikon loading
     BG_COUNT
 } BgTextures;
