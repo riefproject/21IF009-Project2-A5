@@ -55,7 +55,6 @@ typedef unsigned long long int ull;
 #define MAX_COLUMNS 10
 #define MAX_WIDTH_BLOCKS 11
 #define MAX_LEVELS 11
-#define MAX_BULLETS 100
 
 // =============================================================================
 // DIFFICULTY SYSTEM CONFIGURATION
