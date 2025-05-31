@@ -17,6 +17,49 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
 -   Responsive controls with keyboard/mouse support
 -   Clean, modern UI with smooth animations
 
+## Features (More details)
+
+**Block Shooter** is a fast-paced vertical shooter where quick reflexes and smart decisions keep you alive. Here's what makes it exciting:
+
+### 🎯 Grid-Based Shooting
+
+Shoot falling blocks to complete rows. Clear space, score points, and stay alive. Let the grid fill up — and it's game over.
+
+### 🚀 Difficulty Modes
+
+Play across multiple challenge levels: from **Super Easy** to **God Mode**, plus **Progressive Mode** that gets harder the longer you last.
+
+### 🧠 Scoring
+
+Clear rows, survive longer, and chase high scores. Each difficulty tracks its own leaderboard.
+
+### ❤️ Lives
+
+Start with three lives. Stay alive by avoiding harmful items and mistakes. Power-ups can help — or hurt.
+
+### 🧪 Power-Ups
+
+Power-ups drop randomly. Catch them to trigger effects:
+
+| .   | Power-Up       | Effect                                   |
+| --- | -------------- | ---------------------------------------- |
+| 🟢  | Extra Life     | Adds one life (max 3)                    |
+| 🟢  | Slow Down      | Blocks fall slower temporarily           |
+| 🔴  | Poison         | Reduces one life                         |
+| 🔴  | Speed Up       | Blocks fall faster temporarily           |
+| 🟡  | Special Bullet | Clears a row, but leaves floating blocks |
+| 🎲  | Lucky Box      | Random effect — sometimes hidden         |
+
+Only three effects can be active. Use them wisely.
+
+### 🔦 Laser
+
+Need precision? Activate the laser pointer with **E** or **Right Shift**. Aiming made easier — for a limited time.
+
+### 🧩 Challenge & Flow
+
+Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into chaos — and dares you to master it.
+
 ## 📂 Project Structure
 
 -   **src/** → Contains the source code files (.c), including the main game logic and entry point (`main.c`).
@@ -107,16 +150,16 @@ A fast-paced **Block Shooter** game project developed for the **Project 2: Libra
 
 ### Menu Controls
 
-| Action      | Keybinding               | Description                     |
-| ----------- | ------------------------ | ------------------------------- |
-| Navigate    | ↑ / ↓ or W / S           | Move through menu options       |
-| Select      | Enter / Space / Y / Left | Confirm selection               |
-| Back        | A / B / Backspace        | Return to previous menu         |
-| Forward     | F                        | Go to next menu (e.g. settings) |
-| Resume Game | R                        | Resume after pause              |
-| Pause       | P                        | Open pause menu                 |
-| Help        | H                        | Open help screen                |
-| Force Quit  | Esc                      | Force exit the game             |
+| Action      | Keybinding        | Description                     |
+| ----------- | ----------------- | ------------------------------- |
+| Navigate    | ↑ / ↓ or W / S    | Move through menu options       |
+| Select      | Enter / Space     | Confirm selection               |
+| Back        | A / B / Backspace | Return to previous menu         |
+| Forward     | F                 | Go to next menu (e.g. settings) |
+| Resume Game | R                 | Resume after pause              |
+| Pause       | P                 | Open pause menu                 |
+| Help        | H                 | Open help screen                |
+| Force Quit  | Esc               | Force exit the game             |
 
 ## 📝 Team Members
 

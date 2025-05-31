@@ -1823,7 +1823,7 @@ void displayGame(GameResources* resources) {
     drawBlocks(gameContext, resources);
     drawPowerUp(gameContext, resources);
 
-    if (IsKeyPressed(KEY_E) && gameContext->laserCooldown <= 0) {
+    if ((IsKeyPressed(KEY_E) || IsKeyPressed(KEY_RIGHT_SHIFT)) && gameContext->laserCooldown <= 0) {
         gameContext->laserActive = true;
         gameContext->laserDuration = 5.0f;
         gameContext->laserCooldown = 15.0f; // 5s aktif + 10s cooldown
