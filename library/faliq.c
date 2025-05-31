@@ -150,9 +150,9 @@ void handleLaser(Game* game) {
     if (!game->laserActive) return;
     float blockSize = BLOCK_SIZE;
 
-    // Sesuaikan posisi shooter dengan grid
-    float shooterX = roundf(P.x / blockSize) * blockSize;
-    int gridX = (int)(shooterX / blockSize);
+    // Perbaikan: Gunakan posisi actual shooter, bukan rounded
+    // Karena shooter bisa berada di posisi antara grid
+    int gridX = (int)(P.x / blockSize);
     float intersectionY = P.y;
 
     DLLNode* currentRowNode = game->grid->tail;
@@ -181,14 +181,16 @@ void handleLaser(Game* game) {
         currentRowIndex--;
     }
 
-    shooterX += blockSize / 2;
+    // PERBAIKAN UTAMA: Gunakan center actual dari posisi shooter
+    // Bukan rounded position, tapi posisi actual + setengah block
+    float laserX = P.x + (blockSize / 2);
 
     float laserThickness = auto_x(2.0f);
     float dotRadius = auto_x(3.0f);
     intersectionY += blockSize;
 
-    DrawLineEx((Vector2) { shooterX, P.y }, (Vector2) { shooterX, intersectionY }, laserThickness, (Color) { 255, 0, 0, 128 });
-    DrawCircle(shooterX, intersectionY, dotRadius, RED);
+    DrawLineEx((Vector2) { laserX, P.y }, (Vector2) { laserX, intersectionY }, laserThickness, (Color) { 255, 0, 0, 128 });
+    DrawCircle(laserX, intersectionY, dotRadius, RED);
 }
 
 // =============================================================================
