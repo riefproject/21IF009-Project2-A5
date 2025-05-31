@@ -1300,7 +1300,8 @@ void showControls(GameResources* resources) {
         "H               : Help/Control",
         "P               : Pause",
         "Space / Enter   : Select/Shoot",
-        "Q / Backspace   : Kembali"
+        "Mouse Left Click",
+        "E / RIGHT SHIFT : Activate Laser"
     };
 
     int lineCount = len(lines);
@@ -1893,14 +1894,6 @@ void displayGame(GameResources* resources) {
         gameContext = NULL;
         return;
     }
-    // Debug grid visualization
-    if (IsKeyDown(KEY_LEFT_SHIFT)) {
-        for (int i = 0; i <= MAX_ROWS; i++) {
-        }
-        for (int j = 0; j <= MAX_COLUMNS; j++) {
-        }
-    }
-
     // Player and bullets
     shooter(&P.x, &P.y, resources);
     moveSet(&P.x, resources);
