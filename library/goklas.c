@@ -15,9 +15,6 @@
 #include "all.h"
 #include "defines.h"
 
-#include "all.h"
-#include "defines.h"
-
  // =============================================================================
  // BULLET SYSTEM MANAGEMENT
  // Sistem manajemen peluru untuk gameplay shooting
