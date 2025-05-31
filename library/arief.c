@@ -2689,7 +2689,7 @@ void drawGameUI(Game* game, GameResources* resources) {
         Vector2 title = MeasureTextEx(GetFontDefault(), "HIGH-SCORE", 20, 2);
         Vector2 tag = MeasureTextEx(GetFontDefault(), newTag, 12, 2);
         Rectangle newBox = {
-            auto_x(405) - (title.x / 2), 50 + auto_y(3),
+            auto_x(405) - auto_x(title.x / 2), auto_y(160),
             tag.x + auto_x(10), tag.y + auto_y(6)
         };
         DrawRectangle(newBox.x, newBox.y, newBox.width, newBox.height, ORANGE);

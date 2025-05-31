@@ -150,7 +150,7 @@ void handleLaser(Game* game) {
     if (!game->laserActive) return;
     float blockSize = BLOCK_SIZE;
 
-    // Perbaikan: Gunakan posisi actual shooter, bukan rounded
+    // Gunakan posisi actual shooter, bukan rounded
     // Karena shooter bisa berada di posisi antara grid
     int gridX = (int)(P.x / blockSize);
     float intersectionY = P.y;
@@ -163,7 +163,6 @@ void handleLaser(Game* game) {
             DoublyLinkedList* currentRow = (DoublyLinkedList*)currentRowNode->data;
             DLLNode* blockNode = currentRow->head;
 
-            // Navigate to correct column
             for (int col = 0; col < gridX && blockNode != NULL; col++) {
                 blockNode = blockNode->next;
             }
@@ -171,7 +170,6 @@ void handleLaser(Game* game) {
             if (blockNode != NULL) {
                 Block* block = (Block*)blockNode->data;
                 if (block->active) {
-                    // Sesuaikan Y dengan grid
                     intersectionY = currentRowIndex * blockSize;
                     break;
                 }
@@ -181,8 +179,6 @@ void handleLaser(Game* game) {
         currentRowIndex--;
     }
 
-    // PERBAIKAN UTAMA: Gunakan center actual dari posisi shooter
-    // Bukan rounded position, tapi posisi actual + setengah block
     float laserX = P.x + (blockSize / 2);
 
     float laserThickness = auto_x(2.0f);
