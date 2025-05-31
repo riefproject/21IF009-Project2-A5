@@ -411,8 +411,7 @@ void mainWindow(void) {
 
     int screenWidth = MIN_SCREEN_WIDTH;
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
-    P.x = 160; // Ditambahkan oleh faliq
-    P.y = 598; // Ditambahkan oleh faliq
+
     openingTransition opTrans; // Ditambahkan oleh faliq
     opTrans.progress = 0.0f; // Ditambahkan oleh faliq
 
@@ -422,6 +421,9 @@ void mainWindow(void) {
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(MIN_SCREEN_WIDTH, MIN_SCREEN_HEIGHT);
     InitAudioDevice();
+
+    initializePlayerPosition();
+
     musicGameplay(resources); // Ditambahkan faliq
     SetTargetFPS(60);
     resources->assets = createAssets();
@@ -451,7 +453,6 @@ void mainWindow(void) {
 
             // Update window size
             if (IsWindowState(FLAG_WINDOW_MAXIMIZED)) {
-                // Jika dimaksimalkan, buat window dengan ukuran yang disesuaikan
                 ClearWindowState(FLAG_WINDOW_MAXIMIZED);
                 SetWindowSize(adjustedWidth, adjustedHeight);
 
@@ -465,6 +466,9 @@ void mainWindow(void) {
             else {
                 SetWindowSize(adjustedWidth, adjustedHeight);
             }
+
+            // Update posisi player setelah resize
+            updatePlayerPositionOnResize();
         }
         switch (resources->currentState) {
         case STATE_LOADING:
@@ -2751,3 +2755,36 @@ ll getMaxScoreToShow(Game* game, GameResources* rsc) {
     return game->score > getCurrentModeHighScore(rsc) ? game->score : getCurrentModeHighScore(rsc);
 }
 
+// Tambahkan fungsi ini untuk inisialisasi posisi player yang responsif
+void initializePlayerPosition(void) {
+    // Hitung posisi tengah game area secara responsif
+    float blockSize = auto_x(32);
+    float gameWidth = blockSize * MAX_COLUMNS;
+
+    // Posisi X: tengah game area dikurangi setengah lebar shooter
+    P.x = auto_x(192);
+
+    // Posisi Y: bagian bawah dengan offset yang responsif
+    P.y = auto_y(598);
+
+    // Pastikan posisi dalam bounds
+    if (P.x < 0) P.x = 0;
+    if (P.x + blockSize > gameWidth) P.x = gameWidth - blockSize;
+}
+
+// Fungsi untuk update posisi saat window resize
+void updatePlayerPositionOnResize(void) {
+    float blockSize = auto_x(32);
+    float gameWidth = blockSize * MAX_COLUMNS;
+
+    // Pertahankan posisi relatif terhadap game area
+    P.x = ((int)(P.x / blockSize)) * blockSize;
+
+    // Pertahankan posisi relatif terhadap game area
+    if (P.x + blockSize > gameWidth) {
+        P.x = gameWidth - blockSize;
+    }
+
+    // Update posisi Y jika diperlukan
+    P.y = auto_y(598);
+}

@@ -436,4 +436,17 @@ ll getCurrentModeHighScore(GameResources* resources);
 // Utility untuk display score dengan formatting yang tepat
 ll getMaxScoreToShow(Game* game, GameResources* rsc);
 
+// =============================================================================
+// PLAYER MANAGEMENT SYSTEM
+// Fungsi-fungsi untuk mengelola posisi dan state pemain dalam game
+// =============================================================================
+
+// Menginisialisasi posisi awal pemain saat game dimulai
+// Mengatur koordinat starting position player di tengah layar
+void initializePlayerPosition(void);
+
+// Memperbarui posisi pemain ketika ukuran window berubah
+// Menyesuaikan koordinat player agar tetap proporsional setelah resize
+void updatePlayerPositionOnResize(void);
+
 #endif

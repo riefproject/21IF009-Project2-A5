@@ -122,6 +122,8 @@ void moveSet(int* x, GameResources* resources) {
 
     *x = (*x < 0) ? 0 : *x;
     *x = (*x + (int)blockSize > (int)gameWidth) ? (int)(gameWidth - blockSize) : *x;
+
+    P.x = *x;
 }
 
 // =============================================================================
