@@ -150,7 +150,7 @@ void drawPowerUp(Game* game, GameResources* resources) {
     case POWERUP_SPECIAL_BULLET:  // Efek temporal
         powerupTexture = TEXTURE(resources, TEXTURE_SPECIAL_BULLET);
         game->bulletCount = 0;
-        local_scale = 40.0f / 1024.0f;
+        local_scale = 40.0f / TEXTURE(resources, TEXTURE_SPECIAL_BULLET).width;
         break;
     case POWERUP_EXTRA_LIFE:      // Efek instan
         powerupTexture = TEXTURE(resources, TEXTURE_PLS1_HP);
