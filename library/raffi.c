@@ -108,14 +108,14 @@ void saveHiScores(SingleLinkedList* list) {
     }
 
     for (int i = 0; i < MAX_LEVELS; ++i) {
-        char* curMode = levelNames[i];
+        const char* curMode = levelNames[i];
         ll curScore = 0;
         bool found = false;
 
         SLLNode* temp = list->head;
         while (temp != NULL) {
             HiScore* score = (HiScore*)SLL_getNodeData(temp);
-            if (score && score->mode && strcmp(score->mode, curMode) == 0) {
+            if (score && strcmp(score->mode, curMode) == 0) {
                 curScore = score->score;
                 found = true;
                 break;
@@ -188,6 +188,6 @@ long long int playerScore(Game* game) {
 
 // Mendapatkan nama mode permainan yang sedang dimainkan
 // Mengembalikan string identifier untuk mode game current
-char* gameMode(GameResources* resources) {
+const char* gameMode(GameResources* resources) {
     return levelNames[resources->gameLevel];
 }

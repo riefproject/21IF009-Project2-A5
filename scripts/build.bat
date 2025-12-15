@@ -17,9 +17,9 @@ set "TMP_PATH=temp"
 REM bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
 set "WNO=-Wno-unused-variable -Wno-switch -Wno-unused-parameter"
 
-set "CFLAGS=%WNO% -Iinclude -Ivendor\raylib-v5.5\include -Ivendor\reestruct-v0.1.0\include"
-set "LDFLAGS=vendor\raylib-v5.5\lib\libraylib.a -lopengl32 -lgdi32 -lwinmm"
-set "RSTFLAGS=vendor\reestruct-v0.1.0\lib\libreestruct.a"
+set "CFLAGS=%WNO% -Iinclude -Ivendor\raylib-v5.5\include -Ivendor\reestruct-v1.0.0\include"
+set "LDFLAGS=-Lvendor\raylib-v5.5\lib -lraylib -lopengl32 -lgdi32 -lwinmm"
+set "RSTFLAGS=-Lvendor\reestruct-v1.0.0\lib -lreestruct"
 set "OBJECT_FILES="
 
 REM =====================================================================================

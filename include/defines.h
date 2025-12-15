@@ -2,6 +2,7 @@
 #define DEFINES_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include "raylib.h"
 #include "linkedlist.h"
 #include "queue.h"
@@ -141,6 +142,15 @@ typedef unsigned long long int ull;
 
 // Debug Helper
 #define DBG printf("[LOG] Haiiii");
+
+// Cross-platform console clearing
+static inline void clearConsole(void) {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
 
 // =============================================================================
 // GAME STATE ENUMERATION
@@ -421,7 +431,7 @@ typedef struct Game {
     PowerUp currentPowerup;     // Power-up yang sedang aktif
     Vector2 powerupPosition;    // Posisi power-up di layar
     bool powerupActive;         // Status power-up aktif
-    Queue activePowerups;       // Queue power-up yang aktif (maksimal 3)
+    Queue* activePowerups;      // Queue power-up yang aktif (maksimal 3)
     int activeEffectsCount;     // Jumlah efek yang sedang berjalan
 } Game;
 

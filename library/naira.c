@@ -36,7 +36,7 @@ void spawnPowerUp(Game* game) {
 // Activate collected power-up and apply its effects
 // Processes power-up collection and applies corresponding game effects to player
 void activatePowerUp(Game* game, GameResources* resources) {
-    if (game->activePowerups.size >= 3) return; // Maximum 3 active effects
+    if (game->activePowerups && game->activePowerups->size >= 3) return; // Maximum 3 active effects
 
     PowerUpType type = game->currentPowerup.type;
     if (type == POWERUP_RANDOM) {
@@ -48,7 +48,9 @@ void activatePowerUp(Game* game, GameResources* resources) {
     int foundIdx = -1;
     SLLNode* foundNode = NULL;
     int idx = 0;
-    for (SLLNode* node = game->activePowerups.Front; node != NULL; node = node->next, idx++) {
+    for (SLLNode* node = game->activePowerups ? game->activePowerups->Front : NULL;
+         node != NULL;
+         node = node->next, idx++) {
         ActivePowerup* ap = (ActivePowerup*)node->data;
         if (ap && ap->type == type) {
             foundNode = node;
@@ -103,7 +105,7 @@ void activatePowerUp(Game* game, GameResources* resources) {
         ap->type = type;
         ap->duration = duration;
         ap->active = true;
-        enqueue(&game->activePowerups, ap);
+        Enqueue(game->activePowerups, ap);
     }
 
     game->powerupActive = false;
@@ -289,4 +291,3 @@ void updatePowerUp(Game* game, GameResources* resources) {
 // }
 
 // =================================End of Array Old=======================================================
-

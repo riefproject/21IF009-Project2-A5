@@ -1,31 +1,112 @@
 #!/bin/bash
 
 # pake array karna akan diiterasi. Kalo mau nambah subfolder tambahin aja
-SRC_DIRS=("src" 
+SRC_DIRS=("src"
           "library")
 
 BUILD_DIR="build/output"
 BIN_DIR="bin"
-EXE_NAME="BlockShooter.exe"
+TMP_PATH="temp"
+
+PLATFORM="unknown"
+case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*) PLATFORM="windows" ;;
+    Linux*) PLATFORM="linux" ;;
+    Darwin*) PLATFORM="mac" ;;
+    *) PLATFORM="unknown" ;;
+esac
+
+EXE_EXT=""
+RESOURCE_ENABLED=0
+if [ "$PLATFORM" = "windows" ]; then
+    EXE_EXT=".exe"
+    RESOURCE_ENABLED=1
+fi
+
+EXE_NAME="BlockShooter${EXE_EXT}"
 EXE_PATH="$BIN_DIR/$EXE_NAME"
-TEST_EXE_NAME="test.exe"
+TEST_EXE_NAME="test${EXE_EXT}"
 TEST_EXE_PATH="$BIN_DIR/$TEST_EXE_NAME"
 RESOURCE_RC="assets/resource.rc"
 RESOURCE_RES="$BUILD_DIR/resource.o"
-TMP_PATH="temp"
 
 # bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
 WNO="-Wno-unused-variable
      -Wno-switch
      -Wno-unused-parameter"
 
+detect_raylib_pkgconfig() {
+    if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists raylib; then
+        RAYLIB_CFLAGS="$(pkg-config --cflags raylib)"
+        RAYLIB_LDFLAGS="$(pkg-config --libs raylib)"
+        return 0
+    fi
+    return 1
+}
+
+RAYLIB_CFLAGS=""
+RAYLIB_LDFLAGS=""
+RAYLIB_RPATH=""
+if [ "$PLATFORM" = "windows" ]; then
+    RAYLIB_LDFLAGS="-Lvendor/raylib-v5.5/lib -lraylib -lopengl32 -lgdi32 -lwinmm"
+elif [ "$PLATFORM" = "linux" ]; then
+    if ! detect_raylib_pkgconfig; then
+        if [ -f "vendor/raylib-v5.5/lib/libraylib.so" ]; then
+            RAYLIB_LDFLAGS="-Lvendor/raylib-v5.5/lib -lraylib -lm -lpthread -ldl -lrt -lGL -lX11"
+            RAYLIB_RPATH="-Wl,-rpath,'\$ORIGIN/../vendor/raylib-v5.5/lib'"
+        else
+            RAYLIB_LDFLAGS="-lraylib -lm -lpthread -ldl -lrt -lGL -lX11"
+        fi
+    fi
+elif [ "$PLATFORM" = "mac" ]; then
+    if ! detect_raylib_pkgconfig; then
+        if [ -f "vendor/raylib-v5.5/lib/libraylib.dylib" ]; then
+            RAYLIB_LDFLAGS="-Lvendor/raylib-v5.5/lib -lraylib -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework AudioToolbox -framework CoreAudio"
+            RAYLIB_RPATH="-Wl,-rpath,@executable_path/../vendor/raylib-v5.5/lib"
+        elif command -v brew >/dev/null 2>&1 && brew --prefix raylib >/dev/null 2>&1; then
+            RAYLIB_PREFIX="$(brew --prefix raylib 2>/dev/null)"
+            RAYLIB_CFLAGS="-I${RAYLIB_PREFIX}/include"
+            RAYLIB_LDFLAGS="-L${RAYLIB_PREFIX}/lib -lraylib -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework AudioToolbox -framework CoreAudio"
+            RAYLIB_RPATH="-Wl,-rpath,${RAYLIB_PREFIX}/lib"
+        else
+            RAYLIB_LDFLAGS="-lraylib -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework AudioToolbox -framework CoreAudio"
+            RAYLIB_NEEDS_HINT=1
+        fi
+    fi
+else
+    RAYLIB_LDFLAGS="-lraylib"
+fi
+
 CFLAGS="$WNO
         -Iinclude
         -Ivendor/raylib-v5.5/include
-        -Ivendor/reestruct-v0.1.0/include"
-LDFLAGS="vendor/raylib-v5.5/lib/libraylib.a -lopengl32 -lgdi32 -lwinmm"
-RSTFLAGS="vendor/reestruct-v0.1.0/lib/libreestruct.a"
+        -Ivendor/reestruct-v1.0.0/include
+        $RAYLIB_CFLAGS"
+LDFLAGS="$RAYLIB_LDFLAGS $RAYLIB_RPATH"
+RSTFLAGS="vendor/reestruct-v1.0.0/lib/libreestruct.a"
 OBJECT_FILES=()
+
+verify_raylib() {
+    if [ "$PLATFORM" = "unknown" ]; then
+        echo -e "${YELLOW}⚠️  Unknown platform; attempting to link raylib generically.${RESET}"
+    fi
+    mkdir -p "$BUILD_DIR"
+    local test_bin="$BUILD_DIR/.raylib_check${EXE_EXT}"
+    echo "int main(void){return 0;}" | gcc $CFLAGS -x c - -o "$test_bin" $LDFLAGS >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Raylib not found for this platform.${RESET}"
+        if [ "$PLATFORM" = "mac" ]; then
+            echo "Install via 'brew install raylib' or export RAYLIB_CFLAGS/RAYLIB_LDFLAGS."
+        elif [ "$PLATFORM" = "linux" ]; then
+            echo "Install raylib from your package manager (and ensure pkg-config is available), or export RAYLIB_CFLAGS/RAYLIB_LDFLAGS."
+        else
+            echo "Ensure raylib libraries are available and update RAYLIB_CFLAGS/RAYLIB_LDFLAGS accordingly."
+        fi
+        rm -f "$test_bin"
+        exit 1
+    fi
+    rm -f "$test_bin"
+}
 
 # Biar CLI nya cakep
 RED='\e[31m'
@@ -40,6 +121,12 @@ UNDERLINE='\e[4m'
 # =====================================================================================
 # . . . FUNCTIONS . . .
 # =====================================================================================
+
+maybe_clear() {
+    if command -v clear >/dev/null 2>&1; then
+        clear
+    fi
+}
 
 clean() {
     echo "🧹 Cleaning build directories..."
@@ -86,6 +173,10 @@ compile_sources() {
 }
 
 compile_resource_if_needed() {
+    if [ "$RESOURCE_ENABLED" -ne 1 ]; then
+        return
+    fi
+
     if [ ! -f "$RESOURCE_RES" ] || [ "$RESOURCE_RC" -nt "$RESOURCE_RES" ]; then
         echo "🎨 Compiling resource file..."
         mkdir -p "$(dirname "$RESOURCE_RES")"
@@ -103,7 +194,9 @@ link_if_needed() {
     compile_resource_if_needed
 
     local need_link=false
-    if [ ! -f "$EXE_PATH" ] || [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
+    if [ ! -f "$EXE_PATH" ]; then
+        need_link=true
+    elif [ "$RESOURCE_ENABLED" -eq 1 ] && [ "$RESOURCE_RES" -nt "$EXE_PATH" ]; then
         need_link=true
     else
         for obj in "${OBJECT_FILES[@]}"; do
@@ -116,7 +209,11 @@ link_if_needed() {
 
     if $need_link; then
         echo "🔧 Linking..."
-        gcc "${OBJECT_FILES[@]}" "$RESOURCE_RES" -o "$EXE_PATH" $LDFLAGS $RSTFLAGS
+        local link_inputs=("${OBJECT_FILES[@]}")
+        if [ "$RESOURCE_ENABLED" -eq 1 ]; then
+            link_inputs+=("$RESOURCE_RES")
+        fi
+        gcc "${link_inputs[@]}" -o "$EXE_PATH" $LDFLAGS $RSTFLAGS
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1
@@ -129,10 +226,11 @@ link_if_needed() {
 build() {
     echo "🚧 Starting build process..."
     mkdir -p "$BIN_DIR"
+    verify_raylib
     compile_sources
     link_if_needed
 
-    clear
+    maybe_clear
     echo -e "✅ Build successful! Run './$EXE_PATH'"
 }
 
@@ -145,7 +243,7 @@ run() {
     echo -e "\n🚀 Running ${BLUE}BlockShooter...${RESET}"
     "./$EXE_PATH"
     
-    clear
+    maybe_clear
     if [ $? -eq 0 ]; then
         echo -e "\n\nThanks for playing ${GREEN}Block Shooter${RESET}"
     fi
@@ -179,7 +277,7 @@ test() {
     done
     
     echo "🔧 Linking test executable..."
-    gcc "$BUILD_DIR/$TMP_PATH/main.o" "${OBJECT_FILES[@]}" -o "$TEST_EXE_PATH" $LDFLAGS
+    gcc "$BUILD_DIR/$TMP_PATH/main.o" "${OBJECT_FILES[@]}" -o "$TEST_EXE_PATH" $LDFLAGS $RSTFLAGS
     
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ Test linking failed! ${RESET}"

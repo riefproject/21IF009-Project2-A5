@@ -14,6 +14,9 @@ Build Scripts
     -   POSIX shell compatible version
     -   Provides identical functionality to the Windows version
     -   Uses bash syntax and Unix commands
+    -   On macOS, auto-detects Homebrew Raylib if `pkg-config` is unavailable
+
+> The Bash script auto-detects the host OS: it uses the bundled Windows Raylib binaries on Windows, and prefers system-installed Raylib via `pkg-config` on Linux/macOS.
 
 ## 📄 Usage Examples
 
@@ -63,7 +66,7 @@ Both scripts support these commands:
     - `goklas.c`
 
 5. Links all object files with libraries
-6. Produces final executable (Block Shooter.exe)
+6. Produces final executable (BlockShooter / BlockShooter.exe)
 
 ### Rebuild Process
 
@@ -83,7 +86,7 @@ Both scripts support these commands:
 2. Creates test-specific directories
 3. Compiles test main entry point (`temp/main.c`)
 4. Compiles library files for testing
-5. Links test executable (`bin/test.exe`)
+5. Links test executable (`bin/test` or `bin/test.exe`)
 6. Runs tests and reports results
 7. Returns test success/failure status code
 
@@ -95,7 +98,7 @@ Scripts use these environment variables and settings:
 -   `WINDRES` - Windows resource compiler
 -   `CFLAGS` - Compiler flags including:
     -   Warning suppressions (`-Wno-unused-variable`, `-Wno-switch`, `-Wno-unused-parameter`)
-    -   Include paths for header files (`-Iinclude`, `-Ivendor/raylib-v5.5/include`, `-Ivendor/reestruct-v0.1.0/include`)
+    -   Include paths for header files (`-Iinclude`, `-Ivendor/raylib-v5.5/include`, `-Ivendor/reestruct-v1.0.0/include`)
 -   `LDFLAGS` - Linker flags with Raylib `library`
 -   `RSTFLAGS` - Reestruct `library` flags
 
@@ -112,13 +115,15 @@ Scripts use these environment variables and settings:
 -   **GCC/MinGW compiler** - For C code compilation
 -   **Windres** - For Windows resource compilation
 -   **Raylib v5.5** - Graphics `library` (expected in raylib-v5.5)
--   **Reestruct v0.1.0** - Data structure `library` (expected in reestruct-v0.1.0)
+-   **Reestruct v1.0.0** - Data structure `library` (expected in reestruct-v1.0.0)
+-   **Raylib on Linux/macOS** - Install via your package manager so `pkg-config --libs raylib` works (the bundled Raylib binaries target Windows)
+    -   macOS example: `brew install raylib`
 -   **Bash shell** - For Unix environments (build.sh)
 -   **Windows Command Prompt** - For Windows environments (build.bat)
 
 ## 🖥️ Output Files
 
--   **Main executable** - `bin/BlockShooter.exe`
--   **Test executable** - `bin/test.exe`
+-   **Main executable** - `bin/BlockShooter` (Windows: `.exe`)
+-   **Test executable** - `bin/test` (Windows: `.exe`)
 -   **Object files** - Stored in `output` with directory structure matching source
 -   **Resource object** - `resource.o`

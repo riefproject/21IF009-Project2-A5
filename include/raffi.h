@@ -43,5 +43,5 @@ long long int playerScore(Game* game);
 
 // Mendapatkan nama mode permainan yang sedang dimainkan
 // Mengembalikan string identifier untuk mode game current
-char* gameMode(GameResources* resources);
+const char* gameMode(GameResources* resources);
 #endif

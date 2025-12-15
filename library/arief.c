@@ -106,6 +106,7 @@ InputAsset* inputAssets(TypeofAssets type, uint id, const char* path) {
 Assets* createAssets(void) {
     Assets* assets = new(Assets);
     if (!assets) return NULL;
+    memset(assets, 0, sizeof(Assets));
 
     // Load sounds
     SLL_insertFront(&assets->sounds, inputAssets(TYPE_SOUND, SOUND_MOVE, "assets/sounds/click.wav"));
@@ -180,7 +181,7 @@ Assets* createAssets(void) {
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_LEGEND, "assets/bg/mode/tx/Legend.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_GOD, "assets/bg/mode/tx/God.png"));
     SLL_insertFront(&assets->txMode, inputAssets(TYPE_TEXTURE, BGMODE_PROGRESSIVE, "assets/bg/mode/tx/Progressive.png"));
-    system("cls");
+    clearConsole();
     printf("\e[4;32m""[ALL ASSETS LOADED SUCCESSFULLY]\n""\e[0m");
     printf("Let the fun begin!\n\n");
 
@@ -345,13 +346,29 @@ Game* createGameContext(void) {
     game->powerupPosition = (Vector2){ 0, 0 };
 
     game->activeEffectsCount = 0;
-    game->activePowerups = *createQueue();
+    game->activePowerups = createQueue();
+    if (!game->activePowerups) {
+        delete(game);
+        return NULL;
+    }
+
     game->bullets = (SingleLinkedList*)malloc(sizeof(SingleLinkedList));
+    if (!game->bullets) {
+        free(game->activePowerups);
+        delete(game);
+        return NULL;
+    }
     game->bullets->head = NULL;
     game->bullets->tail = NULL;
     game->bullets->size = 0;
 
     game->grid = initGameGrid();
+    if (!game->grid) {
+        free(game->activePowerups);
+        delete(game->bullets);
+        delete(game);
+        return NULL;
+    }
 
     return game;
 }
@@ -360,6 +377,17 @@ Game* createGameContext(void) {
 // Dealokasi grid, bullets, dan semua struktur data yang digunakan
 void destroyGameContext(Game* game) {
     if (!game) return;
+    if (game->activePowerups) {
+        SLLNode* node = game->activePowerups->Front;
+        while (node) {
+            SLLNode* next = node->next;
+            free(node->data);
+            free(node);
+            node = next;
+        }
+        free(game->activePowerups);
+    }
+    delete(game->bullets);
     delete(game);
 }
 
@@ -1762,6 +1790,11 @@ void displayGame(GameResources* resources) {
             destroyGameContext(gameContext);
         }
         gameContext = createGameContext();
+        if (!gameContext) {
+            printf("[LOG] Failed to initialize game context.\n");
+            resources->currentState = STATE_QUIT;
+            return;
+        }
         initBlocks(gameContext, resources);
     }
     resources->prevState = STATE_PLAY;
@@ -1784,7 +1817,7 @@ void displayGame(GameResources* resources) {
             resources->currentState = STATE_GAME_OVER;
             updateHighScore(gameContext, resources);
             gameOver(resources, gameContext->score);
-            delete(gameContext);
+            destroyGameContext(gameContext);
             gameContext = NULL;
             return;
         }
@@ -1845,7 +1878,7 @@ void displayGame(GameResources* resources) {
     // Update powerups
     float deltaTime = GetFrameTime();
     SLLNode* prev = NULL;
-    SLLNode* node = gameContext->activePowerups.Front;
+    SLLNode* node = gameContext->activePowerups ? gameContext->activePowerups->Front : NULL;
     while (node != NULL) {
         PowerUp* powerup = (PowerUp*)node->data;
         if (powerup && powerup->active) {
@@ -1865,19 +1898,19 @@ void displayGame(GameResources* resources) {
                 SLLNode* toDelete = node;
                 if (prev == NULL) {
                     // Removing front
-                    gameContext->activePowerups.Front = node->next;
+                    gameContext->activePowerups->Front = node->next;
                     node = node->next;
                 }
                 else {
                     prev->next = node->next;
                     node = node->next;
                 }
-                if (gameContext->activePowerups.Rear == toDelete) {
-                    gameContext->activePowerups.Rear = prev;
+                if (gameContext->activePowerups->Rear == toDelete) {
+                    gameContext->activePowerups->Rear = prev;
                 }
                 free(toDelete->data);
                 free(toDelete);
-                gameContext->activePowerups.size--;
+                gameContext->activePowerups->size--;
                 continue;
             }
         }
@@ -1890,7 +1923,7 @@ void displayGame(GameResources* resources) {
         resources->currentState = STATE_GAME_OVER;
         updateHighScore(gameContext, resources);
         gameOver(resources, gameContext->score);
-        delete(gameContext);
+        destroyGameContext(gameContext);
         gameContext = NULL;
         return;
     }
@@ -2388,7 +2421,7 @@ void fillRemainingBlocks(Game* game, int remainingBlocks) {
 // Damage application, explosion effect, dan bullet removal
 void processBulletHit(Game* game, int gridX, int gridY, Bullets* bullets) {
     bool hasSpecialBullet = false;
-    SLLNode* node = game->activePowerups.Front;
+    SLLNode* node = game->activePowerups ? game->activePowerups->Front : NULL;
     while (node) {
         PowerUp* powerup = (PowerUp*)node->data;
         if (powerup && powerup->active &&
@@ -2534,7 +2567,7 @@ void drawBlocks(Game* game, GameResources* resources) {
 // Debug function untuk print grid ke console
 // Development utility untuk visualisasi grid state
 void printGrid(Game* game) {
-    system("cls");
+    clearConsole();
     printf("[LOG] \n--- Grid State ---\n");
 
     DLLNode* rowNode = game->grid->head;
@@ -2698,7 +2731,7 @@ void drawGameUI(Game* game, GameResources* resources) {
 
     // Power-up icons
     int iconIdx = 0;
-    SLLNode* node = game->activePowerups.Front;
+    SLLNode* node = game->activePowerups ? game->activePowerups->Front : NULL;
     while (node) {
         PowerUp* powerup = (PowerUp*)node->data;
         if (powerup && powerup->active) {

@@ -21,7 +21,7 @@
 int main(void) {
     mainWindow();
 
-    system("cls");
+    clearConsole();
     printf("\n\nThanks for playing ""\e[0;32m""Block Shooter\n""\e[0m");
 
     return 0;

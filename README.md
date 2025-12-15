@@ -77,13 +77,14 @@ Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into 
     -   `settings.dat` - Stores user preferences (SFX, music, last played level)
     -   `hiscores.dat` - Stores high scores for all difficulty modes
 -   **build/** → Directory for compiled files (`build/output/`)
--   **bin/** → Output directory for the final executable (`game.exe`)
+-   **bin/** → Output directory for the final executable (`BlockShooter` / `BlockShooter.exe`)
 -   **scripts/** → Build automation scripts (`build.bat`, `clean.bat`)
 
 ## ⚙️ Build Requirements
 
--   GCC Compiler (MinGW/MSYS2 for Windows)
--   Raylib Graphics Library (Tested on Raylib 5.5+)
+-   GCC/Clang (MinGW/MSYS2 for Windows; Xcode CLT/Homebrew GCC for macOS)
+-   Raylib Graphics Library (tested on Raylib 5.5+; bundled Windows binaries, `pkg-config --libs raylib` on Linux/macOS)
+-   Reestruct v1.0.0 (vendored in `vendor/reestruct-v1.0.0`)
 -   Make (optional, for Makefile support)
 
 ## 🛠️ How to Build and Run
@@ -107,18 +108,24 @@ Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into 
     - Or manually using script:
         - **Windows:**
             ```sh
-            ./scripts/clean.bat rebuild
+            ./scripts/build.bat rebuild
             ```
         - **Linux/macOS:**
             ```sh
             . scripts/build.sh rebuild
             # OR
             chmod +x scripts/build.sh  # Only needed the first time
-            ./scripts/clean.sh rebuild
+            ./scripts/build.sh rebuild
             ```
 
 4. Additioal build options:
    Both build scripts support various commands for different build tasks. For all available commands and detailed documentation, see [`📋scripts/README.md`](https://github.com/riefproject/21IF009-Project2-A5/blob/main/scripts). Common commands include: build (default), run, clean, rebuild, test, and help.
+
+### Cross-platform notes
+
+-   Makefile and `scripts/build.sh` auto-detect Windows/Linux/macOS and choose the right linker flags.
+-   Windows builds use bundled Raylib binaries (`vendor/raylib-v5.5`) and vendored Reestruct v1.0.0.
+-   Linux/macOS builds expect Raylib installed and discoverable via `pkg-config` (Homebrew example: `brew install raylib`); Reestruct is linked from `vendor/reestruct-v1.0.0/lib`.
 
 ## 🎮 Gameplay Instructions
 
