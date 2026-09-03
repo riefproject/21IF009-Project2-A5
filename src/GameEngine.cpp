@@ -16,6 +16,7 @@ GameEngine::~GameEngine() {
         UnloadMusicStream(m_soundGameplay);
     }
     m_assets.unloadAll();
+    CloseVirtualCanvas();
     CloseAudioDevice();
     CloseWindow();
 }
@@ -25,6 +26,8 @@ void GameEngine::init() {
     int screenHeight = (screenWidth * ASPECT_RATIO_HEIGHT) / ASPECT_RATIO_WIDTH;
 
     InitWindow(screenWidth, screenHeight, "Block Shooter (C++17)");
+    InitVirtualCanvas();
+
     Image ico = LoadImage("assets/icon/icon.png");
     SetWindowIcon(ico);
     UnloadImage(ico);
@@ -58,30 +61,9 @@ void GameEngine::setupAudio() {
 }
 
 void GameEngine::checkWindowResize() {
-    if (IsWindowResized() || (IsWindowState(FLAG_WINDOW_MAXIMIZED) &&
-        (GetScreenWidth() != GetMonitorWidth(GetCurrentMonitor()) ||
-         GetScreenHeight() != GetMonitorHeight(GetCurrentMonitor())))) {
-
-        int width = GetScreenWidth();
-        int height = GetScreenHeight();
-        int adjustedWidth, adjustedHeight;
-
-        GetAdjustedWindowSize(width, height, &adjustedWidth, &adjustedHeight);
-
-        if (IsWindowState(FLAG_WINDOW_MAXIMIZED)) {
-            ClearWindowState(FLAG_WINDOW_MAXIMIZED);
-            SetWindowSize(adjustedWidth, adjustedHeight);
-
-            int monitorWidth = GetMonitorWidth(GetCurrentMonitor());
-            int monitorHeight = GetMonitorHeight(GetCurrentMonitor());
-            SetWindowPosition((monitorWidth - adjustedWidth) / 2, (monitorHeight - adjustedHeight) / 2);
-        } else {
-            SetWindowSize(adjustedWidth, adjustedHeight);
-        }
-
-        if (m_gameContext) {
-            m_gameContext->player.updatePositionOnResize();
-        }
+    // Toggle Fullscreen via F11 or Alt+Enter
+    if (IsKeyPressed(KEY_F11) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_ENTER))) {
+        ToggleFullscreen();
     }
 }
 
@@ -157,18 +139,18 @@ void GameEngine::handleMainMenu() {
 
     // Tunggu key release agar tidak double press dari screen sebelumnya
     while (IsKeyDown(KEY_ENTER) || IsKeyDown(KEY_SPACE)) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
-        EndDrawing();
+        EndVirtualCanvas();
     }
 
     while (m_currentState == GameState::MainMenu && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::MainMenu);
 
         const Texture2D& menuBg = m_assets.getBg(BgTexture::MainMenu);
-        int startY = (menuBg.height > 0) ? (auto_y(1023) * MIN_SCREEN_HEIGHT / menuBg.height) : auto_y(300);
+        int startY = (menuBg.height > 0) ? (auto_y(1023) * VIRTUAL_SCREEN_HEIGHT / menuBg.height) : auto_y(300);
 
         for (int i = 0; i < lineCount; ++i) {
             drawCenteredText(defaultFont, lines[i], static_cast<float>(startY), fontSize, static_cast<float>(auto_x(2)), (selection == i) ? ORANGE : DARKGRAY);
@@ -187,7 +169,7 @@ void GameEngine::handleMainMenu() {
             case 4: m_currentState = GameState::Quit; break;
             }
         }
-        EndDrawing();
+        EndVirtualCanvas();
     }
 }
 
@@ -213,13 +195,13 @@ void GameEngine::handleSelectMode() {
         updateTransition(&transition, &currentSelection, targetSelection, &transitionDirection, dt, transitionSpeed);
         updateTransition(&skinTransition, &currentSkin, targetSkin, &skinTransitionDirection, dt, transitionSpeed);
 
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
 
         renderModeTransition(m_assets, currentSelection, targetSelection, transition, transitionDirection);
         renderSkinTransition(m_assets, currentSkin, targetSkin, skinTransition, skinTransitionDirection);
 
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (transitionDirection == 0 && skinTransitionDirection == 0) {
             if (isMoveDown()) {
@@ -316,7 +298,7 @@ void GameEngine::handlePlay() {
     }
 
     // Render game screen
-    BeginDrawing();
+    BeginVirtualCanvas();
     ClearBackground(WHITE);
 
     float blockSize = static_cast<float>(auto_x(32));
@@ -328,18 +310,18 @@ void GameEngine::handlePlay() {
     if (gameBg.width > 0 && gameBg.height > 0) {
         DrawTexturePro(gameBg,
             { 0.0f, 0.0f, static_cast<float>(gameBg.width), static_cast<float>(gameBg.height) },
-            { 0.0f, 0.0f, gameWidth, static_cast<float>(GetScreenHeight()) },
+            { 0.0f, 0.0f, gameWidth, static_cast<float>(VIRTUAL_SCREEN_HEIGHT) },
             { 0.0f, 0.0f }, 0.0f, WHITE);
     }
 
-    // Sidebar UI area background
+    // Sidebar UI area background (Fixed 160x640, 100% immune to stretching)
     float sidebarX = gameWidth;
-    float sidebarWidth = static_cast<float>(GetScreenWidth()) - gameWidth;
+    float sidebarWidth = static_cast<float>(VIRTUAL_SCREEN_WIDTH) - gameWidth;
     const Texture2D& uiBg = m_assets.getBg(BgTexture::UiGame);
     if (uiBg.width > 0 && uiBg.height > 0) {
         DrawTexturePro(uiBg,
             { 0.0f, 0.0f, static_cast<float>(uiBg.width), static_cast<float>(uiBg.height) },
-            { sidebarX, 0.0f, sidebarWidth, static_cast<float>(GetScreenHeight()) },
+            { sidebarX, 0.0f, sidebarWidth, static_cast<float>(VIRTUAL_SCREEN_HEIGHT) },
             { 0.0f, 0.0f }, 0.0f, WHITE);
     }
 
@@ -355,7 +337,7 @@ void GameEngine::handlePlay() {
 
     drawGameUI(*m_gameContext, m_assets, m_scores);
 
-    EndDrawing();
+    EndVirtualCanvas();
 }
 
 void GameEngine::handlePause() {
@@ -366,11 +348,11 @@ void GameEngine::handlePause() {
     bool paused = true;
 
     while (m_currentState == GameState::Pause && paused && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(Fade(RAYWHITE, 0.9f));
         drawBG(m_assets, BgTexture::Paused);
         drawMenu(m_assets, lines, lineCount, selection, fontSize, ORANGE);
-        EndDrawing();
+        EndVirtualCanvas();
 
         selection = handleMenuNavigation(selection, lineCount, m_assets, m_settings.get().sfx);
 
@@ -428,13 +410,13 @@ void GameEngine::handleGameOver(ll finalScore) {
         countdown -= dt;
         if (countdown <= 0.0f) canSelect = true;
 
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::Plain);
 
-        drawCenteredText(m_assets.getFont(FontAsset::Header), message, static_cast<float>(GetScreenHeight() / 2 - 350), 30, 2.0f, RAYWHITE);
+        drawCenteredText(m_assets.getFont(FontAsset::Header), message, static_cast<float>(auto_y(100)), 30, 2.0f, RAYWHITE);
 
-        int startY = GetScreenHeight() / 2 - 100;
+        int startY = auto_y(220);
         drawGameOverScore(m_assets, finalScore, currentHighScore, &startY);
 
         if (!canSelect) {
@@ -456,7 +438,7 @@ void GameEngine::handleGameOver(ll finalScore) {
                 inGameOver = false;
             }
         }
-        EndDrawing();
+        EndVirtualCanvas();
     }
 }
 
@@ -474,29 +456,29 @@ void GameEngine::handleHighScores() {
     }
 
     while (m_currentState == GameState::HighScores && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::HighScores);
 
         int totalHeight = calculateTotalHeight(MAX_LEVELS, fontSize, static_cast<float>(spacing));
-        int startY = (GetScreenHeight() - totalHeight) / 2;
+        int startY = (VIRTUAL_SCREEN_HEIGHT - totalHeight) / 2;
 
         int maxLabelWidth = 0, maxValueWidth = 0;
         calculateMaxWidths(linePtrs.data(), MAX_LEVELS, fontSize, static_cast<float>(spacing), &maxLabelWidth, &maxValueWidth, m_assets.getFont(FontAsset::Body));
 
         int padding = auto_x(20);
         int totalWidth = maxLabelWidth + 10 + static_cast<int>(MeasureTextEx(m_assets.getFont(FontAsset::Body), ":", static_cast<float>(fontSize), static_cast<float>(spacing)).x) + 5 + maxValueWidth;
-        int startX = (GetScreenWidth() - totalWidth) / 2;
+        int startX = (VIRTUAL_SCREEN_WIDTH - totalWidth) / 2;
         if (startX < padding) startX = padding;
 
         drawLabelsAndValues(linePtrs.data(), MAX_LEVELS, startX, startY, maxLabelWidth, fontSize, static_cast<float>(spacing), m_assets.getFont(FontAsset::Body), RAYWHITE);
 
         const char* controlsText = "[A] / [B]: Main Menu";
-        Vector2 tSize = MeasureTextEx(m_assets.getFont(FontAsset::Body), controlsText, 20.0f, 2.0f);
-        float bottomX = (static_cast<float>(GetScreenWidth()) - tSize.x) / 2.0f;
-        DrawTextEx(m_assets.getFont(FontAsset::Body), controlsText, { bottomX, 560.0f }, 20.0f, 2.0f, DARKGRAY);
+        Vector2 tSize = MeasureTextEx(m_assets.getFont(FontAsset::Body), controlsText, static_cast<float>(auto_y(20)), static_cast<float>(auto_x(2)));
+        float bottomX = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - tSize.x) / 2.0f;
+        DrawTextEx(m_assets.getFont(FontAsset::Body), controlsText, { bottomX, static_cast<float>(auto_y(560)) }, static_cast<float>(auto_y(20)), static_cast<float>(auto_x(2)), DARKGRAY);
 
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (isMoveLeft() || isBackPressed()) {
             if (m_settings.get().sfx) PlaySound(m_assets.getSound(SoundAsset::Move));
@@ -529,19 +511,19 @@ void GameEngine::handleSettings() {
     bool editing = false;
 
     while (m_currentState == GameState::Settings && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::Settings);
 
         int totalHeight = calculateTotalHeight(totalCount, fontSize, static_cast<float>(menuSpacing));
-        int startY = (GetScreenHeight() - totalHeight) / 2;
+        int startY = (VIRTUAL_SCREEN_HEIGHT - totalHeight) / 2;
 
         int maxLabelWidth = 0, maxValueWidth = 0;
         calculateMaxWidths(togglePtrs, toggleCount, fontSize, static_cast<float>(spacing), &maxLabelWidth, &maxValueWidth, m_assets.getFont(FontAsset::Body));
 
         int padding = auto_x(20);
         int totalWidth = maxLabelWidth + auto_x(10) + static_cast<int>(MeasureTextEx(m_assets.getFont(FontAsset::Body), ":", static_cast<float>(fontSize), static_cast<float>(spacing)).x) + auto_x(5) + maxValueWidth;
-        int startX = (GetScreenWidth() - totalWidth) / 2;
+        int startX = (VIRTUAL_SCREEN_WIDTH - totalWidth) / 2;
         if (startX < padding) startX = padding;
 
         int y = startY;
@@ -551,7 +533,7 @@ void GameEngine::handleSettings() {
             y += fontSize + spacing;
         }
 
-        y += 50;
+        y += auto_y(50);
         for (int i = 0; i < menuCount; ++i) {
             int globalIndex = i + toggleCount;
             bool isSelected = (selection == globalIndex);
@@ -561,9 +543,9 @@ void GameEngine::handleSettings() {
 
         const char* infoText = (m_prevState == GameState::Play || m_prevState == GameState::Pause)
             ? "[B]: Back    [R]: Resume" : "[A] / [B]: Main Menu";
-        drawCenteredText(m_assets.getFont(FontAsset::Body), infoText, 560.0f, auto_y(20), 2.0f, RAYWHITE);
+        drawCenteredText(m_assets.getFont(FontAsset::Body), infoText, static_cast<float>(auto_y(560)), auto_y(20), 2.0f, RAYWHITE);
 
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (!editing) {
             selection = handleMenuNavigation(selection, totalCount, m_assets, m_settings.get().sfx);
@@ -637,19 +619,19 @@ void GameEngine::handleControls() {
     constexpr int lineCount = 9;
 
     while (m_currentState == GameState::Controls && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::Controls);
 
         int totalHeight = calculateTotalHeight(lineCount, fontSize, static_cast<float>(spacing));
-        int startY = (GetScreenHeight() - totalHeight) / 2;
+        int startY = (VIRTUAL_SCREEN_HEIGHT - totalHeight) / 2;
 
         int maxLabelWidth = 0, maxValueWidth = 0;
         calculateMaxWidths(lines, lineCount, fontSize, static_cast<float>(spacing), &maxLabelWidth, &maxValueWidth, m_assets.getFont(FontAsset::Body));
 
         int padding = auto_x(20);
         int totalWidth = maxLabelWidth + auto_x(10) + static_cast<int>(MeasureTextEx(m_assets.getFont(FontAsset::Body), ":", static_cast<float>(fontSize), static_cast<float>(spacing)).x) + 5 + maxValueWidth;
-        int startX = (GetScreenWidth() - totalWidth) / 2;
+        int startX = (VIRTUAL_SCREEN_WIDTH - totalWidth) / 2;
         if (startX < padding) startX = padding;
 
         drawLabelsAndValues(lines, lineCount, startX, startY, maxLabelWidth, fontSize, static_cast<float>(spacing), m_assets.getFont(FontAsset::Body), RAYWHITE);
@@ -657,10 +639,10 @@ void GameEngine::handleControls() {
         const char* infoText = (m_prevState == GameState::Play || m_prevState == GameState::Pause)
             ? "[B]: Back    [R]: Resume    [F]: GUIDE"
             : "[A] / [B]: Main Menu    [F]: GUIDE";
-        int infoFontSize = (m_prevState == GameState::Play) ? 15 : 20;
-        drawCenteredText(m_assets.getFont(FontAsset::Body), infoText, 560.0f, infoFontSize, 2.0f, RAYWHITE);
+        int infoFontSize = (m_prevState == GameState::Play) ? auto_y(15) : auto_y(20);
+        drawCenteredText(m_assets.getFont(FontAsset::Body), infoText, static_cast<float>(auto_y(560)), infoFontSize, 2.0f, RAYWHITE);
 
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (m_prevState == GameState::Play && IsKeyPressed(KEY_R)) {
             if (m_settings.get().sfx) PlaySound(m_assets.getSound(SoundAsset::Move));
@@ -687,7 +669,7 @@ void GameEngine::handleControls() {
 
 void GameEngine::handleHowToPlay() {
     while (m_currentState == GameState::HowToPlay && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::HowToPlay);
 
@@ -697,7 +679,7 @@ void GameEngine::handleHowToPlay() {
         int infoFontSize = (m_prevState == GameState::Play || m_prevState == GameState::Pause) ? auto_y(15) : auto_y(20);
         drawCenteredText(m_assets.getFont(FontAsset::Body), infoText, static_cast<float>(auto_y(560)), infoFontSize, 2.0f, RAYWHITE);
 
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (m_prevState == GameState::Play && IsKeyPressed(KEY_R)) {
             if (m_settings.get().sfx) PlaySound(m_assets.getSound(SoundAsset::Move));
@@ -726,21 +708,21 @@ void GameEngine::handleCredits() {
     const Texture2D& sceneTex = m_assets.getBg(BgTexture::CreditScene);
     if (sceneTex.width == 0) return;
 
-    float creditScale = static_cast<float>(GetScreenWidth()) / static_cast<float>(sceneTex.width);
+    float creditScale = static_cast<float>(VIRTUAL_SCREEN_WIDTH) / static_cast<float>(sceneTex.width);
     float creditWidth = static_cast<float>(sceneTex.width) * creditScale;
-    float xPos = (static_cast<float>(GetScreenWidth()) - creditWidth) / 2.0f;
+    float xPos = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - creditWidth) / 2.0f;
 
-    float scrollY = static_cast<float>(GetScreenHeight()) - static_cast<float>(auto_y(50));
+    float scrollY = static_cast<float>(VIRTUAL_SCREEN_HEIGHT) - static_cast<float>(auto_y(50));
     constexpr float scrollSpeed = 30.0f;
 
     while (m_currentState == GameState::Scene && !WindowShouldClose()) {
         scrollY -= scrollSpeed * GetFrameTime();
 
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(m_assets, BgTexture::Plain);
         DrawTextureEx(sceneTex, { xPos, scrollY }, 0.0f, creditScale, WHITE);
-        EndDrawing();
+        EndVirtualCanvas();
 
         if (scrollY <= -(static_cast<float>(sceneTex.height) * creditScale) || GetKeyPressed() != 0) {
             if (m_settings.get().sfx) PlaySound(m_assets.getSound(SoundAsset::Move));

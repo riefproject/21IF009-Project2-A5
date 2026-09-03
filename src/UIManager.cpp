@@ -5,16 +5,18 @@
  */
 
 #include "UIManager.hpp"
+#include "Input.hpp"
 #include "AssetManager.hpp"
 #include "ScoreManager.hpp"
 #include "Game.hpp"
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <algorithm>
 
 void drawCenteredText(Font font, const char* text, float y, int fontSize, float spacing, Color color) {
     Vector2 textSize = MeasureTextEx(font, text, static_cast<float>(fontSize), spacing);
-    float x = (static_cast<float>(GetScreenWidth()) - textSize.x) / 2.0f;
+    float x = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - textSize.x) / 2.0f;
     DrawTextEx(font, text, { x, y }, static_cast<float>(fontSize), spacing, color);
 }
 
@@ -23,41 +25,51 @@ void drawMenuOption(Font font, const char* text, float y, int fontSize, bool sel
 }
 
 void drawToggleOption(Font font, const char* line, int startX, int y, int maxLabelWidth, int fontSize, float spacing, bool isSelected, bool isEditing, Color normalColor) {
-    std::string lineStr(line);
-    auto colonPos = lineStr.find(':');
-    if (colonPos == std::string::npos) return;
+    if (!line) return;
+    const char* colon = std::strchr(line, ':');
+    if (!colon) return;
 
-    std::string label = lineStr.substr(0, colonPos);
-    std::string val = lineStr.substr(colonPos + 1);
+    size_t colonOffset = colon - line;
+    char label[128];
+    size_t labelLen = std::min(colonOffset, sizeof(label) - 1);
+    std::memcpy(label, line, labelLen);
+    label[labelLen] = '\0';
+
+    const char* val = colon + 1;
 
     Color labelColor = isSelected ? (isEditing ? GREEN : ORANGE) : normalColor;
     Color valColor   = isSelected ? (isEditing ? GREEN : ORANGE) : normalColor;
 
-    DrawTextEx(font, label.c_str(), { static_cast<float>(startX), static_cast<float>(y) }, static_cast<float>(fontSize), spacing, labelColor);
+    DrawTextEx(font, label, { static_cast<float>(startX), static_cast<float>(y) }, static_cast<float>(fontSize), spacing, labelColor);
 
     float colonX = static_cast<float>(startX + maxLabelWidth + auto_x(10));
     DrawTextEx(font, ":", { colonX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, normalColor);
 
     float valX = colonX + MeasureTextEx(font, ":", static_cast<float>(fontSize), spacing).x + static_cast<float>(auto_x(15));
-    DrawTextEx(font, val.c_str(), { valX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, valColor);
+    DrawTextEx(font, val, { valX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, valColor);
 }
 
 void drawLabelsAndValues(const char* lines[], int lineCount, int startX, int startY, int maxLabelWidth, int fontSize, float spacing, Font font, Color color) {
     int y = startY;
     for (int i = 0; i < lineCount; ++i) {
-        std::string line(lines[i]);
-        auto colonPos = line.find(':');
-        if (colonPos != std::string::npos) {
-            std::string label = line.substr(0, colonPos);
-            std::string val = line.substr(colonPos + 1);
+        if (!lines[i]) continue;
+        const char* colon = std::strchr(lines[i], ':');
+        if (colon) {
+            size_t colonOffset = colon - lines[i];
+            char label[128];
+            size_t labelLen = std::min(colonOffset, sizeof(label) - 1);
+            std::memcpy(label, lines[i], labelLen);
+            label[labelLen] = '\0';
 
-            DrawTextEx(font, label.c_str(), { static_cast<float>(startX), static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
+            const char* val = colon + 1;
+
+            DrawTextEx(font, label, { static_cast<float>(startX), static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
 
             float colonX = static_cast<float>(startX + maxLabelWidth + auto_x(10));
             DrawTextEx(font, ":", { colonX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
 
             float valX = colonX + MeasureTextEx(font, ":", static_cast<float>(fontSize), spacing).x + static_cast<float>(auto_x(10));
-            DrawTextEx(font, val.c_str(), { valX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
+            DrawTextEx(font, val, { valX, static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
         } else {
             DrawTextEx(font, lines[i], { static_cast<float>(startX), static_cast<float>(y) }, static_cast<float>(fontSize), spacing, color);
         }
@@ -86,14 +98,19 @@ void calculateMaxWidths(const char* lines[], int lineCount, int fontSize, float 
     *maxValueWidth = 0;
 
     for (int i = 0; i < lineCount; ++i) {
-        std::string line(lines[i]);
-        auto colonPos = line.find(':');
-        if (colonPos != std::string::npos) {
-            std::string label = line.substr(0, colonPos);
-            std::string val = line.substr(colonPos + 1);
+        if (!lines[i]) continue;
+        const char* colon = std::strchr(lines[i], ':');
+        if (colon) {
+            size_t colonOffset = colon - lines[i];
+            char label[128];
+            size_t labelLen = std::min(colonOffset, sizeof(label) - 1);
+            std::memcpy(label, lines[i], labelLen);
+            label[labelLen] = '\0';
 
-            Vector2 lSize = MeasureTextEx(font, label.c_str(), static_cast<float>(fontSize), spacing);
-            Vector2 vSize = MeasureTextEx(font, val.c_str(), static_cast<float>(fontSize), spacing);
+            const char* val = colon + 1;
+
+            Vector2 lSize = MeasureTextEx(font, label, static_cast<float>(fontSize), spacing);
+            Vector2 vSize = MeasureTextEx(font, val, static_cast<float>(fontSize), spacing);
 
             if (static_cast<int>(lSize.x) > *maxLabelWidth) *maxLabelWidth = static_cast<int>(lSize.x);
             if (static_cast<int>(vSize.x) > *maxValueWidth) *maxValueWidth = static_cast<int>(vSize.x);
@@ -124,7 +141,7 @@ int handleMenuNavigation(int currentSelection, int maxOptions, const AssetManage
 
 void drawMenu(const AssetManager& assets, const char* lines[], int lineCount, int selection, int fontSize, Color highlightColor) {
     int totalHeight = calculateTotalHeight(lineCount, fontSize, static_cast<float>(auto_y(25)));
-    int startY = (GetScreenHeight() - totalHeight) / 2;
+    int startY = (VIRTUAL_SCREEN_HEIGHT - totalHeight) / 2;
 
     Font bodyFont = assets.getFont(FontAsset::Body);
     for (int i = 0; i < lineCount; ++i) {
@@ -138,13 +155,13 @@ bool showConfirmationDialog(const AssetManager& assets, bool sfxEnabled, const c
     int fontSize = auto_y(20);
 
     while (!WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(Fade(PRIMARY_COLOR, 0.95f));
         drawBG(assets, BgTexture::Confirm);
 
-        drawCenteredText(assets.getFont(FontAsset::Header), message, static_cast<float>(GetScreenHeight() / 2 - auto_y(80)), auto_y(24), 2.0f, RAYWHITE);
+        drawCenteredText(assets.getFont(FontAsset::Header), message, static_cast<float>(VIRTUAL_SCREEN_HEIGHT / 2 - auto_y(80)), auto_y(24), 2.0f, RAYWHITE);
         drawMenu(assets, options, optionCount, selection, fontSize, highlightColor);
-        EndDrawing();
+        EndVirtualCanvas();
 
         selection = handleMenuNavigation(selection, optionCount, assets, sfxEnabled);
 
@@ -164,15 +181,15 @@ void showMessageDialog(const AssetManager& assets, const char* message, const ch
     float holdTime = 1.5f;
     while (holdTime > 0.0f && !WindowShouldClose()) {
         holdTime -= GetFrameTime();
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(assets, BgTexture::Confirm);
 
-        drawCenteredText(assets.getFont(FontAsset::Header), message, static_cast<float>(GetScreenHeight() / 2 - auto_y(30)), auto_y(24), 2.0f, messageColor);
+        drawCenteredText(assets.getFont(FontAsset::Header), message, static_cast<float>(VIRTUAL_SCREEN_HEIGHT / 2 - auto_y(30)), auto_y(24), 2.0f, messageColor);
         if (subMessage && subMessage[0] != '\0') {
-            drawCenteredText(assets.getFont(FontAsset::Body), subMessage, static_cast<float>(GetScreenHeight() / 2 + auto_y(20)), auto_y(18), 2.0f, subMessageColor);
+            drawCenteredText(assets.getFont(FontAsset::Body), subMessage, static_cast<float>(VIRTUAL_SCREEN_HEIGHT / 2 + auto_y(20)), auto_y(18), 2.0f, subMessageColor);
         }
-        EndDrawing();
+        EndVirtualCanvas();
     }
 }
 
@@ -194,16 +211,16 @@ void renderModeTransition(const AssetManager& assets, int current, int target, f
     const Texture2D& curBg = assets.getBgMode(curMode);
     if (curBg.height == 0) return;
 
-    float imgScale = static_cast<float>(GetScreenHeight()) / static_cast<float>(curBg.height);
+    float imgScale = static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(curBg.height);
     float scaledWidth = static_cast<float>(curBg.width) * imgScale;
-    float baseXPos = (static_cast<float>(GetScreenWidth()) - scaledWidth) / 2.0f;
+    float baseXPos = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - scaledWidth) / 2.0f;
 
     float currentXPos = baseXPos;
     float nextXPos = baseXPos;
 
     if (direction != 0) {
-        currentXPos += (static_cast<float>(direction) * static_cast<float>(GetScreenWidth()) * -transition);
-        nextXPos += (static_cast<float>(direction) * static_cast<float>(GetScreenWidth()) * (1.0f - transition));
+        currentXPos += (static_cast<float>(direction) * static_cast<float>(VIRTUAL_SCREEN_WIDTH) * -transition);
+        nextXPos += (static_cast<float>(direction) * static_cast<float>(VIRTUAL_SCREEN_WIDTH) * (1.0f - transition));
 
         const Texture2D& tgtBg = assets.getBgMode(tgtMode);
         DrawTextureEx(tgtBg, { nextXPos, 0.0f }, 0.0f, imgScale, WHITE);
@@ -214,9 +231,9 @@ void renderModeTransition(const AssetManager& assets, int current, int target, f
     // Overlay teks mode
     const Texture2D& txMode = assets.getTxMode(curMode);
     if (txMode.height > 0) {
-        float txScale = static_cast<float>(GetScreenHeight()) / static_cast<float>(txMode.height);
+        float txScale = static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(txMode.height);
         float txWidth = static_cast<float>(txMode.width) * txScale;
-        float txBaseX = (static_cast<float>(GetScreenWidth()) - txWidth) / 2.0f;
+        float txBaseX = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - txWidth) / 2.0f;
         DrawTextureEx(txMode, { txBaseX, 0.0f }, 0.0f, txScale, WHITE);
     }
 }
@@ -229,15 +246,15 @@ void renderSkinTransition(const AssetManager& assets, int current, int target, f
     if (curSkin.width == 0) return;
 
     float skinScale = 120.0f / static_cast<float>(curSkin.width);
-    float centerX = (static_cast<float>(GetScreenWidth()) - static_cast<float>(curSkin.width) * skinScale) / 2.0f;
-    float centerY = (static_cast<float>(GetScreenHeight()) - static_cast<float>(curSkin.height) * skinScale) / 2.0f;
+    float centerX = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - static_cast<float>(curSkin.width) * skinScale) / 2.0f;
+    float centerY = (static_cast<float>(VIRTUAL_SCREEN_HEIGHT) - static_cast<float>(curSkin.height) * skinScale) / 2.0f;
 
     float currentSkinY = centerY + static_cast<float>(auto_y(120));
     float baseSkinX = centerX;
 
     if (direction != 0) {
-        float curOffset = static_cast<float>(direction) * static_cast<float>(GetScreenWidth()) * transition;
-        float tgtOffset = static_cast<float>(direction) * static_cast<float>(GetScreenWidth()) * (transition - 1.0f);
+        float curOffset = static_cast<float>(direction) * static_cast<float>(VIRTUAL_SCREEN_WIDTH) * transition;
+        float tgtOffset = static_cast<float>(direction) * static_cast<float>(VIRTUAL_SCREEN_WIDTH) * (transition - 1.0f);
 
         DrawTextureEx(curSkin, { baseSkinX + curOffset, currentSkinY }, 0.0f, skinScale, Fade(WHITE, 1.0f - transition));
 
@@ -275,7 +292,7 @@ int loadingScreen(const AssetManager& assets, float* loadingTime) {
     int nextStep = (currentStep + 1) % totalSteps;
     float alpha = (elapsed - (static_cast<float>(currentStep) * stepDuration)) / stepDuration;
 
-    BeginDrawing();
+    BeginVirtualCanvas();
     ClearBackground(PRIMARY_COLOR);
     drawBG(assets, BgTexture::Plain);
 
@@ -288,7 +305,7 @@ int loadingScreen(const AssetManager& assets, float* loadingTime) {
         };
         DrawRectangleV(smoothPos, { static_cast<float>(blockSize), static_cast<float>(blockSize) }, ORANGE);
     }
-    EndDrawing();
+    EndVirtualCanvas();
 
     return 0;
 }
@@ -305,7 +322,7 @@ void showCountdown(const AssetManager& assets) {
         float timeInSecond = counter - std::floor(counter);
         float scale = 2.5f - (2.5f - 1.0f) * (1.0f - timeInSecond);
 
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(PRIMARY_COLOR);
         drawBG(assets, BgTexture::Plain);
 
@@ -315,14 +332,14 @@ void showCountdown(const AssetManager& assets) {
         float scaledSize = baseSize * scale;
 
         Vector2 position = {
-            (static_cast<float>(GetScreenWidth()) - textSize.x * scale) / 2.0f,
-            (static_cast<float>(GetScreenHeight()) - textSize.y * scale) / 2.0f
+            (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - textSize.x * scale) / 2.0f,
+            (static_cast<float>(VIRTUAL_SCREEN_HEIGHT) - textSize.y * scale) / 2.0f
         };
 
         DrawTextEx(bodyFont, text.c_str(), position, scaledSize, static_cast<float>(auto_x(2)) * scale,
             Fade(ORANGE, scale > 1.8f ? 2.0f - (scale / 2.0f) : 1.0f));
 
-        EndDrawing();
+        EndVirtualCanvas();
     }
 }
 
@@ -343,9 +360,9 @@ void drawBG(const AssetManager& assets, BgTexture id) {
     const Texture2D& bgTex = assets.getBg(id);
     if (bgTex.height == 0) return;
 
-    float imgScale = static_cast<float>(GetScreenHeight()) / static_cast<float>(bgTex.height);
+    float imgScale = static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(bgTex.height);
     float scaledWidth = static_cast<float>(bgTex.width) * imgScale;
-    float xPos = (static_cast<float>(GetScreenWidth()) - scaledWidth) / 2.0f;
+    float xPos = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - scaledWidth) / 2.0f;
 
     DrawTextureEx(bgTex, { xPos, 0.0f }, 0.0f, imgScale, WHITE);
 }
@@ -362,7 +379,7 @@ void drawGameOverScore(const AssetManager& assets, ll currentScore, ll currentHi
         Vector2 highScoreSize = MeasureTextEx(bodyFont, highScoreText.c_str(), static_cast<float>(fontSize), 2.0f);
 
         Rectangle newBox = {
-            (static_cast<float>(GetScreenWidth()) - highScoreSize.x) / 2.0f,
+            (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - highScoreSize.x) / 2.0f,
             static_cast<float>(*startY + auto_y(3)),
             newTagSize.x + 10.0f,
             newTagSize.y + static_cast<float>(auto_y(6))
@@ -440,8 +457,8 @@ void drawGameUI(const Game& game, const AssetManager& assets, const ScoreManager
     const Texture2D& uiBg = assets.getBg(BgTexture::UiGame);
     const Texture2D& gameBg = assets.getBg(BgTexture::GameArea);
 
-    float uiScale = (uiBg.height > 0) ? (static_cast<float>(GetScreenHeight()) / static_cast<float>(uiBg.height)) : 1.0f;
-    float gameScale = (gameBg.height > 0) ? (static_cast<float>(GetScreenHeight()) / static_cast<float>(gameBg.height)) : 1.0f;
+    float uiScale = (uiBg.height > 0) ? (static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(uiBg.height)) : 1.0f;
+    float gameScale = (gameBg.height > 0) ? (static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(gameBg.height)) : 1.0f;
 
     float uiscaledWidth = static_cast<float>(uiBg.width) * uiScale;
     float gamescaledWidth = static_cast<float>(gameBg.width) * gameScale;

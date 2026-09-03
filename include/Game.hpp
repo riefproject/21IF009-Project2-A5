@@ -10,7 +10,7 @@
  * power-up updates, and coordinating the Grid, Player, BulletManager, and PowerUpManager.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
 #include "Grid.hpp"
 #include "Player.hpp"
 #include "BulletManager.hpp"

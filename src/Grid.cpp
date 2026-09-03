@@ -1,12 +1,13 @@
 /**
  * @file Grid.cpp
- * @brief Implementation of Grid mechanics, row clearing, and procedural generation.
+ * @brief Implementation of Grid mechanics using std::bitset for high performance.
  * @author Arief
  */
 
 #include "Grid.hpp"
 #include "AssetManager.hpp"
 #include "ScoreManager.hpp"
+#include "BulletManager.hpp"
 #include "Game.hpp"
 #include "Scale.hpp"
 #include <iostream>
@@ -17,48 +18,37 @@ Grid::Grid() {
 }
 
 void Grid::clear() {
-    for (int r = 0; r < MAX_ROWS; ++r) {
-        for (int c = 0; c < MAX_COLUMNS; ++c) {
-            m_blocks[r][c].active = false;
-            m_blocks[r][c].pos = c;
-        }
+    for (auto& row : m_rows) {
+        row.reset();
     }
 }
 
 void Grid::clearRow(int row) {
-    if (row < 0 || row >= MAX_ROWS) return;
-    for (int c = 0; c < MAX_COLUMNS; ++c) {
-        m_blocks[row][c].active = false;
+    if (row >= 0 && row < MAX_ROWS) {
+        m_rows[row].reset();
     }
 }
 
 bool Grid::isRowFull(int row) const {
     if (row < 0 || row >= MAX_ROWS) return false;
-    for (int c = 0; c < MAX_COLUMNS; ++c) {
-        if (!m_blocks[row][c].active) return false;
-    }
-    return true;
+    return m_rows[row].all();
 }
 
 bool Grid::hasActiveBlocksInRow(int row) const {
     if (row < 0 || row >= MAX_ROWS) return false;
-    for (int c = 0; c < MAX_COLUMNS; ++c) {
-        if (m_blocks[row][c].active) return true;
-    }
-    return false;
+    return m_rows[row].any();
 }
 
 bool Grid::hasActiveBlockBelow(int row) const {
     for (int r = row + 1; r < MAX_ROWS; ++r) {
-        if (hasActiveBlocksInRow(r)) return true;
+        if (m_rows[r].any()) return true;
     }
     return false;
 }
 
 void Grid::copyRow(int srcRow, int dstRow) {
-    if (srcRow < 0 || srcRow >= MAX_ROWS || dstRow < 0 || dstRow >= MAX_ROWS) return;
-    for (int c = 0; c < MAX_COLUMNS; ++c) {
-        m_blocks[dstRow][c].active = m_blocks[srcRow][c].active;
+    if (srcRow >= 0 && srcRow < MAX_ROWS && dstRow >= 0 && dstRow < MAX_ROWS) {
+        m_rows[dstRow] = m_rows[srcRow];
     }
 }
 
@@ -69,7 +59,7 @@ void Grid::moveBlocksDown(int minBlocks, int maxBlocks) {
     for (int j = 0; j < MAX_COLUMNS; ++j) {
         int emptyCount = 0;
         for (int i = 0; i < MAX_ROWS; ++i) {
-            if (!m_blocks[i][j].active) {
+            if (!m_rows[i].test(j)) {
                 emptyCount++;
             } else {
                 break;
@@ -81,11 +71,11 @@ void Grid::moveBlocksDown(int minBlocks, int maxBlocks) {
         }
     }
 
-    // Geser blok ke bawah
+    // Geser baris ke bawah
     for (int i = MAX_ROWS - 2; i >= 0; --i) {
-        copyRow(i, i + 1);
+        m_rows[i + 1] = m_rows[i];
     }
-    clearRow(0);
+    m_rows[0].reset();
 
     generateNewBlocks(minBlocks, maxBlocks, emptyColLength, totalEmptyColumns);
 }
@@ -94,9 +84,9 @@ void Grid::shiftRowsUp(int startRow) {
     if (startRow < 0 || startRow >= MAX_ROWS) return;
 
     for (int r = startRow; r < MAX_ROWS - 1; ++r) {
-        copyRow(r + 1, r);
+        m_rows[r] = m_rows[r + 1];
     }
-    clearRow(MAX_ROWS - 1);
+    m_rows[MAX_ROWS - 1].reset();
 }
 
 void Grid::handleFullRow(int row, Game& game) {
@@ -151,8 +141,8 @@ void Grid::generateNewBlocks(int minBlocks, int maxBlocks, const int* emptyColLe
 
 bool Grid::activateBlockAt(int row, int col) {
     if (row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLUMNS) {
-        if (!m_blocks[row][col].active) {
-            m_blocks[row][col].active = true;
+        if (!m_rows[row].test(col)) {
+            m_rows[row].set(col);
             return true;
         }
     }
@@ -161,35 +151,23 @@ bool Grid::activateBlockAt(int row, int col) {
 
 bool Grid::deactivateBlockAt(int row, int col) {
     if (row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLUMNS) {
-        if (m_blocks[row][col].active) {
-            m_blocks[row][col].active = false;
+        if (m_rows[row].test(col)) {
+            m_rows[row].reset(col);
             return true;
         }
     }
     return false;
 }
 
-Block* Grid::getBlockAt(int row, int col) {
+bool Grid::isBlockActive(int row, int col) const {
     if (row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLUMNS) {
-        return &m_blocks[row][col];
+        return m_rows[row].test(col);
     }
-    return nullptr;
-}
-
-const Block* Grid::getBlockAt(int row, int col) const {
-    if (row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLUMNS) {
-        return &m_blocks[row][col];
-    }
-    return nullptr;
+    return false;
 }
 
 bool Grid::isGameOverCheck() const {
-    for (int c = 0; c < MAX_COLUMNS; ++c) {
-        if (m_blocks[MAX_ROWS - 1][c].active) {
-            return true;
-        }
-    }
-    return false;
+    return m_rows[MAX_ROWS - 1].any();
 }
 
 void Grid::init(int minBlocks, int maxBlocks) {
@@ -197,8 +175,8 @@ void Grid::init(int minBlocks, int maxBlocks) {
     int numBlocks = minBlocks + (rand() % (maxBlocks - minBlocks + 1));
     while (numBlocks > 0) {
         int pos = rand() % MAX_COLUMNS;
-        if (!m_blocks[0][pos].active) {
-            m_blocks[0][pos].active = true;
+        if (!m_rows[0].test(pos)) {
+            m_rows[0].set(pos);
             numBlocks--;
         }
     }
@@ -225,8 +203,9 @@ void Grid::draw(const AssetManager& assets) const {
     const Texture2D& blockTex = assets.getTexture(TextureAsset::Block);
 
     for (int r = 0; r < MAX_ROWS; ++r) {
+        if (!m_rows[r].any()) continue; // Skip baris kosong untuk efisiensi CPU
         for (int c = 0; c < MAX_COLUMNS; ++c) {
-            if (m_blocks[r][c].active) {
+            if (m_rows[r].test(c)) {
                 Vector2 pos = { static_cast<float>(c) * blockSize, static_cast<float>(r) * blockSize };
                 if (blockTex.width > 0) {
                     float texScale = blockSize / static_cast<float>(blockTex.width);
@@ -240,13 +219,13 @@ void Grid::draw(const AssetManager& assets) const {
 }
 
 void Grid::printDebug() const {
-    std::cout << "\n=== GRID DEBUG ===\n";
+    std::cout << "\n=== GRID DEBUG (std::bitset) ===\n";
     for (int r = 0; r < MAX_ROWS; ++r) {
         std::cout << "|";
         for (int c = 0; c < MAX_COLUMNS; ++c) {
-            std::cout << (m_blocks[r][c].active ? "#" : ".");
+            std::cout << (m_rows[r].test(c) ? "#" : ".");
         }
         std::cout << "|\n";
     }
-    std::cout << "==================\n";
+    std::cout << "================================\n";
 }

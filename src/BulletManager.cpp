@@ -20,7 +20,7 @@ void BulletManager::shoot(Vector2 playerPos, const AssetManager& assets, bool sf
 
     if (m_canShoot) {
         Bullets newBullet;
-        newBullet.position = { playerPos.x, static_cast<float>(GetScreenHeight() - 20) };
+        newBullet.position = { playerPos.x, static_cast<float>(VIRTUAL_SCREEN_HEIGHT - 20) };
         newBullet.active = true;
 
         m_bullets.push_back(newBullet);
@@ -78,8 +78,7 @@ void BulletManager::handleCollisions(Grid& grid, Game& game, bool hasSpecialBull
         int gridY = static_cast<int>(bullet.position.y / blockSize);
 
         if (gridX >= 0 && gridX < MAX_COLUMNS && gridY >= 0 && gridY < MAX_ROWS) {
-            Block* block = grid.getBlockAt(gridY, gridX);
-            if (block && block->active) {
+            if (grid.isBlockActive(gridY, gridX)) {
                 grid.processBulletHit(gridX, gridY, bullet, game, hasSpecialBullet);
             }
         }

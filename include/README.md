@@ -5,7 +5,10 @@ This directory contains all public C++ header files (`.hpp`) for the Block Shoot
 ## 📑 Files
 
 - `BlockShooter.hpp` - Central umbrella header providing access to all subsystems.
-- `Defines.hpp` - Strongly-typed enum classes, game constants, types, and input helpers.
+- `Constants.hpp` - Global compile-time constants (screen, FPS, level configs, type aliases).
+- `Input.hpp` - Inline semantic input event wrappers for Raylib keyboard and mouse.
+- `AssetTypes.hpp` - Strongly-typed asset ID enums (SoundAsset, TextureAsset, FontAsset, etc.).
+- `Defines.hpp` - Backward-compatible aggregator header forwarding to modular headers.
 - `Scale.hpp` - Screen scaling factor and aspect-ratio adapter functions.
 - `AssetManager.hpp` - Centralized RAII asset manager interface (textures, sounds, fonts).
 - `SettingsManager.hpp` - User preferences load/save interface (`db/settings.dat`).

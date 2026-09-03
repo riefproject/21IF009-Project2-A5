@@ -9,8 +9,17 @@
  * for player-fired bullets against the 2D block grid.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
 #include <vector>
+
+/**
+ * @struct Bullets
+ * @brief Active projectile fired by the player.
+ */
+struct Bullets {
+    Vector2 position{0.0f, 0.0f};
+    bool active{true};
+};
 
 class AssetManager;
 class Grid;

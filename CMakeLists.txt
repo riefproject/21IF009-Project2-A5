@@ -33,6 +33,9 @@ set(SOURCES
 
 set(HEADERS
     include/BlockShooter.hpp
+    include/Constants.hpp
+    include/Input.hpp
+    include/AssetTypes.hpp
     include/Defines.hpp
     include/Scale.hpp
     include/AssetManager.hpp

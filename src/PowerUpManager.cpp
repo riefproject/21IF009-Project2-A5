@@ -8,6 +8,7 @@
 #include "AssetManager.hpp"
 #include "Player.hpp"
 #include "Game.hpp"
+#include "Scale.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -20,6 +21,7 @@ void PowerUpManager::reset() {
     m_powerupPosition = { 0.0f, 0.0f };
     m_powerupTimer = 3.0f;
     m_activeEffects.clear();
+    m_activeEffects.reserve(3);
 }
 
 void PowerUpManager::spawn() {
@@ -28,41 +30,47 @@ void PowerUpManager::spawn() {
     if (typeInt == 0) typeInt = 1; // Hindari PowerUpType::None
 
     m_currentPowerup.type = static_cast<PowerUpType>(typeInt);
-    m_powerupPosition = {
-        static_cast<float>(rand() % (GAME_SCREEN_WIDTH - 32)),
-        -32.0f
-    };
+    float blockSize = static_cast<float>(auto_x(32));
+    float gameWidth = blockSize * MAX_COLUMNS;
+    int maxSpawnX = static_cast<int>(gameWidth - blockSize);
+    float randX = (maxSpawnX > 0) ? static_cast<float>(rand() % maxSpawnX) : 0.0f;
+
+    m_powerupPosition = { randX, -blockSize };
 }
 
 void PowerUpManager::update(float /*dt*/, const Player& player, Game& game, const AssetManager& assets, bool sfxEnabled) {
     if (!m_powerupActive) return;
 
-    // Gerakan jatuh ke bawah
-    m_powerupPosition.y += 2.0f;
+    float blockSize = static_cast<float>(auto_x(32));
+    float gameWidth = blockSize * MAX_COLUMNS;
+    float powerUpSize = static_cast<float>(auto_x(40));
 
-    // Gerakan meliuk (wavy) lembut
-    m_powerupPosition.x += std::sin(static_cast<float>(GetTime()) * 2.0f) * 1.0f;
+    // Gerakan jatuh ke bawah (proporsional dengan resolusi)
+    m_powerupPosition.y += std::max(1.0f, static_cast<float>(auto_y(2)));
+
+    // Gerakan meliuk (wavy) proporsional
+    m_powerupPosition.x += std::sin(static_cast<float>(GetTime()) * 2.0f) * std::max(1.0f, static_cast<float>(auto_x(1)));
 
     // Batasi dalam game screen width
     if (m_powerupPosition.x < 0.0f) m_powerupPosition.x = 0.0f;
-    if (m_powerupPosition.x > static_cast<float>(GAME_SCREEN_WIDTH - 32)) {
-        m_powerupPosition.x = static_cast<float>(GAME_SCREEN_WIDTH - 32);
+    if (m_powerupPosition.x > gameWidth - powerUpSize) {
+        m_powerupPosition.x = std::max(0.0f, gameWidth - powerUpSize);
     }
 
-    // Cek jika powerup keluar batas bawah
-    if (m_powerupPosition.y > static_cast<float>(GAME_SCREEN_HEIGHT)) {
+    // Cek jika powerup keluar batas bawah layar
+    if (m_powerupPosition.y > static_cast<float>(VIRTUAL_SCREEN_HEIGHT)) {
         m_powerupActive = false;
         m_powerupTimer = 5.0f + static_cast<float>(rand() % 3);
         return;
     }
 
-    // Deteksi tabrakan dengan shooter
-    Rectangle powerupRect = { m_powerupPosition.x, m_powerupPosition.y, 40.0f, 40.0f };
+    // Deteksi tabrakan dengan shooter (proporsional)
+    Rectangle powerupRect = { m_powerupPosition.x, m_powerupPosition.y, powerUpSize, powerUpSize };
     Rectangle shooterRect = {
-        static_cast<float>(player.x - 32),
-        static_cast<float>(player.y - 32),
-        96.0f,
-        64.0f
+        static_cast<float>(player.x - auto_x(32)),
+        static_cast<float>(player.y - auto_y(32)),
+        static_cast<float>(auto_x(96)),
+        static_cast<float>(auto_y(64))
     };
 
     if (CheckCollisionRecs(powerupRect, shooterRect)) {
@@ -168,42 +176,32 @@ void PowerUpManager::draw(const AssetManager& assets) const {
     if (!m_powerupActive) return;
 
     Texture2D powerupTexture{};
-    float localScale = 1.0f;
 
     switch (m_currentPowerup.type) {
     case PowerUpType::SpeedUp:
         powerupTexture = assets.getTexture(TextureAsset::Speedup);
-        localScale = 40.0f / 640.0f;
         break;
     case PowerUpType::SlowDown:
         powerupTexture = assets.getTexture(TextureAsset::Slowdown);
-        localScale = 40.0f / 1024.0f;
         break;
     case PowerUpType::SpecialBullet:
         powerupTexture = assets.getTexture(TextureAsset::SpecialBullet);
-        if (powerupTexture.width > 0) {
-            localScale = 40.0f / static_cast<float>(powerupTexture.width);
-        }
         break;
     case PowerUpType::ExtraLife:
         powerupTexture = assets.getTexture(TextureAsset::Pls1Hp);
-        localScale = 40.0f / 672.0f;
         break;
     case PowerUpType::Bomb:
         powerupTexture = assets.getTexture(TextureAsset::Min1Hp);
-        localScale = 40.0f / 762.0f;
         break;
     case PowerUpType::Random:
-        powerupTexture = assets.getTexture(TextureAsset::Random);
-        localScale = 40.0f / 1024.0f;
-        break;
     default:
         powerupTexture = assets.getTexture(TextureAsset::Random);
-        localScale = 40.0f / 1024.0f;
         break;
     }
 
     if (powerupTexture.width > 0) {
+        float powerUpSize = static_cast<float>(auto_x(40));
+        float localScale = powerUpSize / static_cast<float>(powerupTexture.width);
         DrawTextureEx(powerupTexture, m_powerupPosition, 0.0f, localScale, WHITE);
     }
 }

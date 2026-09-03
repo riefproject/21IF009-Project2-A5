@@ -10,8 +10,19 @@
  * to disk in `db/settings.dat`.
  */
 
-#include "Defines.hpp"
 #include <string>
+#include <cstdint>
+
+/**
+ * @struct Settings
+ * @brief Memory-optimized user preferences configuration (4 bytes total).
+ */
+struct Settings {
+    bool music{true};
+    bool sfx{true};
+    uint8_t mode{0};
+    uint8_t skin{0};
+};
 
 /**
  * @class SettingsManager

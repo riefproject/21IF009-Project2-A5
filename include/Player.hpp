@@ -10,7 +10,7 @@
  * rendering, and the opening intro sequence.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
 #include "Scale.hpp"
 
 class AssetManager;
@@ -24,6 +24,7 @@ class Player {
 public:
     int x{0};
     int y{0};
+    int gridColumn{6};
     bool laserActive{false};
     float laserDuration{0.0f};
     float laserCooldown{0.0f};

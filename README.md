@@ -65,7 +65,11 @@ Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into 
 The project follows the standard modern C++ application layout (Pitchfork Layout):
 
 -   **include/** → Public C++ header files (`.hpp`):
-    -   `Defines.hpp` - Core enum classes, game constants, types, and input helpers
+    -   `BlockShooter.hpp` - Central umbrella header
+    -   `Constants.hpp` - Global compile-time constants (screen, FPS, level configs, type aliases)
+    -   `Input.hpp` - Semantic input polling wrappers for Raylib keyboard and mouse
+    -   `AssetTypes.hpp` - Strongly-typed asset ID enums (SoundAsset, TextureAsset, etc.)
+    -   `Defines.hpp` - Backward-compatible aggregator header forwarding to modular headers
     -   `Scale.hpp` - Resolution scaling and aspect-ratio adapter
     -   `AssetManager.hpp` - Centralized RAII asset management (textures, audio, fonts)
     -   `SettingsManager.hpp` - Game configuration and user preferences persistence
@@ -73,11 +77,10 @@ The project follows the standard modern C++ application layout (Pitchfork Layout
     -   `Player.hpp` - Player character entity, laser targeting, and intro animation
     -   `BulletManager.hpp` - Projectile physics and grid collision handling
     -   `PowerUpManager.hpp` - Power-up spawning, sinusoidal descent, and active effects queue
-    -   `Grid.hpp` - 2D block grid mechanics, procedural generation, and row clears
+    -   `Grid.hpp` - 2D block grid mechanics using `std::bitset<10>` for $O(1)$ operations
     -   `Game.hpp` - Active game session state and difficulty calculations
-    -   `UIManager.hpp` - UI rendering, menus, transitions, and in-game HUD
+    -   `UIManager.hpp` - UI rendering, zero-allocation text parsing, transitions, HUD
     -   `GameEngine.hpp` - Main application engine and state machine runner
-    -   `BlockShooter.hpp` - Central umbrella header
 -   **src/** → C++ implementation source files (`.cpp`):
     -   `main.cpp` - Application entry point with exception handling
     -   `Scale.cpp`, `AssetManager.cpp`, `SettingsManager.cpp`, `ScoreManager.cpp`

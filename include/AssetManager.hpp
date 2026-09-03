@@ -10,7 +10,9 @@
  * of Raylib multimedia assets, preventing GPU/audio memory leaks and double-free errors.
  */
 
-#include "Defines.hpp"
+#include "AssetTypes.hpp"
+#include "Constants.hpp"
+#include "raylib.h"
 #include <unordered_map>
 #include <array>
 

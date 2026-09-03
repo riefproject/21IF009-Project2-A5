@@ -7,11 +7,56 @@
  *
  * @details Implements the dynamic power-up item system, randomized spawning at screen top,
  * trigonometric wavy floating descent, collision detection with the player, immediate
- * or timed gameplay modifiers, and maintaining a FIFO queue of up to 3 concurrent active effects.
+ * or timed gameplay modifiers, and maintaining a cache-friendly queue of up to 3 active effects.
  */
 
-#include "Defines.hpp"
-#include <deque>
+#include "Constants.hpp"
+#include <vector>
+
+/**
+ * @enum PowerUpType
+ * @brief Collectible power-up types.
+ */
+enum class PowerUpType {
+    None = 0,
+    SpeedUp,
+    SlowDown,
+    ExtraLife,
+    Bomb,
+    SpecialBullet,
+    Random,
+    Count
+};
+
+/**
+ * @struct PowerUp
+ * @brief Collectible power-up entity state.
+ */
+struct PowerUp {
+    PowerUpType type{PowerUpType::None};
+    float duration{0.0f};
+    bool active{false};
+    float timer{0.0f};
+};
+
+/**
+ * @struct ActivePowerup
+ * @brief Active timed power-up effect in queue.
+ */
+struct ActivePowerup {
+    PowerUpType type{PowerUpType::None};
+    float duration{0.0f};
+    bool active{false};
+};
+
+/**
+ * @struct PowerUpVisuals
+ * @brief Texture and timer color pair for power-up HUD rendering.
+ */
+struct PowerUpVisuals {
+    Texture2D texture{};
+    Color timerColor{WHITE};
+};
 
 class AssetManager;
 class Player;
@@ -27,7 +72,7 @@ private:
     PowerUp m_currentPowerup;
     Vector2 m_powerupPosition{0.0f, 0.0f};
     float m_powerupTimer{3.0f};
-    std::deque<ActivePowerup> m_activeEffects; // Maximum 3 concurrent active effects
+    std::vector<ActivePowerup> m_activeEffects; // Contiguous buffer for maximum 3 active effects
 
 public:
     PowerUpManager();
@@ -107,10 +152,10 @@ public:
     /**
      * @brief Accesses active power-up effects queue (const).
      */
-    const std::deque<ActivePowerup>& getActiveEffects() const { return m_activeEffects; }
+    const std::vector<ActivePowerup>& getActiveEffects() const { return m_activeEffects; }
 
     /**
      * @brief Accesses active power-up effects queue (mutable).
      */
-    std::deque<ActivePowerup>& getActiveEffects() { return m_activeEffects; }
+    std::vector<ActivePowerup>& getActiveEffects() { return m_activeEffects; }
 };

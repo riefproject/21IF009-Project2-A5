@@ -15,52 +15,35 @@ Player::Player() {
 
 void Player::initializePosition() {
     float blockSize = static_cast<float>(auto_x(32));
-    float gameWidth = blockSize * MAX_COLUMNS;
-
-    x = auto_x(192);
+    gridColumn = 6;
+    x = static_cast<int>(gridColumn * blockSize);
     y = auto_y(598);
-
-    if (x < 0) x = 0;
-    if (static_cast<float>(x) + blockSize > gameWidth) {
-        x = static_cast<int>(gameWidth - blockSize);
-    }
 }
 
 void Player::updatePositionOnResize() {
     float blockSize = static_cast<float>(auto_x(32));
-    float gameWidth = blockSize * MAX_COLUMNS;
+    if (gridColumn < 0) gridColumn = 0;
+    if (gridColumn >= MAX_COLUMNS) gridColumn = MAX_COLUMNS - 1;
 
-    if (blockSize > 0.0f) {
-        x = static_cast<int>(static_cast<float>(x) / blockSize) * static_cast<int>(blockSize);
-    }
-
-    if (static_cast<float>(x) + blockSize > gameWidth) {
-        x = static_cast<int>(gameWidth - blockSize);
-    }
-
+    x = static_cast<int>(gridColumn * blockSize);
     y = auto_y(598);
 }
 
 void Player::move(bool left, bool right, const AssetManager& assets, bool sfxEnabled) {
     float blockSize = static_cast<float>(auto_x(32));
-    float gameWidth = blockSize * MAX_COLUMNS;
-    int step = auto_x(32);
 
-    if (left && x > 0) {
-        x -= step;
+    if (left && gridColumn > 0) {
+        gridColumn--;
+        x = static_cast<int>(gridColumn * blockSize);
         if (sfxEnabled) {
             PlaySound(assets.getSound(SoundAsset::Move));
         }
-    } else if (right && (static_cast<float>(x) + blockSize < gameWidth)) {
-        x += step;
+    } else if (right && (gridColumn < MAX_COLUMNS - 1)) {
+        gridColumn++;
+        x = static_cast<int>(gridColumn * blockSize);
         if (sfxEnabled) {
             PlaySound(assets.getSound(SoundAsset::Move));
         }
-    }
-
-    if (x < 0) x = 0;
-    if (static_cast<float>(x) + blockSize > gameWidth) {
-        x = static_cast<int>(gameWidth - blockSize);
     }
 }
 
@@ -118,13 +101,14 @@ void Player::drawLaser(const Grid& grid) const {
     if (blockSize <= 0.0f) return;
 
     int gridX = static_cast<int>(static_cast<float>(x) / blockSize);
-    float intersectionY = static_cast<float>(y);
+    float intersectionY = 0.0f;
+    bool hitBlock = false;
 
     if (gridX >= 0 && gridX < MAX_COLUMNS) {
         for (int r = MAX_ROWS - 1; r >= 0; --r) {
-            const Block* b = grid.getBlockAt(r, gridX);
-            if (b && b->active) {
-                intersectionY = static_cast<float>(r) * blockSize;
+            if (grid.isBlockActive(r, gridX)) {
+                intersectionY = static_cast<float>(r) * blockSize + blockSize;
+                hitBlock = true;
                 break;
             }
         }
@@ -133,10 +117,11 @@ void Player::drawLaser(const Grid& grid) const {
     float laserX = static_cast<float>(x) + (blockSize / 2.0f);
     float laserThickness = static_cast<float>(auto_x(2.0f));
     float dotRadius = static_cast<float>(auto_x(3.0f));
-    intersectionY += blockSize;
 
     DrawLineEx({ laserX, static_cast<float>(y) }, { laserX, intersectionY }, laserThickness, Color{ 255, 0, 0, 128 });
-    DrawCircle(static_cast<int>(laserX), static_cast<int>(intersectionY), dotRadius, RED);
+    if (hitBlock) {
+        DrawCircle(static_cast<int>(laserX), static_cast<int>(intersectionY), dotRadius, RED);
+    }
 }
 
 Color fadeInOpeningAnimation(float* trans) {
@@ -160,38 +145,38 @@ void openingAnimation(float* trans, const AssetManager& assets) {
     const Texture2D& icon = assets.getBg(BgTexture::IconLoading);
     if (icon.height == 0) return;
 
-    float imgScale = static_cast<float>(GetScreenHeight()) / static_cast<float>(icon.height);
+    float imgScale = static_cast<float>(VIRTUAL_SCREEN_HEIGHT) / static_cast<float>(icon.height);
     float scaledWidth = static_cast<float>(icon.width) * imgScale;
-    float iconX = (static_cast<float>(GetScreenWidth()) - scaledWidth) / 2.0f;
+    float iconX = (static_cast<float>(VIRTUAL_SCREEN_WIDTH) - scaledWidth) / 2.0f;
 
     while (*trans < 1.0f && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(fadeInOpeningAnimation(trans));
         unsigned char alpha = static_cast<unsigned char>(std::clamp(*trans, 0.0f, 1.0f) * 255.0f);
         DrawTextureEx(icon, { iconX, 0.0f }, 0.0f, imgScale, Color{ 255, 255, 255, alpha });
-        EndDrawing();
+        EndVirtualCanvas();
     }
 
-    BeginDrawing();
+    BeginVirtualCanvas();
     ClearBackground(WHITE);
     DrawTextureEx(icon, { iconX, 0.0f }, 0.0f, imgScale, WHITE);
-    EndDrawing();
+    EndVirtualCanvas();
 
     // Tunggu sejenak di layar penuh
     float holdTimer = 1.0f;
     while (holdTimer > 0.0f && !WindowShouldClose()) {
         holdTimer -= GetFrameTime();
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(WHITE);
         DrawTextureEx(icon, { iconX, 0.0f }, 0.0f, imgScale, WHITE);
-        EndDrawing();
+        EndVirtualCanvas();
     }
 
     while (*trans > 0.0f && !WindowShouldClose()) {
-        BeginDrawing();
+        BeginVirtualCanvas();
         ClearBackground(fadeOutOpeningAnimation(trans));
         unsigned char alpha = static_cast<unsigned char>(std::clamp(*trans, 0.0f, 1.0f) * 255.0f);
         DrawTextureEx(icon, { iconX, 0.0f }, 0.0f, imgScale, Color{ 255, 255, 255, alpha });
-        EndDrawing();
+        EndVirtualCanvas();
     }
 }

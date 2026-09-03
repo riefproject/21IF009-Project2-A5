@@ -9,7 +9,9 @@
  * access to GameEngine, Player, BulletManager, PowerUpManager, Grid, and AssetManager.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
+#include "Input.hpp"
+#include "AssetTypes.hpp"
 #include "Scale.hpp"
 #include "AssetManager.hpp"
 #include "SettingsManager.hpp"

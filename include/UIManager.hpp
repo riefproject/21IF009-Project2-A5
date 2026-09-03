@@ -10,7 +10,8 @@
  * countdown timers, game-over summaries, and in-game HUD displays.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
+#include "AssetTypes.hpp"
 #include "Scale.hpp"
 
 class AssetManager;

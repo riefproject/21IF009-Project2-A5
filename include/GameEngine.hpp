@@ -10,7 +10,8 @@
  * and executes the finite state machine driving all game screens.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
+#include "Input.hpp"
 #include "Scale.hpp"
 #include "AssetManager.hpp"
 #include "SettingsManager.hpp"
@@ -18,6 +19,25 @@
 #include "Game.hpp"
 #include "UIManager.hpp"
 #include <memory>
+
+/**
+ * @enum GameState
+ * @brief Identifies current screen / gameplay state.
+ */
+enum class GameState {
+    Loading,
+    MainMenu,
+    HighScores,
+    Controls,
+    Settings,
+    Play,
+    Quit,
+    Pause,
+    SelectLevel,
+    GameOver,
+    Scene,
+    HowToPlay
+};
 
 /**
  * @class GameEngine

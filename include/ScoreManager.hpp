@@ -9,9 +9,18 @@
  * updating new records for all 11 difficulty modes, and calculating line-clear point bonuses.
  */
 
-#include "Defines.hpp"
+#include "Constants.hpp"
 #include <vector>
 #include <string>
+
+/**
+ * @struct HiScore
+ * @brief High score entry per difficulty mode.
+ */
+struct HiScore {
+    std::string mode{};
+    ll score{0};
+};
 
 /**
  * @class ScoreManager

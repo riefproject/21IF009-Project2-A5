@@ -34,10 +34,10 @@ void SettingsManager::load() {
         std::string key, val;
         if (std::getline(ss, key, ',') && std::getline(ss, val)) {
             try {
-                if (key == "music") m_settings.music = std::stoi(val);
-                else if (key == "sfx") m_settings.sfx = std::stoi(val);
-                else if (key == "mode") m_settings.mode = std::stoi(val);
-                else if (key == "skin") m_settings.skin = static_cast<uint>(std::stoul(val));
+                if (key == "music") m_settings.music = (std::stoi(val) != 0);
+                else if (key == "sfx") m_settings.sfx = (std::stoi(val) != 0);
+                else if (key == "mode") m_settings.mode = static_cast<uint8_t>(std::stoi(val));
+                else if (key == "skin") m_settings.skin = static_cast<uint8_t>(std::stoul(val));
             } catch (...) {}
         }
     }
@@ -55,9 +55,9 @@ void SettingsManager::save() const {
     std::ofstream file(m_path, std::ios::out | std::ios::trunc);
     if (!file.is_open()) return;
 
-    file << "music," << m_settings.music << '\n';
-    file << "sfx," << m_settings.sfx << '\n';
-    file << "mode," << m_settings.mode << '\n';
-    file << "skin," << m_settings.skin << '\n';
+    file << "music," << (m_settings.music ? 1 : 0) << '\n';
+    file << "sfx," << (m_settings.sfx ? 1 : 0) << '\n';
+    file << "mode," << static_cast<int>(m_settings.mode) << '\n';
+    file << "skin," << static_cast<int>(m_settings.skin) << '\n';
     file.close();
 }
