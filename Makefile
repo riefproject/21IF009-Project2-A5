@@ -1,17 +1,6 @@
 # Compiler
-CC = gcc
-WINDRES = windres
-
-# Flags
-WNOFLAGS = -Wno-unused-variable -Wno-switch -Wno-unused-parameter
-INCLUDES = -Iinclude -Ivendor/raylib-v5.5/include -Ivendor/reestruct-v1.0.0/include
-RSTFLAGS = vendor/reestruct-v1.0.0/lib/libreestruct.a
-
-# Paths
-SRC_PATH = src library
-OBJ_PATH = build/output
-BIN_PATH = bin
-TMP_PATH = temp
+CXX ?= g++
+WINDRES ?= windres
 
 # Platform detection
 UNAME_S := $(shell uname -s)
@@ -33,6 +22,10 @@ ifeq ($(PLATFORM),)
 		PLATFORM := UNKNOWN
 	endif
 endif
+
+# Flags & Includes
+INCLUDES = -Iinclude -Ivendor/raylib-v5.5/include
+WNOFLAGS = -Wall -Wextra -Wno-unused-parameter
 
 EXE_EXT :=
 RC_OBJ :=
@@ -57,6 +50,7 @@ else ifeq ($(PLATFORM),LINUX)
 		RAYLIB_LDFLAGS := -lraylib -lm -lpthread -ldl -lrt -lGL -lX11
 	endif
 else ifeq ($(PLATFORM),MAC)
+	CXX = clang++
 	ifeq ($(shell pkg-config --exists raylib && echo yes),yes)
 		RAYLIB_CFLAGS := $(shell pkg-config --cflags raylib)
 		RAYLIB_LDFLAGS := $(shell pkg-config --libs raylib)
@@ -76,14 +70,31 @@ else
 	RAYLIB_LDFLAGS := -lraylib
 endif
 
-CFLAGS = $(WNOFLAGS) $(INCLUDES) $(RAYLIB_CFLAGS)
+CXXFLAGS = -std=c++17 $(WNOFLAGS) $(INCLUDES) $(RAYLIB_CFLAGS)
 LDFLAGS = $(RAYLIB_LDFLAGS) $(RAYLIB_RPATH)
 
-# Source files
-SRC = src/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c
+# Paths
+SRC_PATH = src
+OBJ_PATH = build/output
+BIN_PATH = bin
+TMP_PATH = temp
 
-# Object files (replace src/library with build/output)
-OBJ = $(patsubst %.c,$(OBJ_PATH)/%.o,$(SRC))
+# Source files
+SRC = src/main.cpp \
+      src/Scale.cpp \
+      src/AssetManager.cpp \
+      src/SettingsManager.cpp \
+      src/ScoreManager.cpp \
+      src/Player.cpp \
+      src/BulletManager.cpp \
+      src/PowerUpManager.cpp \
+      src/Grid.cpp \
+      src/Game.cpp \
+      src/UIManager.cpp \
+      src/GameEngine.cpp
+
+# Object files
+OBJ = $(patsubst src/%.cpp,$(OBJ_PATH)/%.o,$(SRC))
 
 # Output
 TARGET_NAME = BlockShooter$(EXE_EXT)
@@ -95,8 +106,8 @@ all: $(TARGET)
 $(TARGET): $(OBJ) $(RC_OBJ)
 	@echo "Creating necessary directories..."
 	@mkdir -p $(BIN_PATH)
-	@echo "🔧 Linking..."
-	$(CC) $^ -o $@ $(LDFLAGS) $(RSTFLAGS)
+	@echo "🔧 Linking C++ executable..."
+	$(CXX) $^ -o $@ $(LDFLAGS)
 	@echo "✅ Build successful! Run './$(TARGET)'"
 
 ifeq ($(PLATFORM),WINDOWS)
@@ -106,11 +117,11 @@ $(RC_OBJ): $(RC_FILE)
 	$(WINDRES) $< -o $@
 endif
 
-# Compile each .c file into build/output/
-$(OBJ_PATH)/%.o: %.c
+# Compile each .cpp file into build/output/
+$(OBJ_PATH)/%.o: src/%.cpp
 	@echo "🔨 Compiling $<..."
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Clean
 clean:
@@ -123,34 +134,6 @@ run: all
 	@echo "🚀 Running game..."
 	@./$(TARGET)
 
-rebuild: clean run
+rebuild: clean all
 
-# Test files
-TEST_SRC = $(TMP_PATH)/main.c library/arief.c library/naira.c library/raffi.c library/faliq.c library/goklas.c
-TEST_OBJ = $(patsubst %.c,$(OBJ_PATH)/%.o,$(TEST_SRC))
-TEST_TARGET = $(BIN_PATH)/test$(EXE_EXT)
-
-# Test target
-test: clean-test $(TEST_TARGET)
-	@echo "🧪 Running tests..."
-	@./$(TEST_TARGET)
-
-$(TEST_TARGET): $(TEST_OBJ)
-	@echo "Creating necessary directories..."
-	@mkdir -p $(BIN_PATH)
-	@echo "🔧 Linking test executable..."
-	$(CC) $^ -o $@ $(LDFLAGS) $(RSTFLAGS)
-	@echo "✅ Test build successful!"
-
-# Compile test files
-$(OBJ_PATH)/$(TMP_PATH)/%.o: $(TMP_PATH)/%.c
-	@echo "🔨 Compiling test file $<..."
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean tests
-clean-test:
-	@echo "🗑 Cleaning test files..."
-	@rm -f $(TEST_TARGET)
-	@rm -rf $(OBJ_PATH)/$(TMP_PATH)
-	@echo "✅ Test clean complete!"
+.PHONY: all clean run rebuild

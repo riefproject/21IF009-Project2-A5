@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# pake array karna akan diiterasi. Kalo mau nambah subfolder tambahin aja
-SRC_DIRS=("src"
-          "library")
+# Source directories
+SRC_DIRS=("src")
 
 BUILD_DIR="build/output"
 BIN_DIR="bin"
@@ -30,10 +29,12 @@ TEST_EXE_PATH="$BIN_DIR/$TEST_EXE_NAME"
 RESOURCE_RC="assets/resource.rc"
 RESOURCE_RES="$BUILD_DIR/resource.o"
 
-# bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
-WNO="-Wno-unused-variable
-     -Wno-switch
-     -Wno-unused-parameter"
+CXX="g++"
+if [ "$PLATFORM" = "mac" ]; then
+    CXX="clang++"
+fi
+
+WNO="-Wall -Wextra -Wno-unused-parameter"
 
 detect_raylib_pkgconfig() {
     if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists raylib; then
@@ -77,13 +78,8 @@ else
     RAYLIB_LDFLAGS="-lraylib"
 fi
 
-CFLAGS="$WNO
-        -Iinclude
-        -Ivendor/raylib-v5.5/include
-        -Ivendor/reestruct-v1.0.0/include
-        $RAYLIB_CFLAGS"
+CXXFLAGS="-std=c++17 $WNO -Iinclude -Ivendor/raylib-v5.5/include $RAYLIB_CFLAGS"
 LDFLAGS="$RAYLIB_LDFLAGS $RAYLIB_RPATH"
-RSTFLAGS="vendor/reestruct-v1.0.0/lib/libreestruct.a"
 OBJECT_FILES=()
 
 verify_raylib() {
@@ -92,7 +88,7 @@ verify_raylib() {
     fi
     mkdir -p "$BUILD_DIR"
     local test_bin="$BUILD_DIR/.raylib_check${EXE_EXT}"
-    echo "int main(void){return 0;}" | gcc $CFLAGS -x c - -o "$test_bin" $LDFLAGS >/dev/null 2>&1
+    echo "int main(void){return 0;}" | $CXX $CXXFLAGS -x c++ - -o "$test_bin" $LDFLAGS >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ Raylib not found for this platform.${RESET}"
         if [ "$PLATFORM" = "mac" ]; then
@@ -149,7 +145,7 @@ compile_if_needed() {
 
     if [ ! -f "$out_file" ] || [ "$src_file" -nt "$out_file" ]; then
         echo "🔨 Compiling $src_file..."
-        gcc $CFLAGS -c "$src_file" -o "$out_file"
+        $CXX $CXXFLAGS -c "$src_file" -o "$out_file"
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Compilation failed: $src_file ${RESET}"
             exit 1
@@ -163,9 +159,9 @@ compile_if_needed() {
 
 compile_sources() {
     for dir in "${SRC_DIRS[@]}"; do
-        for src_file in "$dir"/*.c; do
+        for src_file in "$dir"/*.cpp; do
             [ -f "$src_file" ] || continue
-            local filename=$(basename "$src_file" .c)
+            local filename=$(basename "$src_file" .cpp)
             local out_file="$BUILD_DIR/$dir/${filename}.o"
             compile_if_needed "$src_file" "$out_file"
         done
@@ -213,7 +209,7 @@ link_if_needed() {
         if [ "$RESOURCE_ENABLED" -eq 1 ]; then
             link_inputs+=("$RESOURCE_RES")
         fi
-        gcc "${link_inputs[@]}" -o "$EXE_PATH" $LDFLAGS $RSTFLAGS
+        $CXX "${link_inputs[@]}" -o "$EXE_PATH" $LDFLAGS
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Linking failed! ${RESET}"
             exit 1
