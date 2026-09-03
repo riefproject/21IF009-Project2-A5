@@ -60,32 +60,48 @@ Need precision? Activate the laser pointer with **E** or **Right Shift**. Aiming
 
 Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into chaos — and dares you to master it.
 
-## 📂 Project Structure
+## 📂 Project Structure (Industry Standard)
 
--   **src/** → Contains the source code files (.c), including the main game logic and entry point (`main.c`).
--   **library/** → Contains core game logic modules:
-    -   `arief.c` - Core game loop and UI management
-    -   `naira.c` - Power-up system implementation
-    -   `raffi.c` - Score handling and persistence
-    -   `faliq.c` - Player movement and shooting mechanics
-    -   `goklas.c` - Projectile and collision systems
--   **assets/** → Stores game assets:
-    -   Sprites: Player, blocks, projectiles
-    -   Sounds: Effects and background music
-    -   Fonts: UI and display text
--   **db/** → Stores game data (saved settings & scores):
-    -   `settings.dat` - Stores user preferences (SFX, music, last played level)
-    -   `hiscores.dat` - Stores high scores for all difficulty modes
--   **build/** → Directory for compiled files (`build/output/`)
--   **bin/** → Output directory for the final executable (`BlockShooter` / `BlockShooter.exe`)
--   **scripts/** → Build automation scripts (`build.bat`, `clean.bat`)
+The project follows the standard modern C++ application layout (Pitchfork Layout):
+
+-   **include/** → Public C++ header files (`.hpp`):
+    -   `BlockShooter.hpp` - Central umbrella header
+    -   `Constants.hpp` - Global compile-time constants (screen, FPS, level configs, type aliases)
+    -   `Input.hpp` - Semantic input polling wrappers for Raylib keyboard and mouse
+    -   `AssetTypes.hpp` - Strongly-typed asset ID enums (SoundAsset, TextureAsset, etc.)
+    -   `Defines.hpp` - Backward-compatible aggregator header forwarding to modular headers
+    -   `Scale.hpp` - Resolution scaling and aspect-ratio adapter
+    -   `AssetManager.hpp` - Centralized RAII asset management (textures, audio, fonts)
+    -   `SettingsManager.hpp` - Game configuration and user preferences persistence
+    -   `ScoreManager.hpp` - High score database management and points calculation
+    -   `Player.hpp` - Player character entity, laser targeting, and intro animation
+    -   `BulletManager.hpp` - Projectile physics and grid collision handling
+    -   `PowerUpManager.hpp` - Power-up spawning, sinusoidal descent, and active effects queue
+    -   `Grid.hpp` - 2D block grid mechanics using `std::bitset<10>` for $O(1)$ operations
+    -   `Game.hpp` - Active game session state and difficulty calculations
+    -   `UIManager.hpp` - UI rendering, zero-allocation text parsing, transitions, HUD
+    -   `GameEngine.hpp` - Main application engine and state machine runner
+-   **src/** → C++ implementation source files (`.cpp`):
+    -   `main.cpp` - Application entry point with exception handling
+    -   `Scale.cpp`, `AssetManager.cpp`, `SettingsManager.cpp`, `ScoreManager.cpp`
+    -   `Player.cpp`, `BulletManager.cpp`, `PowerUpManager.cpp`, `Grid.cpp`
+    -   `Game.cpp`, `UIManager.cpp`, `GameEngine.cpp`
+-   **assets/** → Stores game assets (sprites, sounds, music, and fonts)
+-   **db/** → Stores persistent data files:
+    -   `settings.dat` - User settings (SFX, music, last mode, selected skin)
+    -   `hiscores.dat` - Leaderboard records for all 11 difficulty modes
+-   **bin/** → Output directory for executable binary (`BlockShooter` / `BlockShooter.exe`)
+-   **build/** → Build artifacts directory (`build/output/`)
+-   **scripts/** → Cross-platform build automation scripts (`build.sh`, `build.bat`)
+
+> [!NOTE]
+> **Author / PIC Attribution**: In accordance with industry best practices, all files are named descriptively after their architectural responsibility. Module authors/PICs are documented via standard **Doxygen** annotations (`@author`, `@file`, `@brief`, `@details`) in each respective source file.
 
 ## ⚙️ Build Requirements
 
--   GCC/Clang (MinGW/MSYS2 for Windows; Xcode CLT/Homebrew GCC for macOS)
+-   C++17 Compiler (GCC 9+, Clang 10+, Apple Clang, or MSVC)
 -   Raylib Graphics Library (tested on Raylib 5.5+; bundled Windows binaries, `pkg-config --libs raylib` on Linux/macOS)
--   Reestruct v1.0.0 (vendored in `vendor/reestruct-v1.0.0`)
--   Make (optional, for Makefile support)
+-   Make or CMake (optional, for Makefile / CMake support)
 
 ## 🛠️ How to Build and Run
 
@@ -99,11 +115,17 @@ Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into 
     cd 21IF009-Project2-A5
     ```
 
-3. rebuild and run the project:
+3. Rebuild and run the project:
 
     - Using **Makefile** (recommended for Linux/macOS/Windows with MinGW):
         ```bash
         make rebuild
+        ```
+    - Or using **CMake**:
+        ```bash
+        cmake -B build -S .
+        cmake --build build
+        ./bin/BlockShooter
         ```
     - Or manually using script:
         - **Windows:**
@@ -112,20 +134,17 @@ Speed builds. Mistakes stack. Power-ups surprise. Block Shooter throws you into 
             ```
         - **Linux/macOS:**
             ```sh
-            . scripts/build.sh rebuild
-            # OR
-            chmod +x scripts/build.sh  # Only needed the first time
             ./scripts/build.sh rebuild
             ```
 
-4. Additioal build options:
+4. Additional build options:
    Both build scripts support various commands for different build tasks. For all available commands and detailed documentation, see [`📋scripts/README.md`](https://github.com/riefproject/21IF009-Project2-A5/blob/main/scripts). Common commands include: build (default), run, clean, rebuild, test, and help.
 
 ### Cross-platform notes
 
 -   Makefile and `scripts/build.sh` auto-detect Windows/Linux/macOS and choose the right linker flags.
--   Windows builds use bundled Raylib binaries (`vendor/raylib-v5.5`) and vendored Reestruct v1.0.0.
--   Linux/macOS builds expect Raylib installed and discoverable via `pkg-config` (Homebrew example: `brew install raylib`); Reestruct is linked from `vendor/reestruct-v1.0.0/lib`.
+-   Windows builds use bundled Raylib binaries (`vendor/raylib-v5.5`).
+-   Linux/macOS builds link Raylib via pkg-config or Homebrew (`brew install raylib`).
 
 ## 🎮 Gameplay Instructions
 

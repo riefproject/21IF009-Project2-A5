@@ -1,8 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM pake array karna akan diiterasi. Kalo mau nambah subfolder tambahin aja
-set "SRC_DIRS=src library"
+set "SRC_DIRS=src"
 
 set "BUILD_DIR=build\output"
 set "BIN_DIR=bin"
@@ -14,12 +13,10 @@ set "RESOURCE_RC=assets\resource.rc"
 set "RESOURCE_RES=%BUILD_DIR%\resource.o"
 set "TMP_PATH=temp"
 
-REM bukan array karna ga akan diiterasi (cuma flag). Tambahin aja kalo butuh subfolder tambahan
-set "WNO=-Wno-unused-variable -Wno-switch -Wno-unused-parameter"
+set "WNO=-Wall -Wextra -Wno-unused-parameter"
 
-set "CFLAGS=%WNO% -Iinclude -Ivendor\raylib-v5.5\include -Ivendor\reestruct-v1.0.0\include"
+set "CXXFLAGS=-std=c++17 %WNO% -Iinclude -Ivendor\raylib-v5.5\include"
 set "LDFLAGS=-Lvendor\raylib-v5.5\lib -lraylib -lopengl32 -lgdi32 -lwinmm"
-set "RSTFLAGS=-Lvendor\reestruct-v1.0.0\lib -lreestruct"
 set "OBJECT_FILES="
 
 REM =====================================================================================
@@ -63,7 +60,7 @@ if exist "%out_file%" (
 
 if "!need_compile!"=="1" (
     echo [COMPILE] Compiling %src_file%...
-    gcc %CFLAGS% -c "%src_file%" -o "%out_file%"
+    g++ %CXXFLAGS% -c "%src_file%" -o "%out_file%"
     if !errorlevel! neq 0 (
         echo [ERROR] Compilation failed: %src_file% 
         exit /b 1
@@ -77,7 +74,7 @@ goto :eof
 
 :compile_sources
 for %%d in (%SRC_DIRS%) do (
-    for %%f in ("%%d\*.c") do (
+    for %%f in ("%%d\*.cpp") do (
         if exist "%%f" (
             set "filename=%%~nf"
             set "out_file=%BUILD_DIR%\%%d\!filename!.o"
@@ -134,7 +131,7 @@ if exist "%EXE_PATH%" (
 
 if "!need_link!"=="1" (
     echo [LINKING] Linking...
-    gcc %OBJECT_FILES% "%RESOURCE_RES%" -o "%EXE_PATH%" %LDFLAGS% %RSTFLAGS%
+    g++ %OBJECT_FILES% "%RESOURCE_RES%" -o "%EXE_PATH%" %LDFLAGS%
     if !errorlevel! neq 0 (
         echo [ERROR] Linking failed! 
         exit /b 1
